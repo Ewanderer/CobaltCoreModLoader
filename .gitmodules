@@ -1,0 +1,3 @@
+[submodule "SingleFileExtractor"]
+	path = SingleFileExtractor
+	url = https://github.com/Droppers/SingleFileExtractor.git

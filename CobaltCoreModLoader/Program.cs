@@ -2,62 +2,64 @@
 using System.Globalization;
 using System.Reflection;
 using System.Resources;
-using System.Reflection.PortableExecutable;
+using SingleFileExtractor.Core;
 
 public static class Program
 {
     [STAThread]
     private static int Main(string[] args)
     {
-
+        List<Assembly> cobalt_core_exe_assemblies = new List<Assembly>();
         Console.WriteLine("Booting Cobalt Core Mod Loader...");
         var exe_file = new FileInfo("CobaltCore.exe");
-      
+
         if (exe_file.Exists)
         {
-
-         
-
             try
             {
-                //open cobal core exe.
-                using(var exe_stream=exe_file.OpenRead())
+                Console.WriteLine("Extracting CobaltCore.exe...");
+                //Extract everything from cobalt core application to use up
+                using (ExecutableReader reader = new(exe_file.FullName))
                 {
-                    //get data from exe.
-                    var exe_headers = new PEHeaders(exe_stream);
-
-
-                    //find all assemblies and load them.
-                    var header = exe_headers.PEHeader;
-                    if (header != null)
+                    foreach (var file in reader.Bundle.Files)
                     {
-                        //start cobalt core assembly.
-
-                        var stuff = header.ResourceTableDirectory;
-                        Console.WriteLine("Stuffing?");
+                        if (file.Type != FileType.Assembly)
+                            continue;
+                        try
+                        {
+                            using (var stream = file.AsStream())
+                            {
+                                var buffer = new byte[stream.Length];
+                                stream.Read(buffer);
+                                Assembly asm = AppDomain.CurrentDomain.Load(buffer);
+                                //Assembly asm = Assembly.Load(buffer);
+                                cobalt_core_exe_assemblies.Add(asm);
+                              //  Console.WriteLine("Loaded Assembly:" + asm.FullName);
+                            }
+                        }
+                        catch
+                        {
+                        }
                     }
 
-                   
-
-                    foreach(var section in exe_headers.SectionHeaders){
-                        Console.WriteLine(section.Name);
-                    }
                 }
-                
-                var assembly = Assembly.Load("CobaltCore.dll");
-                
-                // Run Program startup.
-                var entry_point = assembly.EntryPoint;
-                if (entry_point != null)
+                Console.WriteLine("Cobalt Core Executable content loaded.");
+                Console.WriteLine("Booting Cobalt Core from loaded assemblies...");
+
+                var cobalt_core_asm = cobalt_core_exe_assemblies.FirstOrDefault(e => e.FullName?.ToLower().Contains("cobaltcore") ?? false);
+
+                if (cobalt_core_asm != null && cobalt_core_asm.EntryPoint != null)
                 {
-                    var result = entry_point.Invoke(null, args);
-                    Console.WriteLine(result);
+                    var entry_point = cobalt_core_asm.EntryPoint;
+                    //Overwrite assembly resolve to use whatever we have grabbed from the cobalt core exe.
+                    AppDomain.CurrentDomain.AssemblyResolve += (sender, evt) => { return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(e => e.FullName == evt.Name); };
+                    //run main entry point...
+                    entry_point.Invoke(null, new object[] { args });
                 }
                 else
                 {
-                    Console.WriteLine("Assembly doesn't contain entry point. you sure you are running cobalt core?");
+                    Console.WriteLine("Cannot Find CobaltCore Entry Point");
                 }
-                
             }
             catch (Exception ex)
             {
@@ -70,7 +72,7 @@ public static class Program
         {
 
             Console.WriteLine("No Cobalt Core Exe found. Shutting down.");
-          
+
 
         }
         Console.ReadLine();
