@@ -13,7 +13,7 @@ namespace CobaltCoreModLoader.Services
     /// This class contains the logic to parse a CoboltCore executable and start it up on demand.
     /// After being loaded it will also provide the cobalt core game assembly for any shenanigans
     /// </summary>
-    public class CobaltCoreHander
+    public class CobaltCoreHandler
     {
 
         public DirectoryInfo? CobaltCoreAppPath { get; private set; }
@@ -22,11 +22,11 @@ namespace CobaltCoreModLoader.Services
 
         public Assembly? CobaltCoreAssembly { get; private set; }
 
-        public CobaltCoreHander(Logger<CobaltCoreHander> logger) {
+        public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger) {
             this.logger = logger;
         }
 
-        private Logger<CobaltCoreHander> logger;
+        private ILogger<CobaltCoreHandler> logger;
 
         public void LoadupCobaltCore(FileInfo cobaltCoreExecutable) {
             if (!cobaltCoreExecutable.Exists)

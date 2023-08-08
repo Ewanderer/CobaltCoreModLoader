@@ -1,5 +1,6 @@
 ﻿using CobaltCoreModding.Definitions;
 
+
 namespace DemoMod
 {
     public class ModManifest : IModManifest
@@ -11,6 +12,7 @@ namespace DemoMod
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
+            
         }
     }
 }
