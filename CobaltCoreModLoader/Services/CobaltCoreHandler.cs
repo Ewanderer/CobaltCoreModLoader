@@ -1,11 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
+using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -13,22 +9,25 @@ namespace CobaltCoreModLoader.Services
     /// This class contains the logic to parse a CoboltCore executable and start it up on demand.
     /// After being loaded it will also provide the cobalt core game assembly for any shenanigans
     /// </summary>
-    public class CobaltCoreHandler
+    public class CobaltCoreHandler : ICobaltCoreContact
     {
-
         public DirectoryInfo? CobaltCoreAppPath { get; private set; }
+
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded!");
 
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
 
         public Assembly? CobaltCoreAssembly { get; private set; }
 
-        public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger) {
+        public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger)
+        {
             this.logger = logger;
         }
 
         private ILogger<CobaltCoreHandler> logger;
 
-        public void LoadupCobaltCore(FileInfo cobaltCoreExecutable) {
+        public void LoadupCobaltCore(FileInfo cobaltCoreExecutable)
+        {
             if (!cobaltCoreExecutable.Exists)
                 throw new ArgumentException("Specified File Path doesn't exist");
             CobaltCoreAppPath = cobaltCoreExecutable.Directory ?? throw new Exception("Unkown directory!");
@@ -65,7 +64,6 @@ namespace CobaltCoreModLoader.Services
                         }
                         catch
                         {
-
                         }
                     }
                 }
@@ -82,9 +80,6 @@ namespace CobaltCoreModLoader.Services
             AppDomain.CurrentDomain.AssemblyResolve += (sender, evt) => { return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(e => e.FullName == evt.Name); };
         }
 
-
-
-
         /// <summary>
         /// Startsup cobalt core game.
         /// </summary>
@@ -92,6 +87,8 @@ namespace CobaltCoreModLoader.Services
         public void RunCobaltCore(string[] args)
         {
             var entry_point = CobaltCoreAssembly?.EntryPoint ?? throw new Exception("No entry point in cobalt core dll!");
+            if (CobaltCoreAppPath == null)
+                throw new Exception("No cobalt core assembly name know");
             var current_dir = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(CobaltCoreAppPath.FullName);
             try
@@ -103,8 +100,5 @@ namespace CobaltCoreModLoader.Services
                 Directory.SetCurrentDirectory(current_dir);
             }
         }
-
-
-
     }
 }

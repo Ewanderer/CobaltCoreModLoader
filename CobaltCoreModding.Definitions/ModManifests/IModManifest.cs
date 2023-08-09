@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
 
-namespace CobaltCoreModding.Definitions
+namespace CobaltCoreModding.Definitions.ModManifests
 {
     public interface IModManifest
     {
@@ -16,7 +12,7 @@ namespace CobaltCoreModding.Definitions
         /// <summary>
         /// Mod Identifiers for manifest which should be booted first
         /// </summary>
-        public IEnumerable<string> Dependencies { get;}
+        public IEnumerable<string> Dependencies { get; }
 
         /// <summary>
         /// Used by the mod loader to allow a mod to activate its logic.
@@ -24,8 +20,5 @@ namespace CobaltCoreModding.Definitions
         /// will also try to respect dependencies.
         /// </summary>
         public void BootMod(IModLoaderContact contact);
-
-        
-
     }
 }

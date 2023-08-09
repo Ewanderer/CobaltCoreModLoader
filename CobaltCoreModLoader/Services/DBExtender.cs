@@ -1,28 +1,25 @@
 ﻿using CobaltCoreModding.Definitions;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     /// <summary>
     /// This serice can be used to run patches
     /// </summary>
-    public class DBPatcher
+    public class DBExtender : IDbRegistry
     {
-
         private static ModAssemblyHandler? ModStorage;
 
-        private static ILogger<DBPatcher>? Logger;
+        private static ILogger<DBExtender>? Logger;
 
         private static CobaltCoreHandler? CobaltCoreHandler;
 
-        public DBPatcher(CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler, ILogger<DBPatcher> logger)
+        private Assembly cobalt_core_assembly;
+
+        public DBExtender(CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler, ILogger<DBExtender> logger)
         {
             //Register ONCE!
             if (ModStorage == null)
@@ -33,27 +30,30 @@ namespace CobaltCoreModLoader.Services
                 throw new InvalidOperationException("DB patcher already loaded once. cannot have two!");
             Logger = logger;
             CobaltCoreHandler = cobaltCoreHandler;
+            cobalt_core_assembly = cobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No cobalt core assembly loaded!");
         }
 
         private Harmony? harmony;
 
+        /// <summary>
+        /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         public void PatchDB()
         {
-            Assembly cobalt_core_assembly = CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("Cobalt Core not found");
+            Assembly cobalt_core_assembly = CobaltCoreHandler?.CobaltCoreAssembly ?? throw new Exception("Cobalt Core not found");
             if (harmony != null)
-                harmony.UnpatchAll("modloader.dbpatcher");
-            harmony = new Harmony("modloader.dbpatcher");
-
+                harmony.UnpatchAll("modloader.dbextender");
+            harmony = new Harmony("modloader.dbextender");
 
             //patch DB
             var db_type = cobalt_core_assembly.GetType("DB") ?? throw new Exception("Cobalt Core Assembly missed DB type.");
 
             var make_init_queue_function = db_type.GetMethod("MakeInitQueue");
 
-            var make_init_queue_postfix = typeof(DBPatcher).GetMethod("MakeInitQueue_Postfix", BindingFlags.Static | BindingFlags.NonPublic);
+            var make_init_queue_postfix = typeof(DBExtender).GetMethod("MakeInitQueue_Postfix", BindingFlags.Static | BindingFlags.NonPublic);
 
             harmony.Patch(make_init_queue_function, postfix: new HarmonyMethod(make_init_queue_postfix));
-
         }
 
         public void UnPatchDB()
@@ -62,6 +62,27 @@ namespace CobaltCoreModLoader.Services
                 harmony.UnpatchAll("modloader.dbpatcher");
         }
 
+        private static int deck_counter = 1000;
+        private static Dictionary<int, object> registered_deck_defenitions = new Dictionary<int, object>();
+
+        private static Dictionary<string, string> registered_glossary = new Dictionary<string, string>();
+
+        private static int status_counter = 10000;
+        private static Dictionary<int, object> registered_statuses = new Dictionary<int, object>();
+
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => cobalt_core_assembly;
+
+        public int RegisterDeck(object deck_def)
+        {
+            if (string.Compare("DeckDef", deck_def.GetType().Name, true) != 0)
+            {
+                throw new Exception("Passed object is not a DeckDef!");
+            }
+
+            registered_deck_defenitions.Add(deck_counter, deck_def);
+
+            return deck_counter++;
+        }
 
         private static Queue<Action> MakeInitQueue_Postfix(Queue<Action> __result)
         {
@@ -77,7 +98,6 @@ namespace CobaltCoreModLoader.Services
                 patched_result.Enqueue(__result.Dequeue());
 
             return patched_result;
-
         }
 
         private static void Load_1()
@@ -141,10 +161,6 @@ namespace CobaltCoreModLoader.Services
                 }
                 Logger?.LogInformation($"Successfully loaded {counter} subclasses of {lookup_type.Name} from {ModStorage.ModLookup.Count()} mod assemblies.");
             }
-
-
-
         }
-
     }
 }

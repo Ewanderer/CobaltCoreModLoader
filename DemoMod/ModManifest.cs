@@ -1,5 +1,5 @@
-﻿using CobaltCoreModding.Definitions;
-
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 
 namespace DemoMod
 {
@@ -12,7 +12,8 @@ namespace DemoMod
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
-            
         }
+
+    
     }
 }
