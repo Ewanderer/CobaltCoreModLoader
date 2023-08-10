@@ -56,11 +56,7 @@ namespace CobaltCoreModLoader.Services
             harmony.Patch(make_init_queue_function, postfix: new HarmonyMethod(make_init_queue_postfix));
         }
 
-        public void UnPatchDB()
-        {
-            if (harmony != null)
-                harmony.UnpatchAll("modloader.dbpatcher");
-        }
+
 
         private static int deck_counter = 1000;
         private static Dictionary<int, object> registered_deck_defenitions = new Dictionary<int, object>();
@@ -93,6 +89,19 @@ namespace CobaltCoreModLoader.Services
             patched_result.Enqueue(__result.Dequeue());
 
             patched_result.Enqueue(() => { Load_1(); });
+
+            patched_result.Enqueue(__result.Dequeue());
+
+            patched_result.Enqueue(__result.Dequeue());
+
+            patched_result.Enqueue(__result.Dequeue());
+
+            patched_result.Enqueue(__result.Dequeue());
+
+            patched_result.Enqueue(__result.Dequeue());
+            //Sprite extender needs to remove stuff from atlas for overwrite...
+            patched_result.Enqueue(() => { SpriteExtender.BreakAtlas(); });
+
 
             while (__result.Count > 0)
                 patched_result.Enqueue(__result.Dequeue());
