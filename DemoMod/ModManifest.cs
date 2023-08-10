@@ -1,4 +1,4 @@
-﻿using CobaltCoreModding.Definitions.ExternalResourceHelper;
+﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using DemoMod.Cards;
@@ -6,32 +6,48 @@ using System.Reflection;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest
     {
-        public string ModIdentifier => "EWanderer.DemoMod";
+        public string Name => "EWanderer.DemoMod";
 
         public IEnumerable<string> Dependencies => new string[0];
 
-        public string Name => ModIdentifier;
+        private static ExternalSprite? card_art_sprite;
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
 
+        internal static int x = 0;
+
         public void LoadManifest(IArtRegistry artRegistry)
         {
             {
-                var sprite = new ExternalSprite(new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\patched_cobalt_core.png"));
+                var sprite = new ExternalSprite("EWanderer.DemoMod.Patched_Cobalt_Core", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\patched_cobalt_core.png"));
                 artRegistry.RegisterArt(sprite, (int)Spr.cockpit_cobalt_core);
             }
 
             {
-                var sprite = new ExternalSprite(new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\Shield.png"));
-                EWandererDemoCard.card_sprite = (Spr)artRegistry.RegisterArt(sprite);
+                card_art_sprite = new ExternalSprite("EWanderer.DemoMod.DemoCardArt", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\Shield.png"));
+                if (!artRegistry.RegisterArt(card_art_sprite))
+                    throw new Exception("Cannot register sprite.");
+                EWandererDemoCard.card_sprite = (Spr)(card_art_sprite.Id ?? throw new NullReferenceException());
             }
 
 
+        }
+
+        public void LoadManifest(IDbRegistry dbRegistry)
+        {
+            if (card_art_sprite == null)
+                return;
+            //make card meta data
+            var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null);
+            //add card name in english
+            card.AddLocalisation("Schwarzmagier");
+            //register card in the db extender.
+            dbRegistry.RegisterCard(card);
         }
     }
 }

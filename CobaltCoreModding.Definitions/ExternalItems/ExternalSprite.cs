@@ -1,12 +1,20 @@
-﻿namespace CobaltCoreModding.Definitions.ExternalResourceHelper
+﻿namespace CobaltCoreModding.Definitions.ExternalItems
 {
     /// <summary>
     /// A container for sprite registry
     /// </summary>
     public class ExternalSprite
     {
+        /// <summary>
+        /// This must be a unique name across all mods to be used for cross mod sprite usage.
+        /// </summary>
+        public string GlobalName { get; init; }
+
         private int? id;
 
+        /// <summary>
+        /// The Spr value assigned to this Sprite. By the time any other external ressource needs this value, it will already be assigned aka not null
+        /// </summary>
         public int? Id
         {
             get => id; set
@@ -33,9 +41,10 @@
         /// Path to the sprite file on disc to be used.
         /// </summary>
         /// <param name="physical_location"></param>
-        public ExternalSprite(FileInfo physical_location)
+        public ExternalSprite(string global_name, FileInfo physical_location)
         {
             this.physical_location = physical_location;
+            this.GlobalName = global_name;
         }
 
         /// <summary>
@@ -43,9 +52,26 @@
         /// or who want to dynamically generate texture for whatever reason.
         /// </summary>
         /// <param name="virtual_location"></param>
-        public ExternalSprite(Func<Stream> virtual_location)
+        public ExternalSprite(string global_name, Func<Stream> virtual_location)
         {
             this.virtual_location = virtual_location;
+            this.GlobalName = global_name;
         }
+
+        private ExternalSprite(int id) {
+            this.id = id;
+            GlobalName = "";
+        }
+        /// <summary>
+        /// This function is used by mod loader to create an art asset with an id of an cobalt core spr value.
+        /// mods should not use this unless they feed it direct Spr values.
+        /// cannot be registered in the art registry but otherwise be used.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static ExternalSprite GetRaw(int id) {
+            return new ExternalSprite(id);
+        }
+
     }
 }

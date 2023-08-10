@@ -13,6 +13,15 @@
             art = new Spr?(card_sprite)
         };
 
+        public override void OnDraw(State s, Combat c)
+        {
+            var z = s.CharacterIsMissing(new Deck?(this.GetMeta().deck));
+            var y = this.GetDataWithOverrides(s);
+            var x = GetArt(s);
+
+            base.OnDraw(s, c);
+        }
+
         public override List<CardAction> GetActions(State s, Combat c)
         {
             var list = new List<CardAction>();
