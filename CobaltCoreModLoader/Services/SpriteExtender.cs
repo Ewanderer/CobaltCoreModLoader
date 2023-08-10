@@ -20,8 +20,12 @@ namespace CobaltCoreModLoader.Services
 
         private Assembly cobalt_core_assembly { get; init; }
 
-        public SpriteExtender(ILogger<SpriteExtender> logger, CobaltCoreHandler cobaltCoreHandler)
+        private ModAssemblyHandler modAssemblyHandler { get; init; }
+
+        public SpriteExtender(ILogger<SpriteExtender> logger, CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler)
         {
+            this.modAssemblyHandler = modAssemblyHandler;
+
             SpriteExtender.cobalt_core_handler = cobaltCoreHandler;
             SpriteExtender.logger = logger;
             cobalt_core_assembly = cobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded.");
@@ -38,12 +42,21 @@ namespace CobaltCoreModLoader.Services
         public void PatchSpriteSystem()
         {
             //load manifest
-
+            RunArtManifest();
 
             //"patch" mapping
             PatchMapping();
             //patch sprite loader
             PatchSpriteLoader();
+        }
+
+        private void RunArtManifest()
+        {
+            var sprite_manifests = modAssemblyHandler.ModLookup.Select(e => e.Item4);
+            foreach (var manifest in sprite_manifests)
+            {
+                manifest?.LoadManifest(this);
+            }
         }
 
         private void PatchMapping()
@@ -70,18 +83,22 @@ namespace CobaltCoreModLoader.Services
                 {
                     if (sprite.Id == null)
                         continue;
-                    var spr_val = Convert.ChangeType(sprite.Id, spr_type) ?? throw new Exception("Cast failed");
+                    var spr_val = Convert.ChangeType(Enum.ToObject(spr_type, sprite.Id), spr_type) ?? throw new Exception("Cast failed");
                     var str = $"@mod{sprite.Id}";
                     //update or add registed sprite data.
+
+
                     if (spr_to_str_dictionary.Contains(spr_val))
                         spr_to_str_dictionary[spr_val] = str;
                     else
                         spr_to_str_dictionary.Add(spr_val, str);
-
-                    if (str_to_spr_dictionary.Contains(str))
-                        str_to_spr_dictionary[str] = spr_val;
-                    else
-                        str_to_spr_dictionary.Add(str, spr_val);
+                    if (!Enum.IsDefined(spr_type, spr_val))
+                    {
+                        if (str_to_spr_dictionary.Contains(str))
+                            str_to_spr_dictionary[str] = spr_val;
+                        else
+                            str_to_spr_dictionary.Add(str, spr_val);
+                    }
                 }
             }
         }
@@ -107,6 +124,66 @@ namespace CobaltCoreModLoader.Services
 
                 harmony.Patch(load_file_to_tex_method, prefix: new HarmonyMethod(load_file_to_tex_prefix));
             }
+            //patch cache for preload everything 
+            {
+                var preload_everything_method = sprite_loader_type.GetMethod("PreloadEverything", BindingFlags.Static | BindingFlags.Public) ?? throw new Exception("Cannot find preload_everything method in spriter loader");
+                var preload_everything_postfix = typeof(SpriteExtender).GetMethod("PreloadEverythingPostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("Cannot find preload_everything_postfix method!");
+
+                harmony.Patch(preload_everything_method, postfix: new HarmonyMethod(preload_everything_postfix));
+            }
+        }
+
+        private static void PreloadEverythingPostFix()
+        {
+            var counter = 0;
+            var spr_type = cobalt_core_handler?.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
+            //overwriting textures
+
+            if (CachedTextures == null)
+            {
+                CachedTextures = cobalt_core_handler?.CobaltCoreAssembly?.GetType("SpriteLoader")?.GetField("textures")?.GetValue(null) as IDictionary;
+            }
+            if (CachedTextures == null)
+            {
+                logger?.LogCritical("No texture cache found!");
+                return;
+            }
+
+            foreach (var overwrite_sprite in registered_sprites.Values.Where(e => e.Id != null && 0 <= e.Id && e.Id < sprite_id_counter_start))
+            {
+                if (overwrite_sprite == null || overwrite_sprite.Id == null)
+                    continue;
+                var texture = LoadTexture(overwrite_sprite);
+                if (texture == null)
+                {
+                    logger?.LogWarning("Failed to load overwrite texture");
+                    continue;
+                }
+
+                object spr_val;
+                try
+                {
+                    spr_val = Convert.ChangeType(Enum.ToObject(spr_type, overwrite_sprite.Id), spr_type) ?? throw new Exception("Cast failed");
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (CachedTextures.Contains(spr_val))
+                {
+                    var old = CachedTextures[spr_val];
+                    CachedTextures[spr_val] = texture;
+                    //  (old as IDisposable)?.Dispose();
+                }
+                else
+                {
+                    CachedTextures.Add(spr_val, texture);
+                }
+
+                counter++;
+            }
+            logger?.LogInformation($"Overwrote {counter} original sprites");
         }
 
         private static Texture2D? LoadTexture(ExternalSprite sprite)
@@ -173,7 +250,7 @@ namespace CobaltCoreModLoader.Services
 
             var mg_inst = mg_type.GetField("inst")?.GetValue(null) ?? throw new Exception("MG instance not found. has game not started?");
 
-            graphics_device = (mg_type.GetMethod("GraphicsDevice", System.Reflection.BindingFlags.Public)?.Invoke(mg_inst, new object[0]) as GraphicsDevice);
+            graphics_device = (mg_type.BaseType?.GetMethod("get_GraphicsDevice")?.Invoke(mg_inst, new object[0]) as GraphicsDevice);
 
             if (graphics_device == null)
             {
@@ -233,9 +310,48 @@ namespace CobaltCoreModLoader.Services
             return false;
         }
 
+        internal static void BreakAtlas()
+        {
+            //get db type.
+            var db_type = cobalt_core_handler?.CobaltCoreAssembly?.GetType("DB") ?? throw new Exception();
+            var spr_type = cobalt_core_handler?.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
+            var atlas = db_type.GetField("atlas")?.GetValue(null) as IDictionary;
+            if (atlas != null)
+            {
+                foreach (var overwrite_sprite in registered_sprites.Values.Where(e => e.Id != null && 0 <= e.Id && e.Id < sprite_id_counter_start))
+                {
+                    if (overwrite_sprite == null || overwrite_sprite.Id == null)
+                        continue;
+                    var texture = LoadTexture(overwrite_sprite);
+                    if (texture == null)
+                    {
+                        logger?.LogWarning("Failed to load overwrite texture");
+                        continue;
+                    }
+
+                    object spr_val;
+                    try
+                    {
+                        spr_val = Convert.ChangeType(Enum.ToObject(spr_type, overwrite_sprite.Id), spr_type) ?? throw new Exception("Cast failed");
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                    if (spr_val == null)
+                        continue;
+                    if (atlas.Contains(spr_val))
+                        atlas.Remove(spr_val);
+                }
+            }
+
+        }
+
+
+
         int IArtRegistry.RegisterArt(ExternalSprite sprite_data, int? overwrite_value)
         {
-            if (sprite_data.Id != 0)
+            if (sprite_data.Id != null)
                 throw new ArgumentException("sprite data was already assigned id.");
             if (overwrite_value == null)
             {
@@ -246,7 +362,7 @@ namespace CobaltCoreModLoader.Services
             else
             {
                 var target_id = overwrite_value.Value;
-                if (0 <= target_id && target_id < sprite_id_counter_start)
+                if (target_id < 0 && sprite_id_counter_start <= target_id)
                     throw new Exception("Attempted overwrite of modded content detected!");
 
                 if (registered_sprites.ContainsKey(overwrite_value.Value))

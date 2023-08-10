@@ -5,10 +5,12 @@
     {
         public override string Name() => "EWDemoCard";
 
+        internal static Spr card_sprite = Spr.cards_GoatDrone;
+
         public override CardData GetData(State state) => new CardData
         {
             cost = 0,
-            art = new Spr?(Spr.cards_GoatDrone)
+            art = new Spr?(card_sprite)
         };
 
         public override List<CardAction> GetActions(State s, Combat c)
