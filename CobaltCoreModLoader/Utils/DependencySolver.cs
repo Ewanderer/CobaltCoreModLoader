@@ -1,9 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ModManifests;
-
-namespace CobaltCoreModLoader.Utils
+﻿namespace CobaltCoreModLoader.Utils
 {
     public static class DependencySolver
     {
-       
     }
 }

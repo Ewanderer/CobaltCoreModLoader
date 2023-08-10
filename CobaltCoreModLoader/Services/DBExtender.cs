@@ -1,13 +1,10 @@
-﻿using CobaltCoreModding.Definitions;
-using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using HarmonyLib;
-using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Data;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -16,8 +13,6 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class DBExtender : IDbRegistry
     {
-
-
         private static ILogger<DBExtender>? Logger;
 
         public DBExtender(CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler, ILogger<DBExtender> logger)
@@ -42,13 +37,11 @@ namespace CobaltCoreModLoader.Services
         /// <exception cref="Exception"></exception>
         public void PatchDB()
         {
-
-            //load 
+            //load
 
             harmony = new Harmony("modloader.dbextender");
 
             //patch DB
-
 
             var make_init_queue_function = db_type.GetMethod("MakeInitQueue") ?? throw new Exception("make init queue method not found");
 
@@ -65,10 +58,7 @@ namespace CobaltCoreModLoader.Services
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
 
             LoadDbManifests();
-
         }
-
-
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
 
@@ -93,13 +83,12 @@ namespace CobaltCoreModLoader.Services
                 var key = "card." + card.CardType.Name + ".name";
                 if (!__result.TryAdd(key, text))
                     Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
-
             }
-
         }
 
-        static Type? __db_type = null;
-        static Type db_type
+        private static Type? __db_type = null;
+
+        private static Type db_type
         {
             get
             {
@@ -164,9 +153,7 @@ namespace CobaltCoreModLoader.Services
             foreach (var card in registered_cards.Values.Where(e => e != null && e.ActualDeck != null))
             {
                 if (card == null) continue;
-
             }
-
         }
 
         /// <summary>
@@ -196,7 +183,6 @@ namespace CobaltCoreModLoader.Services
                     card_art_dictionary.Add(card.CardType.Name, spr_val);
                 }
             }
-
         }
 
         /// <summary>
@@ -204,7 +190,6 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void PatchStory()
         {
-
         }
 
         /// <summary>
@@ -212,14 +197,12 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void InsertNewDeckAndStatus()
         {
-
         }
 
         private static void InsertNewLogicItems()
         {
             if (CobaltCoreHandler.CobaltCoreAssembly != null)
             {
-
                 /*
                 //patch into all fields
                 var db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
@@ -261,7 +244,6 @@ namespace CobaltCoreModLoader.Services
                         }
                     }
                 }
-
 
                 var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
                 var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;

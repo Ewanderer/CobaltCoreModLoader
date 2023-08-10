@@ -2,7 +2,6 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using DemoMod.Cards;
-using System.Reflection;
 
 namespace DemoMod
 {
@@ -34,8 +33,6 @@ namespace DemoMod
                     throw new Exception("Cannot register sprite.");
                 EWandererDemoCard.card_sprite = (Spr)(card_art_sprite.Id ?? throw new NullReferenceException());
             }
-
-
         }
 
         public void LoadManifest(IDbRegistry dbRegistry)

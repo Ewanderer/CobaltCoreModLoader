@@ -58,10 +58,12 @@
             this.GlobalName = global_name;
         }
 
-        private ExternalSprite(int id) {
+        private ExternalSprite(int id)
+        {
             this.id = id;
             GlobalName = "";
         }
+
         /// <summary>
         /// This function is used by mod loader to create an art asset with an id of an cobalt core spr value.
         /// mods should not use this unless they feed it direct Spr values.
@@ -69,9 +71,9 @@
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static ExternalSprite GetRaw(int id) {
+        public static ExternalSprite GetRaw(int id)
+        {
             return new ExternalSprite(id);
         }
-
     }
 }

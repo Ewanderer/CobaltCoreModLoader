@@ -1,7 +1,6 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
-using System.Data.SqlTypes;
 using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
@@ -14,7 +13,6 @@ namespace CobaltCoreModLoader.Services
     {
         private ILogger<ModAssemblyHandler> logger { get; init; }
 
-
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
             this.logger = logger;
@@ -26,7 +24,7 @@ namespace CobaltCoreModLoader.Services
 
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => mod_lookup_list.Select(e => e.Item1);
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly??throw new Exception("No Cobalt Core found.");
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public void RunModLogics()
         {
@@ -67,8 +65,6 @@ namespace CobaltCoreModLoader.Services
             {
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
-
-
 
                 //make entry
                 mod_lookup_list.Add(new Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>(

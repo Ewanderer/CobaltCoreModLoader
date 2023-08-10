@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace CobaltCoreModding.Definitions.ExternalItems
 {
@@ -33,27 +27,27 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         /// <summary>
         /// Color multiplied with card texture
         /// </summary>
-        Color DeckColor { get; init; }
+        private Color DeckColor { get; init; }
 
         /// <summary>
         /// Name of the card
         /// </summary>
-        Color TitleColor { get; init; }
+        private Color TitleColor { get; init; }
 
         /// <summary>
         /// The card ard
         /// </summary>
-        ExternalSprite CardArtDefault { get; init; }
+        private ExternalSprite CardArtDefault { get; init; }
 
         /// <summary>
         /// Base Border Sprite
         /// </summary>
-        ExternalSprite BorderSprite { get; init; }
+        private ExternalSprite BorderSprite { get; init; }
 
         /// <summary>
         /// Border Sprite that is overlayed the entire card and can even spill over it.
         /// </summary>
-        ExternalSprite? BordersOverSprite { get; init; }
+        private ExternalSprite? BordersOverSprite { get; init; }
 
         public ExternalDeck(string globalName, Color deckColor, Color titleColor, ExternalSprite cardArtDefault, ExternalSprite borderSprite, ExternalSprite? bordersOverSprite)
         {
