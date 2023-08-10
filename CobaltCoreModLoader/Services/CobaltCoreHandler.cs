@@ -11,13 +11,13 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class CobaltCoreHandler : ICobaltCoreContact
     {
+
+        public static Assembly? CobaltCoreAssembly { get; private set; }
         public DirectoryInfo? CobaltCoreAppPath { get; private set; }
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded!");
 
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
-
-        public Assembly? CobaltCoreAssembly { get; private set; }
 
         public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger)
         {
