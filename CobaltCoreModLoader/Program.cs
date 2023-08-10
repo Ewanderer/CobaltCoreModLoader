@@ -3,24 +3,17 @@ using CobaltCoreModLoader.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 public static class Program
 {
-    private enum BlubberEnum : int
-    {
-        a = 1
-            , b = 2, c = 3, d = 4
-    }
-
-    private class Käsekuchen
-    {
-    }
-
     [STAThread]
     private static int Main(string[] args)
     {
         try
         {
+            Stopwatch mod_boot_timer = new Stopwatch();
+            mod_boot_timer.Start();
             HostApplicationBuilder builder = new HostApplicationBuilder(); ;
 
             builder.Services.AddLogging();
@@ -51,7 +44,8 @@ public static class Program
 
             //run remaining mod logic
             mod_loader.RunModLogics();
-
+            mod_boot_timer.Stop();
+            Console.WriteLine(mod_boot_timer.Elapsed.TotalSeconds.ToString());
             //run cobalt core.
             cobalt_core.RunCobaltCore(new string[] { "--debug" });
 

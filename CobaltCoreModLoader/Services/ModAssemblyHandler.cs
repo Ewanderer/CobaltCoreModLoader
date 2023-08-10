@@ -1,7 +1,6 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
-using System.Data.SqlTypes;
 using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
@@ -14,21 +13,18 @@ namespace CobaltCoreModLoader.Services
     {
         private ILogger<ModAssemblyHandler> logger { get; init; }
 
-        private Assembly cobalt_core_assembly { get; init; }
-
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
             this.logger = logger;
-            cobalt_core_assembly = cobalt_core_handler.CobaltCoreAssembly ?? throw new Exception("No cobalt core assembly loaded.");
         }
 
-        private List<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> mod_lookup_list = new();
+        private static List<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> mod_lookup_list = new();
 
-        public IEnumerable<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> ModLookup => mod_lookup_list;
+        public static IEnumerable<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> ModLookup => mod_lookup_list;
 
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => mod_lookup_list.Select(e => e.Item1);
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => throw new NotImplementedException();
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public void RunModLogics()
         {
@@ -69,8 +65,6 @@ namespace CobaltCoreModLoader.Services
             {
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
-
-               
 
                 //make entry
                 mod_lookup_list.Add(new Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>(
