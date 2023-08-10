@@ -7,7 +7,7 @@ namespace CobaltCoreModding.Definitions.ModManifests
         /// <summary>
         /// A unique string for the mod to identify it in the depency chain
         /// </summary>
-        public string ModIdentifier { get; }
+        public string Name { get; }
 
         /// <summary>
         /// Mod Identifiers for manifest which should be booted first
