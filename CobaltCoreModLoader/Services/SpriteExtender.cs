@@ -14,9 +14,7 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class SpriteExtender : IArtRegistry
     {
-
         private static ILogger<SpriteExtender>? logger;
-
 
         public SpriteExtender(ILogger<SpriteExtender> logger, CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler)
         {
@@ -30,6 +28,7 @@ namespace CobaltCoreModLoader.Services
         /// central
         /// </summary>
         private static Dictionary<int, ExternalSprite> sprite_registry = new Dictionary<int, ExternalSprite>();
+
         private static Dictionary<string, ExternalSprite> sprite_lookup = new Dictionary<string, ExternalSprite>();
 
         public void PatchSpriteSystem()
@@ -80,7 +79,6 @@ namespace CobaltCoreModLoader.Services
                     var str = $"@mod{sprite.Id}";
                     //update or add registed sprite data.
 
-
                     if (spr_to_str_dictionary.Contains(spr_val))
                         spr_to_str_dictionary[spr_val] = str;
                     else
@@ -98,7 +96,6 @@ namespace CobaltCoreModLoader.Services
 
         public static ExternalSprite? LookupSprite(string globalName)
         {
-
             if (!sprite_lookup.TryGetValue(globalName, out var sprite))
                 logger?.LogWarning($"Requested external sprite {globalName} unkown");
             return sprite;
@@ -125,7 +122,7 @@ namespace CobaltCoreModLoader.Services
 
                 harmony.Patch(load_file_to_tex_method, prefix: new HarmonyMethod(load_file_to_tex_prefix));
             }
-            //patch cache for preload everything 
+            //patch cache for preload everything
             {
                 var preload_everything_method = sprite_loader_type.GetMethod("PreloadEverything", BindingFlags.Static | BindingFlags.Public) ?? throw new Exception("Cannot find preload_everything method in spriter loader");
                 var preload_everything_postfix = typeof(SpriteExtender).GetMethod("PreloadEverythingPostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("Cannot find preload_everything_postfix method!");
@@ -134,10 +131,9 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        static Type? __spr_type = null;
+        private static Type? __spr_type = null;
 
-
-        static Type spr_type
+        private static Type spr_type
         {
             get
             {
@@ -146,7 +142,6 @@ namespace CobaltCoreModLoader.Services
                 return __spr_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
             }
         }
-
 
         private static void PreloadEverythingPostFix()
         {
@@ -173,8 +168,6 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogWarning("Failed to load overwrite texture");
                     continue;
                 }
-
-
 
                 object? spr_val = IntToSpr(overwrite_sprite.Id);
                 if (spr_val == null)
@@ -373,10 +366,7 @@ namespace CobaltCoreModLoader.Services
                         atlas.Remove(spr_val);
                 }
             }
-
         }
-
-
 
         bool IArtRegistry.RegisterArt(ExternalSprite sprite_data, int? overwrite_value)
         {
@@ -398,7 +388,6 @@ namespace CobaltCoreModLoader.Services
                 return false;
             }
 
-
             if (overwrite_value == null)
             {
                 sprite_registry.Add(sprite_id_counter, sprite_data);
@@ -418,7 +407,6 @@ namespace CobaltCoreModLoader.Services
                 }
                 sprite_registry.Add(target_id, sprite_data);
                 sprite_data.Id = target_id;
-
             }
             return true;
         }

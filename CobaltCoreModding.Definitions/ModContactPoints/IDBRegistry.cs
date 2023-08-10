@@ -4,7 +4,6 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 {
     public interface IDbRegistry : ICobaltCoreContact
     {
-
         bool RegisterArtifact(ExternalArtifact artifact);
 
         bool RegisterCard(ExternalCard card);
@@ -26,6 +25,5 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         ExternalSprite? GetModSprite(string globalName);
 
         ExternalSprite? GetOriginalSprite(int sprVal);
-
     }
 }

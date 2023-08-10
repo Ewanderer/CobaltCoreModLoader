@@ -11,7 +11,6 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class CobaltCoreHandler : ICobaltCoreContact
     {
-
         public static Assembly? CobaltCoreAssembly { get; private set; }
         public DirectoryInfo? CobaltCoreAppPath { get; private set; }
 

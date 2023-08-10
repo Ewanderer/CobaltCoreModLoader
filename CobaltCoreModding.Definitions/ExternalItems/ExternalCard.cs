@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CobaltCoreModding.Definitions.ExternalItems
+﻿namespace CobaltCoreModding.Definitions.ExternalItems
 {
     public class ExternalCard
     {
@@ -15,13 +9,12 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         public ExternalSprite CardArt { get; init; }
 
         /// <summary>
-        /// Since you cannot put custom decks into deck meta attribute, 
+        /// Since you cannot put custom decks into deck meta attribute,
         /// so if need be they can be fed here and the DB Extender will overwrite the CardMeta Entry in the DB.
         /// </summary>
         public ExternalDeck? ActualDeck { get; init; }
 
-
-        public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck=null)
+        public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
             if (string.IsNullOrWhiteSpace(globalName)) throw new ArgumentException("External card without global name");
             if (cardArt.Id == null) throw new ArgumentException($"Card Art not registered in External Card {globalName}");
@@ -33,10 +26,9 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         }
 
         /// <summary>
-        /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for  
+        /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for
         /// </summary>
         private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
-
 
         public void AddLocalisation(string text, string locale = "en")
         {
@@ -65,6 +57,5 @@ namespace CobaltCoreModding.Definitions.ExternalItems
                 return false;
             return true;
         }
-
     }
 }
