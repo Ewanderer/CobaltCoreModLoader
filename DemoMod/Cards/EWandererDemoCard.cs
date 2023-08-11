@@ -10,17 +10,9 @@
         public override CardData GetData(State state) => new CardData
         {
             cost = 0,
-            art = new Spr?(card_sprite)
+            art = new Spr?(card_sprite),
+            
         };
-
-        public override void OnDraw(State s, Combat c)
-        {
-            var z = s.CharacterIsMissing(new Deck?(this.GetMeta().deck));
-            var y = this.GetDataWithOverrides(s);
-            var x = GetArt(s);
-
-            base.OnDraw(s, c);
-        }
 
         public override List<CardAction> GetActions(State s, Combat c)
         {

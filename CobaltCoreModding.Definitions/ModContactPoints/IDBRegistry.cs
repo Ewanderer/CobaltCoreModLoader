@@ -6,11 +6,11 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     {
         bool RegisterArtifact(ExternalArtifact artifact);
 
-        bool RegisterCard(ExternalCard card);
+        bool RegisterCard(ExternalCard card, string? overwrite = null);
 
         bool RegisterCharacter(ExternalCharacter character);
 
-        bool RegisterDeck(ExternalDeck deck);
+        bool RegisterDeck(ExternalDeck deck, int? overwrite = null);
 
         bool RegisterEnemy(ExternalEnemy enemy);
 
@@ -24,6 +24,6 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 
         ExternalSprite? GetModSprite(string globalName);
 
-        ExternalSprite? GetOriginalSprite(int sprVal);
+        ExternalSprite GetOriginalSprite(int sprVal);
     }
 }
