@@ -30,7 +30,7 @@ namespace CobaltCoreModLoader.Utils
         public static ExternalSprite GetOriginalSprite(int sprVal)
         {
             //check if sprval is valid
-            if (Enum.IsDefined(TypesAndEnums.SprType, sprVal))
+            if (!Enum.IsDefined(TypesAndEnums.SprType, sprVal))
             {
                 throw new Exception("Unkown spr from cobalt core game requested.");
             }
@@ -58,6 +58,31 @@ namespace CobaltCoreModLoader.Utils
                 if (__deck_type != null)
                     return __deck_type;
                 return __deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Deck") ?? throw new Exception("Deck type not found");
+            }
+        }
+
+        private static Type? __deck_def_type = null;
+
+        public static Type DeckDefType
+        {
+            get
+            {
+                if (__deck_def_type != null)
+                    return __deck_def_type;
+                return __deck_def_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("DeckDef") ?? throw new Exception("DeckDef type not found");
+            }
+        }
+
+        private static Type? __cobalt_color_type = null;
+
+
+        public static Type CobaltColorType
+        {
+            get
+            {
+                if (__cobalt_color_type != null)
+                    return __cobalt_color_type;
+                return __cobalt_color_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Color") ?? throw new Exception("Color type not found");
             }
         }
 
