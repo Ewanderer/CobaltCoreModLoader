@@ -208,6 +208,7 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void PatchExtraItemSprites()
         {
+            //cards
             IDictionary card_art_dictionary = db_type.GetField("cardArt", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new Exception("card art dictionary not found");
 
             foreach (var card in registered_cards.Values)
@@ -246,6 +247,85 @@ namespace CobaltCoreModLoader.Services
                 card_art_dictionary[overwrite.Key] = spr_val;
             }
 
+            //decks
+            IDictionary deck_borders_dict = db_type.GetField("deckBorders")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary deck_borders_over_dict = db_type.GetField("deckBordersOver")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary card_art_deck_default_dict = db_type.GetField("cardArtDeckDefault")?.GetValue(null) as IDictionary ?? throw new Exception();
+            foreach (var deck in registered_decks.Values)
+            {
+                if (deck.Id == null)
+                {
+                    Logger?.LogError("ExternalDeck {0} has no idea despite being registered", deck.GlobalName);
+                    continue;
+                }
+                var deck_key = TypesAndEnums.IntToDeck(deck.Id);
+                if (deck_key == null)
+                {
+                    Logger?.LogError("ExternalDeck {0} id couldn't be converted into deck enum", deck.GlobalName);
+                    continue;
+                }
+
+                var border_spr = TypesAndEnums.IntToSpr(deck.BorderSprite.Id);
+                if (border_spr == null)
+                {
+                    Logger?.LogError("ExternalDeck {0} border sprite id {1} couldn't be converted into spr enum", deck.GlobalName, deck.BorderSprite.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+
+                if (deck_borders_dict.Contains(deck_key))
+                {
+                    deck_borders_dict[deck_key] = border_spr;
+                }
+                else
+                {
+                    deck_borders_dict.Add(deck_key, border_spr);
+                }
+
+
+                var border_over_spr = TypesAndEnums.IntToSpr(deck.BordersOverSprite?.Id);
+                if (deck.BordersOverSprite != null && border_over_spr == null)
+                {
+                    Logger?.LogError("ExternalDeck {0} border over sprite id {1} couldn't be converted into spr enum", deck.GlobalName, deck.BordersOverSprite.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+
+                if (border_over_spr != null)
+                {
+                    if (deck_borders_over_dict.Contains(deck_key))
+                    {
+                        deck_borders_over_dict[deck_key] = border_over_spr;
+                    }
+                    else
+                    {
+                        deck_borders_over_dict.Add(deck_key, border_over_spr);
+                    }
+                }
+
+                var card_default_spr = TypesAndEnums.IntToSpr(deck.CardArtDefault.Id);
+                if (card_default_spr == null)
+                {
+                    Logger?.LogError("ExternalDeck {0} card default sprite id {1} couldn't be converted into spr enum", deck.GlobalName, deck.CardArtDefault.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+
+                if (border_over_spr != null)
+                {
+                    if (card_art_deck_default_dict.Contains(deck_key))
+                    {
+                        card_art_deck_default_dict[deck_key] = card_default_spr;
+                    }
+                    else
+                    {
+                        card_art_deck_default_dict.Add(deck_key, card_default_spr);
+                    }
+                }
+
+            }
+
+
+
+
+
         }
 
         /// <summary>
@@ -260,6 +340,50 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void InsertNewDeckAndStatus()
         {
+
+            IDictionary deck_dict = db_type.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
+
+            var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
+            var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
+
+            foreach (var deck in registered_decks.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("externaldeck {0} id {1} not converted into deck enum. skipping...", deck.GlobalName, deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+                //create deck def object
+                var new_deck_def = Activator.CreateInstance(TypesAndEnums.DeckDefType);
+
+                var deck_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.DeckColor.ToArgb());
+                if (deck_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+                var title_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.TitleColor.ToArgb());
+                if (title_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Title Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+
+                color_field.SetValue(new_deck_def, deck_color);
+                title_color_field.SetValue(new_deck_def, title_color);
+
+                deck.DeckDefReference = new_deck_def;
+                if (deck_dict.Contains(deck_val))
+                {
+                    deck_dict[deck_val] = new_deck_def;
+                }
+                else
+                {
+                    deck_dict.Add(deck_val, new_deck_def);
+                }
+            }
+
         }
 
         private static void InsertNewLogicItems()
@@ -433,8 +557,8 @@ namespace CobaltCoreModLoader.Services
         private const int deck_counter_start = 10000;
         private static int deck_counter = deck_counter_start;
 
-        private Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
-        private Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
+        private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
+        private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
 
         bool IDbRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)
         {
@@ -458,17 +582,28 @@ namespace CobaltCoreModLoader.Services
             {
                 deck_lookup.Add(deck.GlobalName, deck);
                 registered_decks.Add(deck_counter, deck);
+                deck.Id = deck_counter;
                 deck_counter++;
                 return true;
             }
             else
             {
+                if (overwrite < 0 || deck_counter_start <= overwrite)
+                {
+                    Logger?.LogError("Attempted overwrite of non card value");
+                    return false;
+                }
 
-
+                deck_lookup.Add(deck.GlobalName, deck);
+                if (!registered_decks.TryAdd(overwrite.Value, deck))
+                {
+                    Logger?.LogWarning("Collision Deck Overwrite between {0} and {1} on value {2}. {1} will be used unless other overwrite happens.",
+                        registered_decks[overwrite.Value].GlobalName, deck.GlobalName, overwrite.Value, deck.GlobalName);
+                    registered_decks[overwrite.Value] = deck;
+                }
+                deck.Id = overwrite.Value;
+                return true;
             }
-
-
-            return true;
         }
 
         bool IDbRegistry.RegisterEnemy(ExternalEnemy enemy)
