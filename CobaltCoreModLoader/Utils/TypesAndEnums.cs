@@ -86,6 +86,46 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        private static Type? __upgrade_type = null;
+
+
+        public static Type UpgradeType
+        {
+            get
+            {
+                if (__upgrade_type != null)
+                    return __upgrade_type;
+                return __upgrade_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Upgrade") ?? throw new Exception("Upgrade type not found");
+            }
+        }
+
+        private static Type? __rarity_type = null;
+
+
+        public static Type RarityType
+        {
+            get
+            {
+                if (__rarity_type != null)
+                    return __rarity_type;
+                return __rarity_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Rarity") ?? throw new Exception("Rarity type not found");
+            }
+        }
+
+        public static object? IntToRarity(int? rarity_id)
+        {
+            if (rarity_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(RarityType, rarity_id), RarityType);
+        }
+
+        public static object? IntToUpgrade(int? upgrade_id)
+        {
+            if (upgrade_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(UpgradeType, upgrade_id), UpgradeType);
+        }
+
         public static object? IntToSpr(int? spr_id)
         {
             if (spr_id == null)
