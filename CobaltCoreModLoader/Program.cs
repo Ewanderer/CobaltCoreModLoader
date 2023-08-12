@@ -7,9 +7,12 @@ using System.Diagnostics;
 
 public static class Program
 {
+
+
     [STAThread]
     private static int Main(string[] args)
     {
+
         try
         {
             Stopwatch mod_boot_timer = new Stopwatch();

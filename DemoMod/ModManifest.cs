@@ -12,6 +12,7 @@ namespace DemoMod
         public IEnumerable<string> Dependencies => new string[0];
 
         private static ExternalSprite? card_art_sprite;
+        private static ExternalSprite? pinker_per_border_over_sprite;
 
         public void BootMod(IModLoaderContact contact)
         {
@@ -25,6 +26,12 @@ namespace DemoMod
             {
                 var sprite = new ExternalSprite("EWanderer.DemoMod.Patched_Cobalt_Core", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\patched_cobalt_core.png"));
                 artRegistry.RegisterArt(sprite, (int)Spr.cockpit_cobalt_core);
+            }
+
+            {
+                pinker_per_border_over_sprite = new ExternalSprite("EWanderer.DemoMod.PinkerPeri.BorderOver", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\border_over_pinker_peri.png"));
+                if (!artRegistry.RegisterArt(pinker_per_border_over_sprite))
+                    throw new Exception("Cannot register sprite.");
             }
 
             {
@@ -45,6 +52,15 @@ namespace DemoMod
             card.AddLocalisation("Schwarzmagier");
             //register card in the db extender.
             dbRegistry.RegisterCard(card);
+
+
+            //make peri deck mod
+            var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_AbyssalVisions);
+            var border = dbRegistry.GetOriginalSprite((int)Spr.cardShared_border_ephemeral);
+            
+            var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.FromArgb(255, 186, 224), System.Drawing.Color.Black, art_default, border, pinker_per_border_over_sprite);
+            dbRegistry.RegisterDeck(pinker_peri,(int)Deck.peri);
+
         }
     }
 }

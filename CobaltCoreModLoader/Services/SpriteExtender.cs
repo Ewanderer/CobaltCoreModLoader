@@ -1,5 +1,6 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -131,17 +132,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private static Type? __spr_type = null;
-
-        private static Type spr_type
-        {
-            get
-            {
-                if (__spr_type != null)
-                    return __spr_type;
-                return __spr_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
-            }
-        }
+     
 
         private static void PreloadEverythingPostFix()
         {
@@ -169,7 +160,7 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 }
 
-                object? spr_val = IntToSpr(overwrite_sprite.Id);
+                object? spr_val =TypesAndEnums.IntToSpr(overwrite_sprite.Id);
                 if (spr_val == null)
                 {
                     logger?.LogCritical($"Couldn't convert {overwrite_sprite.Id?.ToString() ?? "null"} not to spr val during overwrite of original sprites.");
@@ -192,21 +183,7 @@ namespace CobaltCoreModLoader.Services
             logger?.LogInformation($"Overwrote {counter} original sprites");
         }
 
-        public static object? IntToSpr(int? spr_id)
-        {
-            if (spr_id == null)
-                return null;
-
-            try
-            {
-                return Convert.ChangeType(Enum.ToObject(spr_type, spr_id), spr_type);
-            }
-            catch (Exception err)
-            {
-                logger?.LogError(err, "IntToSpr exception");
-                return null;
-            }
-        }
+      
 
         private static Texture2D? LoadTexture(ExternalSprite sprite)
         {
