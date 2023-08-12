@@ -21,6 +21,13 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         bool RegisterSpaceThing(ExternalSpaceThing spaceThing);
 
         bool RegisterStatus(ExternalStatus status);
+        /// <summary>
+        /// Call to overwrite the card meta of an existing card.
+        /// </summary>
+        /// <param name="cardMeta">the meta from which overrides will be grabbed</param>
+        /// <param name="card_key">the name of the card to be overwritten</param>
+        /// <returns>if the overwrite was successfully registered</returns>
+        bool RegisterCardMetaOverwrite(ExternalCardMeta cardMeta, string card_key);
 
         ExternalSprite? GetModSprite(string globalName);
 

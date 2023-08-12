@@ -32,22 +32,22 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         /// <summary>
         /// Name of the card
         /// </summary>
-        public Color TitleColor { get;   init; }
+        public Color TitleColor { get; init; }
 
         /// <summary>
         /// The card ard
         /// </summary>
-        public ExternalSprite CardArtDefault { get;  init; }
+        public ExternalSprite CardArtDefault { get; init; }
 
         /// <summary>
         /// Base Border Sprite
         /// </summary>
-        public ExternalSprite BorderSprite { get;  init; }
+        public ExternalSprite BorderSprite { get; init; }
 
         /// <summary>
         /// Border Sprite that is overlayed the entire card and can even spill over it.
         /// </summary>
-        public ExternalSprite? BordersOverSprite { get;  init; }
+        public ExternalSprite? BordersOverSprite { get; init; }
 
         private object? deckDef;
 
@@ -62,6 +62,21 @@ namespace CobaltCoreModding.Definitions.ExternalItems
                 if (deckDef != null)
                     deckDef = value;
             }
+        }
+
+        public static ExternalDeck GetRaw(int id)
+        {
+            return new ExternalDeck(id);
+        }
+
+        private ExternalDeck(int id)
+        {
+            Id = id;
+            GlobalName = "";
+            DeckColor = Color.White;
+            TitleColor=Color.Black;
+            CardArtDefault = ExternalSprite.GetRaw(0);
+            BorderSprite = ExternalSprite.GetRaw(0);
         }
 
         public ExternalDeck(string globalName, Color deckColor, Color titleColor, ExternalSprite cardArtDefault, ExternalSprite borderSprite, ExternalSprite? bordersOverSprite)
@@ -79,6 +94,6 @@ namespace CobaltCoreModding.Definitions.ExternalItems
             BordersOverSprite = bordersOverSprite;
         }
 
-        
+
     }
 }

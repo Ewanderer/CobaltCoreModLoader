@@ -191,11 +191,82 @@ namespace CobaltCoreModLoader.Services
                         deck_field.SetValue(meta, deck_val);
                     }
 
+                    var dont_offer_field = TypesAndEnums.CardMetaType.GetField("dontOffer") ?? throw new Exception("deck meta dont offer field not found");
+                    var unreleased_field = TypesAndEnums.CardMetaType.GetField("unreleased") ?? throw new Exception("deck meta unreleased field not found");
+                    var dont_loc_field = TypesAndEnums.CardMetaType.GetField("dontLoc") ?? throw new Exception("deck meta dontLoc field not found");
+                    var upgrades_to_field = TypesAndEnums.CardMetaType.GetField("upgradesTo") ?? throw new Exception("deck meta upgradesTo field not found");
+                    var rarity_field = TypesAndEnums.CardMetaType.GetField("rarity") ?? throw new Exception("deck meta rarity field not found");
+                    var extra_glossary_field = TypesAndEnums.CardMetaType.GetField("extraGlossary") ?? throw new Exception("deck meta extraGlossary field not found");
+                    var weird_card_field = TypesAndEnums.CardMetaType.GetField("weirdCard") ?? throw new Exception("deck meta weirdCard field not found");
 
+
+                    foreach (var meta_overwrite in card_meta_overwrites)
+                    {
+                        if (!card_meta_dictionary.Contains(meta_overwrite.Key))
+                        {
+                            Logger?.LogInformation("ExternalCardMeta {0} no target for overwrite {1}.", meta_overwrite.Value.GlobalName, meta_overwrite.Key);
+                            continue;
+                        }
+                        var original_meta = card_meta_dictionary[meta_overwrite.Key];
+
+                        var new_meta = meta_overwrite.Value;
+                        if (new_meta == null)
+                            continue;
+                        //only set fields that are not null
+                        if (new_meta.Unreleased != null)
+                        {
+                            unreleased_field.SetValue(original_meta, new_meta.Unreleased);
+                        }
+                        if (new_meta.WeirdCard != null)
+                        {
+                            weird_card_field.SetValue(original_meta, new_meta.WeirdCard);
+                        }
+                        if (new_meta.ExtraGlossary != null)
+                        {
+                            extra_glossary_field.SetValue(original_meta, new_meta.ExtraGlossary);
+                        }
+
+                        if (new_meta.UpgradesTo != null)
+                        {
+                            var upgrade_vals = new_meta.UpgradesTo.Select(e => TypesAndEnums.IntToUpgrade(e)).Where(e => e != null).ToArray();
+                            var upgrade_arr = Array.CreateInstance(TypesAndEnums.UpgradeType, upgrade_vals.Length);
+                            for(int i = 0; i < upgrade_vals.Length; i++)
+                            {
+                                upgrade_arr.SetValue(upgrade_vals[i], i);
+                            }
+                            upgrades_to_field.SetValue(original_meta, upgrade_arr);
+                        }
+
+                        if (new_meta.Deck != null)
+                        {
+                            var deck_val = TypesAndEnums.IntToDeck(new_meta.Deck.Id);
+                            deck_field.SetValue(original_meta, deck_val);
+                        }
+
+                        if (new_meta.DontLoc != null)
+                        {
+                            dont_loc_field.SetValue(original_meta, new_meta.DontLoc);
+                        }
+
+                        if (new_meta.DontOffer != null)
+                        {
+                            dont_offer_field.SetValue(original_meta, new_meta.DontOffer);
+                        }
+                        if (new_meta.Rarity != null)
+                        {
+                            var rarity_val = TypesAndEnums.IntToRarity(new_meta.Rarity);
+                            if (rarity_val != null)
+                                rarity_field.SetValue(original_meta, rarity_val);
+                        }
+                    }
                 }
                 else
                     throw new Exception("Deck field in card meta type not found.");
             }
+
+
+
+
         }
 
 
@@ -639,6 +710,35 @@ namespace CobaltCoreModLoader.Services
         ExternalSprite IDbRegistry.GetOriginalSprite(int sprVal)
         {
             return TypesAndEnums.GetOriginalSprite(sprVal);
+        }
+
+        /// <summary>
+        /// CardType -> Card Meta
+        /// </summary>
+        private static Dictionary<string, ExternalCardMeta> card_meta_overwrites = new Dictionary<string, ExternalCardMeta>();
+        /// <summary>
+        /// GlobalName -> Card Meta
+        /// </summary>
+        private static Dictionary<string, ExternalCardMeta> card_meta_lookup = new Dictionary<string, ExternalCardMeta>();
+
+        bool IDbRegistry.RegisterCardMetaOverwrite(ExternalCardMeta cardMeta, string card_key)
+        {
+            if (string.IsNullOrEmpty(cardMeta.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card meta without global name. rejected.");
+                return false;
+            }
+            if (!card_meta_lookup.TryAdd(cardMeta.GlobalName, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} cannot be added, because global name already registered", cardMeta.GlobalName);
+                return false;
+            }
+            if (!card_meta_overwrites.TryAdd(card_key, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} will overwrite anoter overwrite meta {1}", cardMeta.GlobalName, card_meta_lookup[card_key].GlobalName);
+                card_meta_lookup[card_key] = cardMeta;
+            }
+            return true;
         }
     }
 }
