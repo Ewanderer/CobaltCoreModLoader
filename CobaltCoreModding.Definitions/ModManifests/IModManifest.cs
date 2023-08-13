@@ -2,13 +2,8 @@
 
 namespace CobaltCoreModding.Definitions.ModManifests
 {
-    public interface IModManifest
+    public interface IModManifest : IManifest
     {
-        /// <summary>
-        /// A unique string for the mod to identify it in the depency chain
-        /// </summary>
-        public string Name { get; }
-
         /// <summary>
         /// Mod Identifiers for manifest which should be booted first
         /// </summary>

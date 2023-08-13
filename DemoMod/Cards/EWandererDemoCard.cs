@@ -11,7 +11,6 @@
         {
             cost = 0,
             art = new Spr?(card_sprite),
-            
         };
 
         public override List<CardAction> GetActions(State s, Combat c)

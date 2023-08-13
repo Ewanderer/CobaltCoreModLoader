@@ -74,7 +74,7 @@ namespace CobaltCoreModding.Definitions.ExternalItems
             Id = id;
             GlobalName = "";
             DeckColor = Color.White;
-            TitleColor=Color.Black;
+            TitleColor = Color.Black;
             CardArtDefault = ExternalSprite.GetRaw(0);
             BorderSprite = ExternalSprite.GetRaw(0);
         }
@@ -93,7 +93,5 @@ namespace CobaltCoreModding.Definitions.ExternalItems
             BorderSprite = borderSprite;
             BordersOverSprite = bordersOverSprite;
         }
-
-
     }
 }

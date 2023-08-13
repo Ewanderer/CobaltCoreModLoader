@@ -2,14 +2,8 @@
 
 namespace CobaltCoreModding.Definitions.ModManifests
 {
-    public interface ISpriteManifest
+    public interface ISpriteManifest : IManifest
     {
-        /// <summary>
-        /// The unique modifier of this manifest. can be shared by other manifest types
-        /// in the same mod as long as this is the only sprite manifest.
-        /// </summary>
-        string Name { get; }
-
         /// <summary>
         /// What other sprite manifest should be first loaded before this mod.
         /// </summary>
