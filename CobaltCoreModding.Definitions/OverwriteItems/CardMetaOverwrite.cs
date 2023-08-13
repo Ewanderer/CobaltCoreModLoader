@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CobaltCoreModding.Definitions.ExternalItems;
 
-namespace CobaltCoreModding.Definitions.ExternalItems
+namespace CobaltCoreModding.Definitions.OverwriteItems
 {
     /// <summary>
     /// Used to overwrite a card meta.
     /// only assign values that actually should be changed.y
     /// </summary>
-    public class ExternalCardMeta
+    public class CardMetaOverwrite
     {
         public string GlobalName { get; init; }
 
@@ -30,7 +31,7 @@ namespace CobaltCoreModding.Definitions.ExternalItems
 
         public bool? WeirdCard { get; init; }
 
-        public ExternalCardMeta(string globalName)
+        public CardMetaOverwrite(string globalName)
         {
             if (string.IsNullOrWhiteSpace(globalName))
                 throw new ArgumentNullException(nameof(globalName));

@@ -1,7 +1,9 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Cards;
+using System.Reflection;
 
 namespace DemoMod
 {
@@ -57,9 +59,34 @@ namespace DemoMod
             //make peri deck mod
             var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_AbyssalVisions);
             var border = dbRegistry.GetOriginalSprite((int)Spr.cardShared_border_ephemeral);
-            
+
             var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.FromArgb(255, 186, 224), System.Drawing.Color.Black, art_default, border, pinker_per_border_over_sprite);
-            dbRegistry.RegisterDeck(pinker_peri,(int)Deck.peri);
+            dbRegistry.RegisterDeck(pinker_peri, (int)Deck.peri);
+
+
+            var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
+            {
+                Deck = ExternalDeck.GetRaw((int)Deck.dracula),
+                DontLoc = false,
+                DontOffer = false,
+                ExtraGlossary = new string[] { "Help", "Why" },
+                Rarity = (int)Rarity.rare,
+                Unreleased = false,
+                UpgradesTo = new int[] { (int)Upgrade.A, (int)Upgrade.B },
+                WeirdCard = false
+            };
+
+            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
+            var all_normal_cards = Assembly.GetAssembly(typeof(Card))?.GetTypes().Where(e => !e.IsAbstract && e.IsClass && e.IsSubclassOf(typeof(Card)));
+            if (all_normal_cards != null) {
+                foreach (var card_type in all_normal_cards) {
+                    var zero_cost_overwrite = new PartialCardStatOverwrite("ewanderer.demomod.partialoverwrite." + card_type.Name, card_type) ;
+                    zero_cost_overwrite.Cost = 0;
+                    dbRegistry.RegisterCardStatOverwrite(zero_cost_overwrite);
+                }
+            }
+
+          
 
         }
     }
