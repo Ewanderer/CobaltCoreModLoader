@@ -32,7 +32,6 @@ namespace CobaltCoreModLoader.Services
         private static List<ISpriteManifest> spriteManifests = new();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
 
-
         private void ExtractManifestFromAssembly(Assembly assembly)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
@@ -66,9 +65,7 @@ namespace CobaltCoreModLoader.Services
                     spriteManifests.Add(sprite_manifest);
                 if (spanwed_manifest is IDBManifest db_manifest)
                     dBManifests.Add(db_manifest);
-
             }
-
         }
 
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;

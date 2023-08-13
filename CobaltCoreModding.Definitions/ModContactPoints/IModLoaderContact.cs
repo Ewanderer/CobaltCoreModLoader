@@ -11,6 +11,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     public interface IModLoaderContact : ICobaltCoreContact
     {
         public IEnumerable<Assembly> LoadedModAssemblies { get; }
+
         public IManifest? GetManifest(string name);
 
         /// <summary>
