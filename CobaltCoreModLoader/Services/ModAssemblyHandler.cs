@@ -18,19 +18,68 @@ namespace CobaltCoreModLoader.Services
             this.logger = logger;
         }
 
-        private static List<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> mod_lookup_list = new();
+        private static Dictionary<string, IManifest> registered_manifests = new();
 
-        public static IEnumerable<Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>> ModLookup => mod_lookup_list;
+        private static List<IModManifest> modManifests = new();
+        public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
 
-        IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => mod_lookup_list.Select(e => e.Item1);
+        private static HashSet<Assembly> modAssemblies = new();
+        public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
+
+        private static List<IDBManifest> dBManifests = new();
+        public static IEnumerable<IDBManifest> DBManifests => dBManifests.ToArray();
+
+        private static List<ISpriteManifest> spriteManifests = new();
+        public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
+
+
+        private void ExtractManifestFromAssembly(Assembly assembly)
+        {
+            var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
+
+            foreach (var type in manifest_types)
+            {
+                IManifest? spanwed_manifest = null;
+                try
+                {
+                    spanwed_manifest = Activator.CreateInstance(type) as IManifest;
+                }
+                catch
+                {
+                    logger.LogError("mod manifest type {0} has no empty constructor", type.Name);
+                    continue;
+                }
+                //should not happen so we don't bother with logging
+                if (spanwed_manifest == null)
+                    continue;
+                //sort manifest into the various manifest lists.
+
+                if (!registered_manifests.TryAdd(spanwed_manifest.Name, spanwed_manifest))
+                {
+                    logger.LogCritical("Collision in manifest name {0}. skipping type {1} for {2}", spanwed_manifest.Name, type.Name, registered_manifests[spanwed_manifest.Name].GetType().Name);
+                    continue;
+                }
+
+                if (spanwed_manifest is IModManifest mod_manifest)
+                    modManifests.Add(mod_manifest);
+                if (spanwed_manifest is ISpriteManifest sprite_manifest)
+                    spriteManifests.Add(sprite_manifest);
+                if (spanwed_manifest is IDBManifest db_manifest)
+                    dBManifests.Add(db_manifest);
+
+            }
+
+        }
+
+        IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public void RunModLogics()
         {
-            foreach (var mod in mod_lookup_list)
+            for (int i = 0; i < modManifests.Count; i++)
             {
-                var manifest = mod.Item2;
+                var manifest = modManifests[i];
                 if (manifest == null)
                     continue;
                 manifest.BootMod(this);
@@ -65,18 +114,27 @@ namespace CobaltCoreModLoader.Services
             {
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
-
-                //make entry
-                mod_lookup_list.Add(new Tuple<Assembly, IModManifest?, IDBManifest?, ISpriteManifest?>(
-                    assembly,
-                    FindManifest<IModManifest>(assembly),
-                    FindManifest<IDBManifest>(assembly),
-                    FindManifest<ISpriteManifest>(assembly)));
+                if (modAssemblies.Add(assembly))
+                    ExtractManifestFromAssembly(assembly);
             }
             catch (Exception err)
             {
                 logger.LogCritical(err, $"Error while loading mod assembly from '{mod_file.FullName}':");
             }
+        }
+
+        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly)
+        {
+            if (modAssemblies.Add(assembly))
+                ExtractManifestFromAssembly(assembly);
+
+            return true;
+        }
+
+        IManifest? IModLoaderContact.GetManifest(string name)
+        {
+            registered_manifests.TryGetValue(name, out var manifest);
+            return manifest;
         }
     }
 }

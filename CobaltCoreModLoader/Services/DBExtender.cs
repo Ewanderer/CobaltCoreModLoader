@@ -30,7 +30,7 @@ namespace CobaltCoreModLoader.Services
 
         private void LoadDbManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ModLookup.Select(e => e.Item3))
+            foreach (var manifest in ModAssemblyHandler.DBManifests)
             {
                 if (manifest == null) continue;
                 manifest.LoadManifest(this);

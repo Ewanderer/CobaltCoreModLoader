@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using CobaltCoreModding.Definitions.ModManifests;
+using System.Reflection;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
 {
@@ -10,5 +11,14 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     public interface IModLoaderContact : ICobaltCoreContact
     {
         public IEnumerable<Assembly> LoadedModAssemblies { get; }
+        public IManifest? GetManifest(string name);
+
+        /// <summary>
+        /// Attempts to put a new assembly into the mod loader.
+        /// think a runtime emitted assembly from maybe lua scripts or something.
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
+        public bool RegisterNewAssembly(Assembly assembly);
     }
 }
