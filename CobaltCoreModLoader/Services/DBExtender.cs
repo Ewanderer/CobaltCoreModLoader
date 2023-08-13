@@ -6,7 +6,6 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Data;
-using System.Net.Http.Headers;
 using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
@@ -202,7 +201,6 @@ namespace CobaltCoreModLoader.Services
                     var extra_glossary_field = TypesAndEnums.CardMetaType.GetField("extraGlossary") ?? throw new Exception("deck meta extraGlossary field not found");
                     var weird_card_field = TypesAndEnums.CardMetaType.GetField("weirdCard") ?? throw new Exception("deck meta weirdCard field not found");
 
-
                     foreach (var meta_overwrite in card_meta_overwrites)
                     {
                         if (!card_meta_dictionary.Contains(meta_overwrite.Key))
@@ -266,15 +264,7 @@ namespace CobaltCoreModLoader.Services
                 else
                     throw new Exception("Deck field in card meta type not found.");
             }
-
-
-
-
         }
-
-
-
-
 
         /// <summary>
         /// Cards, decks, icons, maps, characters, artifacts and other things need their sprite additionaly registered in db.
@@ -355,7 +345,6 @@ namespace CobaltCoreModLoader.Services
                     deck_borders_dict.Add(deck_key, border_spr);
                 }
 
-
                 var border_over_spr = TypesAndEnums.IntToSpr(deck.BordersOverSprite?.Id);
                 if (deck.BordersOverSprite != null && border_over_spr == null)
                 {
@@ -393,13 +382,7 @@ namespace CobaltCoreModLoader.Services
                         card_art_deck_default_dict.Add(deck_key, card_default_spr);
                     }
                 }
-
             }
-
-
-
-
-
         }
 
         /// <summary>
@@ -414,7 +397,6 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void InsertNewDeckAndStatus()
         {
-
             IDictionary deck_dict = db_type.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
 
             var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
@@ -457,7 +439,6 @@ namespace CobaltCoreModLoader.Services
                     deck_dict.Add(deck_val, new_deck_def);
                 }
             }
-
         }
 
         private static void InsertNewLogicItems()
@@ -493,11 +474,10 @@ namespace CobaltCoreModLoader.Services
                 {
                     var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
 
-                    //Overwrite card dictionary.              
+                    //Overwrite card dictionary.
 
                     if (card_dict != null)
                     {
-
                         foreach (var card in registered_cards.Values)
                         {
                             if (card == null) continue;
@@ -507,8 +487,6 @@ namespace CobaltCoreModLoader.Services
                                 Logger?.LogWarning($"ExternalCard {card.GlobalName} couldn't be added into DB.card dictionary because of collision in type name.");
                             }
                         }
-
-
 
                         foreach (var overwrite in card_overwrites)
                         {
@@ -534,9 +512,7 @@ namespace CobaltCoreModLoader.Services
                         var base_stat_method = overwrite.Key.GetMethod("GetData") ?? throw new Exception();
                         harmony.Patch(base_stat_method, postfix: new HarmonyMethod(base_stat_postfix));
                     }
-
                 }
-
 
                 var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
                 var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
@@ -612,7 +588,6 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-
         bool IDbRegistry.RegisterCard(ExternalCard card, string? overwrite)
         {
             if (!card.CardType.IsSubclassOf(card_type))
@@ -635,8 +610,6 @@ namespace CobaltCoreModLoader.Services
                 return false;
             }
 
-
-
             //mark overwrite
             if (overwrite != null)
             {
@@ -654,8 +627,6 @@ namespace CobaltCoreModLoader.Services
 
             return true;
         }
-
-
 
         bool IDbRegistry.RegisterCharacter(ExternalCharacter character)
         {
@@ -753,6 +724,7 @@ namespace CobaltCoreModLoader.Services
         /// CardType -> Card Meta
         /// </summary>
         private static Dictionary<string, CardMetaOverwrite> card_meta_overwrites = new Dictionary<string, CardMetaOverwrite>();
+
         /// <summary>
         /// GlobalName -> Card Meta
         /// </summary>
@@ -781,7 +753,6 @@ namespace CobaltCoreModLoader.Services
         private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
         private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
 
-
         bool IDbRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
         {
             if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
@@ -802,7 +773,6 @@ namespace CobaltCoreModLoader.Services
             if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
                 card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
             return true;
-
         }
     }
 }

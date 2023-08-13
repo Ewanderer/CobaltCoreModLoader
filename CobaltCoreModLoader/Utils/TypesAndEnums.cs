@@ -1,11 +1,5 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModLoader.Services;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Utils
 {
@@ -14,7 +8,6 @@ namespace CobaltCoreModLoader.Utils
     /// </summary>
     internal class TypesAndEnums
     {
-
         private static Type? __card_meta_type = null;
 
         public static Type CardMetaType
@@ -87,7 +80,6 @@ namespace CobaltCoreModLoader.Utils
 
         private static Type? __cobalt_color_type = null;
 
-
         public static Type CobaltColorType
         {
             get
@@ -100,7 +92,6 @@ namespace CobaltCoreModLoader.Utils
 
         private static Type? __upgrade_type = null;
 
-
         public static Type UpgradeType
         {
             get
@@ -112,7 +103,6 @@ namespace CobaltCoreModLoader.Utils
         }
 
         private static Type? __rarity_type = null;
-
 
         public static Type RarityType
         {
@@ -151,6 +141,5 @@ namespace CobaltCoreModLoader.Utils
                 return null;
             return Convert.ChangeType(Enum.ToObject(DeckType, deck_id), DeckType);
         }
-
     }
 }

@@ -132,8 +132,6 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-     
-
         private static void PreloadEverythingPostFix()
         {
             var counter = 0;
@@ -160,7 +158,7 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 }
 
-                object? spr_val =TypesAndEnums.IntToSpr(overwrite_sprite.Id);
+                object? spr_val = TypesAndEnums.IntToSpr(overwrite_sprite.Id);
                 if (spr_val == null)
                 {
                     logger?.LogCritical($"Couldn't convert {overwrite_sprite.Id?.ToString() ?? "null"} not to spr val during overwrite of original sprites.");
@@ -182,8 +180,6 @@ namespace CobaltCoreModLoader.Services
             }
             logger?.LogInformation($"Overwrote {counter} original sprites");
         }
-
-      
 
         private static Texture2D? LoadTexture(ExternalSprite sprite)
         {
