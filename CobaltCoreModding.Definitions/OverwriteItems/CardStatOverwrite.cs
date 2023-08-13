@@ -1,19 +1,13 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
 namespace CobaltCoreModding.Definitions.OverwriteItems
 {
-
     public abstract class CardStatOverwrite
     {
         public string GlobalName { get; init; }
 
         public Type CardType { get; init; }
+
         public CardStatOverwrite(string globalName, Type cardType)
         {
             if (string.IsNullOrEmpty(globalName)) throw new ArgumentNullException(nameof(globalName));
@@ -45,8 +39,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
         private static Type? __card_stat_type { get; set; }
         private static Type card_stat_type { get => __card_stat_type ?? throw new NullReferenceException("no card stat type registered"); set => __card_stat_type = value; }
 
-
-
         private static FieldInfo? __cost_field;
 
         private static FieldInfo? cost_field
@@ -59,7 +51,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __cost_field = card_stat_type.GetField("cost") ?? throw new Exception("CardStat cost field not found");
-
             }
         }
 
@@ -75,7 +66,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __exhaust_field = card_stat_type.GetField("exhaust") ?? throw new Exception("CardStat exhaust field not found");
-
             }
         }
 
@@ -91,7 +81,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __retain_field = card_stat_type.GetField("retain") ?? throw new Exception("CardStat retain field not found");
-
             }
         }
 
@@ -107,7 +96,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __recycle_field = card_stat_type.GetField("recycle") ?? throw new Exception("CardStat recycle field not found");
-
             }
         }
 
@@ -123,7 +111,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __infinite_field = card_stat_type.GetField("infinite") ?? throw new Exception("CardStat infinite field not found");
-
             }
         }
 
@@ -139,7 +126,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __unplayable_field = card_stat_type.GetField("unplayable") ?? throw new Exception("CardStat unplayable field not found");
-
             }
         }
 
@@ -155,7 +141,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __temporary_field = card_stat_type.GetField("temporary") ?? throw new Exception("CardStat temporary field not found");
-
             }
         }
 
@@ -171,7 +156,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __flippable_field = card_stat_type.GetField("flippable") ?? throw new Exception("CardStat flippable field not found");
-
             }
         }
 
@@ -187,7 +171,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __floppable_field = card_stat_type.GetField("floppable") ?? throw new Exception("CardStat floppable field not found");
-
             }
         }
 
@@ -203,7 +186,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __buoyant_field = card_stat_type.GetField("buoyant") ?? throw new Exception("CardStat buoyant field not found");
-
             }
         }
 
@@ -219,7 +201,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __singleUse_field = card_stat_type.GetField("singleUse") ?? throw new Exception("CardStat singleUse field not found");
-
             }
         }
 
@@ -235,7 +216,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __unremovableAtShops_field = card_stat_type.GetField("unremovableAtShops") ?? throw new Exception("CardStat unremovableAtShops field not found");
-
             }
         }
 
@@ -251,7 +231,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __description_field = card_stat_type.GetField("description") ?? throw new Exception("CardStat description field not found");
-
             }
         }
 
@@ -267,7 +246,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __artTint_field = card_stat_type.GetField("artTint") ?? throw new Exception("CardStat artTint field not found");
-
             }
         }
 
@@ -283,7 +261,6 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
                 }
 
                 return __art_field = card_stat_type.GetField("art") ?? throw new Exception("CardStat art field not found");
-
             }
         }
 
@@ -356,6 +333,5 @@ namespace CobaltCoreModding.Definitions.OverwriteItems
         public string? Description { get; set; }
         public string? ArtTint { get; set; }
         public int? Art { get; set; }
-
     }
 }
