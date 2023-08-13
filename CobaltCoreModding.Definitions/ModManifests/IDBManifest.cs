@@ -2,13 +2,9 @@
 
 namespace CobaltCoreModding.Definitions.ModManifests
 {
-    public interface IDBManifest
+    public interface IDBManifest : IManifest
     {
-        /// <summary>
-        /// The unique modifier of this manifest. can be shared by other manifest types
-        /// in the same mod as long as this is the only db manifest.
-        /// </summary>
-        string Name { get; }
+      
 
         /// <summary>
         /// What other db manifest should be first loaded before this mod.

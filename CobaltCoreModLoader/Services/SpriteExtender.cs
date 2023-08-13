@@ -45,7 +45,7 @@ namespace CobaltCoreModLoader.Services
 
         private void RunArtManifest()
         {
-            var sprite_manifests = ModAssemblyHandler.ModLookup.Select(e => e.Item4);
+            var sprite_manifests = ModAssemblyHandler.SpriteManifests;
             foreach (var manifest in sprite_manifests)
             {
                 manifest?.LoadManifest(this);
