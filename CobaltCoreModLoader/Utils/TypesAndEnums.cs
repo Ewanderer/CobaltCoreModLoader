@@ -27,6 +27,18 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        private static Type? __card_type = null;
+
+        public static Type CardType
+        {
+            get
+            {
+                if (__card_type != null)
+                    return __card_type;
+                return __card_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Card") ?? throw new Exception("card type not found");
+            }
+        }
+
         public static ExternalSprite GetOriginalSprite(int sprVal)
         {
             //check if sprval is valid

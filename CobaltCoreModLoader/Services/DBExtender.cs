@@ -1,10 +1,12 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.OverwriteItems;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Data;
+using System.Net.Http.Headers;
 using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
@@ -22,6 +24,7 @@ namespace CobaltCoreModLoader.Services
         {
             Logger = logger;
             card_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Card") ?? throw new Exception();
+            PartialCardStatOverwrite.SprType = TypesAndEnums.SprType;
         }
 
         private Harmony? harmony;
@@ -43,7 +46,7 @@ namespace CobaltCoreModLoader.Services
         {
             //load
 
-            harmony = new Harmony("modloader.dbextender");
+            harmony = new Harmony("modloader.dbextender.general");
 
             //patch DB
 
@@ -230,7 +233,7 @@ namespace CobaltCoreModLoader.Services
                         {
                             var upgrade_vals = new_meta.UpgradesTo.Select(e => TypesAndEnums.IntToUpgrade(e)).Where(e => e != null).ToArray();
                             var upgrade_arr = Array.CreateInstance(TypesAndEnums.UpgradeType, upgrade_vals.Length);
-                            for(int i = 0; i < upgrade_vals.Length; i++)
+                            for (int i = 0; i < upgrade_vals.Length; i++)
                             {
                                 upgrade_arr.SetValue(upgrade_vals[i], i);
                             }
@@ -521,7 +524,18 @@ namespace CobaltCoreModLoader.Services
                         }
                     }
                 }
+                //inject card stat overwrites
+                {
+                    var base_stat_postfix = typeof(DBExtender).GetMethod("OverwriteCardStats", BindingFlags.Static | BindingFlags.NonPublic);
+                    var harmony = new Harmony("modloader.dbextender.card_stat_overwrites");
+                    foreach (var overwrite in card_stat_overwrites)
+                    {
+                        //These are virtual and thus need to be retrieved everytime, but also improves ingame performance.
+                        var base_stat_method = overwrite.Key.GetMethod("GetData") ?? throw new Exception();
+                        harmony.Patch(base_stat_method, postfix: new HarmonyMethod(base_stat_postfix));
+                    }
 
+                }
 
 
                 var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
@@ -574,6 +588,29 @@ namespace CobaltCoreModLoader.Services
             throw new NotImplementedException();
         }
 
+        private static void OverwriteCardStats(ref object __result, object __instance, object state)
+        {
+            var lookup_type = __instance.GetType();
+            if (card_stat_overwrites.TryGetValue(lookup_type, out var overwrite_passes))
+            {
+                foreach (var pass in overwrite_passes)
+                {
+                    if (pass is ActiveCardStatOverwrite active_overwrite)
+                    {
+                        var new_stats = active_overwrite.GetStatFunction(state, __result);
+                        __result = new_stats;
+                    }
+                    else if (pass is PartialCardStatOverwrite partial_overwrite)
+                    {
+                        partial_overwrite.ApplyOverwrite(ref __result);
+                    }
+                    else
+                    {
+                        Logger?.LogCritical("Unkown card stat overwrite {0} type {1}. skipping", pass.GlobalName, pass.GetType().Name);
+                    }
+                }
+            }
+        }
 
 
         bool IDbRegistry.RegisterCard(ExternalCard card, string? overwrite)
@@ -715,13 +752,13 @@ namespace CobaltCoreModLoader.Services
         /// <summary>
         /// CardType -> Card Meta
         /// </summary>
-        private static Dictionary<string, ExternalCardMeta> card_meta_overwrites = new Dictionary<string, ExternalCardMeta>();
+        private static Dictionary<string, CardMetaOverwrite> card_meta_overwrites = new Dictionary<string, CardMetaOverwrite>();
         /// <summary>
         /// GlobalName -> Card Meta
         /// </summary>
-        private static Dictionary<string, ExternalCardMeta> card_meta_lookup = new Dictionary<string, ExternalCardMeta>();
+        private static Dictionary<string, CardMetaOverwrite> card_meta_lookup = new Dictionary<string, CardMetaOverwrite>();
 
-        bool IDbRegistry.RegisterCardMetaOverwrite(ExternalCardMeta cardMeta, string card_key)
+        bool IDbRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
         {
             if (string.IsNullOrEmpty(cardMeta.GlobalName))
             {
@@ -739,6 +776,33 @@ namespace CobaltCoreModLoader.Services
                 card_meta_lookup[card_key] = cardMeta;
             }
             return true;
+        }
+
+        private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
+        private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
+
+
+        bool IDbRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
+        {
+            if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card stat overwrite without global name. rejected.");
+                return false;
+            }
+            if (!statOverwrite.CardType.IsSubclassOf(TypesAndEnums.CardType))
+            {
+                Logger?.LogWarning("Card overwrite {0} doesn't target a class of the card type.", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_lookup.TryAdd(statOverwrite.GlobalName, statOverwrite))
+            {
+                Logger?.LogWarning("Collission in card overwrite global name {0} ", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
+                card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
+            return true;
+
         }
     }
 }

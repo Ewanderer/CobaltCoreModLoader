@@ -1,7 +1,9 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Cards;
+using System.Reflection;
 
 namespace DemoMod
 {
@@ -62,7 +64,7 @@ namespace DemoMod
             dbRegistry.RegisterDeck(pinker_peri, (int)Deck.peri);
 
 
-            var new_meta = new ExternalCardMeta("EWanderer.DemoMod.Meta")
+            var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
             {
                 Deck = ExternalDeck.GetRaw((int)Deck.dracula),
                 DontLoc = false,
@@ -75,6 +77,16 @@ namespace DemoMod
             };
 
             dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
+            var all_normal_cards = Assembly.GetAssembly(typeof(Card))?.GetTypes().Where(e => !e.IsAbstract && e.IsClass && e.IsSubclassOf(typeof(Card)));
+            if (all_normal_cards != null) {
+                foreach (var card_type in all_normal_cards) {
+                    var zero_cost_overwrite = new PartialCardStatOverwrite("ewanderer.demomod.partialoverwrite." + card_type.Name, card_type) ;
+                    zero_cost_overwrite.Cost = 0;
+                    dbRegistry.RegisterCardStatOverwrite(zero_cost_overwrite);
+                }
+            }
+
+          
 
         }
     }
