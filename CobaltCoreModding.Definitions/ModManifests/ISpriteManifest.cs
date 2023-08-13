@@ -4,8 +4,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
 {
     public interface ISpriteManifest : IManifest
     {
-       
-
         /// <summary>
         /// What other sprite manifest should be first loaded before this mod.
         /// </summary>

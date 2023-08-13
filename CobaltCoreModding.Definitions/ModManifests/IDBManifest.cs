@@ -4,8 +4,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
 {
     public interface IDBManifest : IManifest
     {
-      
-
         /// <summary>
         /// What other db manifest should be first loaded before this mod.
         /// </summary>

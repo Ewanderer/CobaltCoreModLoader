@@ -4,8 +4,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
 {
     public interface IModManifest : IManifest
     {
-     
-
         /// <summary>
         /// Mod Identifiers for manifest which should be booted first
         /// </summary>
@@ -17,6 +15,5 @@ namespace CobaltCoreModding.Definitions.ModManifests
         /// will also try to respect dependencies.
         /// </summary>
         public void BootMod(IModLoaderContact contact);
-
     }
 }

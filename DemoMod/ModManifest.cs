@@ -3,7 +3,6 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Cards;
-using System.Reflection;
 
 namespace DemoMod
 {
