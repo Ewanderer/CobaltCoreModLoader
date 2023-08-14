@@ -3,6 +3,7 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Data;
@@ -63,7 +64,126 @@ namespace CobaltCoreModLoader.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
 
+            //patch unlocked characters in the game
+
+            var get_unlocked_characters_method = TypesAndEnums.StoryVarsType.GetMethod("GetUnlockedChars", BindingFlags.Public | BindingFlags.Instance) ?? throw new Exception("GetUnlockedChars method not found.");
+            var get_unlocked_characters_postfix = typeof(DBExtender).GetMethod("GetUnlockedCharactersPostfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("GetUnlockedCharactersPostfix not found");
+
+            harmony.Patch(get_unlocked_characters_method, postfix: new HarmonyMethod(get_unlocked_characters_postfix));
+
             LoadDbManifests();
+
+            PatchEnumExtension();
+
+            PatchNewRunOptions();
+
+            PatchStarterSets();
+
+        }
+
+        /// <summary>
+        /// Activate characters
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void PatchNewRunOptions()
+        {
+            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                    continue;
+                if (all_char_list.Contains(deck_val))
+                    continue;
+                all_char_list.Add(deck_val);
+            }
+        }
+
+        private void PatchStarterSets()
+        {
+            var starter_sets_dictionary = TypesAndEnums.StarterDeckType.GetField("starterSets")?.GetValue(null) as IDictionary ?? throw new Exception("couldn't find starterdeck.startersets");
+            var card_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.CardType);
+            var artifact_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.ArtifactType);
+
+            var cards_field = TypesAndEnums.StarterDeckType.GetField("cards") ?? throw new Exception("StarterDeck.cards not found");
+            var artifacts_field = TypesAndEnums.StarterDeckType.GetField("artifacts") ?? throw new Exception("StarterDeck.artifacts not found");
+
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+
+                if (deck_val == null)
+                    continue;
+                if (starter_sets_dictionary.Contains(deck_val))
+                {
+                    Logger?.LogWarning("ExternalCharacter {0} Starter Deck {1} is already registered. Skipping. Consider using StarterDeckOverwrite", character.GlobalName, deck_val.ToString());
+                    continue;
+                }
+                var card_arr = Array.CreateInstance(TypesAndEnums.CardType, character.StarterDeck.Count());
+                for (int i = 0; i < character.StarterDeck.Count(); i++)
+                {
+                    var card_instance = Activator.CreateInstance(character.StarterDeck.ElementAt(i));
+                    card_arr.SetValue(card_instance, i);
+                }
+
+                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterDeck.Count());
+                for (int i = 0; i < character.StarterArtifacts.Count(); i++)
+                {
+                    var artifact_instance = Activator.CreateInstance(character.StarterArtifacts.ElementAt(i));
+                    artifact_arr.SetValue(artifact_instance, i);
+                }
+
+                var card_list = Activator.CreateInstance(card_list_type, new object[] { card_arr });
+                var artifact_list = Activator.CreateInstance(artifact_list_type, new object[] { artifact_arr });
+
+                var new_starter_deck = Activator.CreateInstance(TypesAndEnums.StarterDeckType);
+
+                if (new_starter_deck == null)
+                {
+                    continue;
+                }
+
+                cards_field.SetValue(new_starter_deck, card_list);
+                artifacts_field.SetValue(new_starter_deck, artifact_list);
+                starter_sets_dictionary.Add(deck_val, new_starter_deck);
+            }
+
+        }
+
+        private void PatchEnumExtension()
+        {
+            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
+
+            foreach (var deck in registered_decks)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
+                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
+                    continue;
+                if (!deck_str_dictionary.Contains(deck_val))
+                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
+            }
+
+        }
+
+        private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+
+        private static void GetUnlockedCharactersPostfix(ref object __result)
+        {
+            var hash_type = typeof(HashSet<>).MakeGenericType(TypesAndEnums.DeckType);
+            var add_method = hash_type.GetMethod("Add") ?? throw new Exception("HashSet<Deck> doesn't have Add method.");
+
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("ExternalCharacter {0} unlocked patch failed because missign deck id {1}", character.GlobalName, character.Deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+                add_method.Invoke(__result, new object[] { deck_val });
+            }
+
+
         }
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
@@ -90,6 +210,20 @@ namespace CobaltCoreModLoader.Services
                 if (!__result.TryAdd(key, text))
                     Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
             }
+            //character names
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                string? text = character.GetCharacterName(locale);
+                if (string.IsNullOrWhiteSpace(text))
+                    continue;
+                var key = "char." + character.GlobalName;
+                if (!__result.TryAdd(key, text))
+                    Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+            }
+
+
         }
 
         private static Type? __db_type = null;
@@ -383,6 +517,27 @@ namespace CobaltCoreModLoader.Services
                     }
                 }
             }
+
+
+            //characters
+
+            IDictionary char_panels_dict = db_type.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
+
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                var spr_val = TypesAndEnums.IntToSpr(character.CharPanelSpr.Id);
+                if (spr_val == null)
+                    continue;
+                if (char_panels_dict.Contains(character.GlobalName))
+                {
+                    continue;
+                }
+
+                char_panels_dict.Add(character.GlobalName, spr_val);
+            }
+
         }
 
         /// <summary>
@@ -630,7 +785,18 @@ namespace CobaltCoreModLoader.Services
 
         bool IDbRegistry.RegisterCharacter(ExternalCharacter character)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(character.GlobalName))
+            {
+                return false;
+            }
+
+            if (!registered_characters.TryAdd(character.GlobalName, character))
+            {
+                return false;
+            }
+
+            return true;
+
         }
 
         private const int deck_counter_start = 10000;
