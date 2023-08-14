@@ -21,6 +21,8 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 
         bool RegisterSpaceThing(ExternalSpaceThing spaceThing);
 
+        bool RegisterAnimation(ExternalAnimation animation);
+
         /// <summary>
         ///
         /// </summary>

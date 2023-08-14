@@ -63,7 +63,121 @@ namespace CobaltCoreModLoader.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
 
+            //patch unlocked characters in the game
+
+            var get_unlocked_characters_method = TypesAndEnums.StoryVarsType.GetMethod("GetUnlockedChars", BindingFlags.Public | BindingFlags.Instance) ?? throw new Exception("GetUnlockedChars method not found.");
+            var get_unlocked_characters_postfix = typeof(DBExtender).GetMethod("GetUnlockedCharactersPostfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("GetUnlockedCharactersPostfix not found");
+
+            harmony.Patch(get_unlocked_characters_method, postfix: new HarmonyMethod(get_unlocked_characters_postfix));
+
             LoadDbManifests();
+
+            PatchEnumExtension();
+
+            PatchNewRunOptions();
+
+            PatchStarterSets();
+        }
+
+        /// <summary>
+        /// Activate characters
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void PatchNewRunOptions()
+        {
+            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                    continue;
+                if (all_char_list.Contains(deck_val))
+                    continue;
+                all_char_list.Add(deck_val);
+            }
+        }
+
+        private void PatchStarterSets()
+        {
+            var starter_sets_dictionary = TypesAndEnums.StarterDeckType.GetField("starterSets")?.GetValue(null) as IDictionary ?? throw new Exception("couldn't find starterdeck.startersets");
+            var card_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.CardType);
+            var artifact_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.ArtifactType);
+
+            var cards_field = TypesAndEnums.StarterDeckType.GetField("cards") ?? throw new Exception("StarterDeck.cards not found");
+            var artifacts_field = TypesAndEnums.StarterDeckType.GetField("artifacts") ?? throw new Exception("StarterDeck.artifacts not found");
+
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+
+                if (deck_val == null)
+                    continue;
+                if (starter_sets_dictionary.Contains(deck_val))
+                {
+                    Logger?.LogWarning("ExternalCharacter {0} Starter Deck {1} is already registered. Skipping. Consider using StarterDeckOverwrite", character.GlobalName, deck_val.ToString());
+                    continue;
+                }
+                var card_arr = Array.CreateInstance(TypesAndEnums.CardType, character.StarterDeck.Count());
+                for (int i = 0; i < character.StarterDeck.Count(); i++)
+                {
+                    var card_instance = Activator.CreateInstance(character.StarterDeck.ElementAt(i));
+                    card_arr.SetValue(card_instance, i);
+                }
+
+                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterArtifacts.Count());
+                for (int i = 0; i < character.StarterArtifacts.Count(); i++)
+                {
+                    var artifact_instance = Activator.CreateInstance(character.StarterArtifacts.ElementAt(i));
+                    artifact_arr.SetValue(artifact_instance, i);
+                }
+
+                var card_list = Activator.CreateInstance(card_list_type, new object[] { card_arr });
+                var artifact_list = Activator.CreateInstance(artifact_list_type, new object[] { artifact_arr });
+
+                var new_starter_deck = Activator.CreateInstance(TypesAndEnums.StarterDeckType);
+
+                if (new_starter_deck == null)
+                {
+                    continue;
+                }
+
+                cards_field.SetValue(new_starter_deck, card_list);
+                artifacts_field.SetValue(new_starter_deck, artifact_list);
+                starter_sets_dictionary.Add(deck_val, new_starter_deck);
+            }
+        }
+
+        private void PatchEnumExtension()
+        {
+            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
+
+            foreach (var deck in registered_decks)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
+                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
+                    continue;
+                if (!deck_str_dictionary.Contains(deck_val))
+                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
+            }
+        }
+
+        private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+
+        private static void GetUnlockedCharactersPostfix(ref object __result)
+        {
+            var hash_type = typeof(HashSet<>).MakeGenericType(TypesAndEnums.DeckType);
+            var add_method = hash_type.GetMethod("Add") ?? throw new Exception("HashSet<Deck> doesn't have Add method.");
+
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("ExternalCharacter {0} unlocked patch failed because missign deck id {1}", character.GlobalName, character.Deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+                add_method.Invoke(__result, new object[] { deck_val });
+            }
         }
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
@@ -89,6 +203,30 @@ namespace CobaltCoreModLoader.Services
                 var key = "card." + card.CardType.Name + ".name";
                 if (!__result.TryAdd(key, text))
                     Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+            }
+            //character names + descriptuions
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                string? text = character.GetCharacterName(locale);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    var key = "char." + character.Deck.GlobalName;
+                    if (!__result.TryAdd(key, text))
+                        Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                }
+                string? desc = character.GetDesc(locale);
+                if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    var deck_val = TypesAndEnums.IntToSpr(character.Deck.Id);
+                    if (deck_val != null)
+                    {
+                        var key = "char." + deck_val.ToString() + ".desc";
+                        if (!__result.TryAdd(key, desc))
+                            Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                    }
+                }
             }
         }
 
@@ -266,6 +404,8 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
+        private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
+
         /// <summary>
         /// Cards, decks, icons, maps, characters, artifacts and other things need their sprite additionaly registered in db.
         /// this is done here.
@@ -382,6 +522,84 @@ namespace CobaltCoreModLoader.Services
                         card_art_deck_default_dict.Add(deck_key, card_default_spr);
                     }
                 }
+            }
+
+            // animations
+
+            IDictionary char_animation_dictionary = db_type.GetField("charAnimations")?.GetValue(null) as IDictionary ?? throw new Exception();
+            var spr_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.SprType);
+            var new_char_anim_dict_type = typeof(Dictionary<,>).MakeGenericType(typeof(string), spr_list_type);
+
+            foreach (var character_animation_group in registered_animations.Values.GroupBy(e => e.Deck.GlobalName))
+            {
+                IDictionary? animation_lookup = null;
+                if (!char_animation_dictionary.Contains(character_animation_group.Key))
+                {
+                    animation_lookup = Activator.CreateInstance(new_char_anim_dict_type) as IDictionary ?? throw new Exception();
+                    char_animation_dictionary.Add(character_animation_group.Key, animation_lookup);
+                }
+                else
+                {
+                    animation_lookup = char_animation_dictionary[character_animation_group.Key] as IDictionary ?? throw new Exception();
+                }
+
+                //iterate over all animations in group
+
+                foreach (var animation in character_animation_group)
+                {
+                    //create sprite list
+                    var spr_list = Activator.CreateInstance(spr_list_type) as IList ?? throw new Exception();
+                    //populate it
+                    bool valid = true;
+
+                    foreach (var frame in animation.Frames)
+                    {
+                        var spr_val = TypesAndEnums.IntToSpr(frame?.Id);
+                        if (spr_val == null)
+                        {
+                            Logger?.LogWarning("ExternalAnimation {0} Frame Sprite {1} was not resolved to Spr object. skipping animation entirely", animation.GlobalName, frame?.GlobalName ?? "NULL");
+                            valid = false;
+                            continue;
+                        }
+
+                        spr_list.Add(spr_val);
+                    }
+                    if (!valid) { continue; }
+
+                    //either overwrite or add list.
+
+                    if (!animation_lookup.Contains(animation.Tag))
+                    {
+                        animation_lookup.Add(animation.Tag, spr_list);
+                    }
+                    else if (animation.IntendedOverwrite)
+                    {
+                        animation_lookup[animation.Tag] = spr_list;
+                    }
+                    else
+                    {
+                        Logger?.LogWarning("Collision of external animation {0} detected for character {1} with tag {2}. if you inteded to overwrite, set ExternalAnimation.intendedoverwrite during construction", animation.GlobalName, character_animation_group.Key, animation.Tag);
+                    }
+                }
+            }
+
+            //characters
+
+            IDictionary char_panels_dict = db_type.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
+
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                var spr_val = TypesAndEnums.IntToSpr(character.CharPanelSpr.Id);
+                if (spr_val == null)
+                    continue;
+                if (char_panels_dict.Contains(character.GlobalName))
+                {
+                    continue;
+                }
+
+                char_panels_dict.Add(character.GlobalName, spr_val);
             }
         }
 
@@ -630,7 +848,17 @@ namespace CobaltCoreModLoader.Services
 
         bool IDbRegistry.RegisterCharacter(ExternalCharacter character)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(character.GlobalName))
+            {
+                return false;
+            }
+
+            if (!registered_characters.TryAdd(character.GlobalName, character))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private const int deck_counter_start = 10000;
@@ -772,6 +1000,30 @@ namespace CobaltCoreModLoader.Services
             }
             if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
                 card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
+            return true;
+        }
+
+        bool IDbRegistry.RegisterAnimation(ExternalAnimation animation)
+        {
+            //
+            if (string.IsNullOrEmpty(animation.GlobalName))
+            {
+                Logger?.LogWarning("animation without global name");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(animation.Tag))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
+                return false;
+            }
+
+            if (!registered_animations.TryAdd(animation.GlobalName, animation))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
+                return false;
+            }
+
             return true;
         }
     }
