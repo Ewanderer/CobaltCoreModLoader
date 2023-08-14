@@ -110,7 +110,8 @@ namespace DemoMod
             var start_crads = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
 
             var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck, dracular_spr, start_crads, new Type[0]);
-
+            playable_dracular_character.AddNameLocalisation("Count Dracula");
+            playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
             registry.RegisterCharacter(playable_dracular_character);
         }
     }

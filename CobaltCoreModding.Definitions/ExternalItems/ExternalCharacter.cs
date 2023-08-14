@@ -27,6 +27,21 @@
         }
 
         private Dictionary<string, string> name_localisations { get; init; } = new Dictionary<string, string>();
+        private Dictionary<string, string> desc_localisations { get; init; } = new Dictionary<string, string>();
+
+        public string? GetDesc(string loacle)
+        {
+            if (!desc_localisations.TryGetValue(loacle, out string? name))
+                if (!desc_localisations.TryGetValue("en", out name))
+                    return null;
+            return name;
+        }
+
+        public void AddDescLocalisation(string desc, string locale = "en")
+        {
+            if (!desc_localisations.TryAdd(locale, desc))
+                desc_localisations[locale] = desc;
+        }
 
         public string? GetCharacterName(string loacle)
         {
