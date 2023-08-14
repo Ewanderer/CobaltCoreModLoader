@@ -150,7 +150,6 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-
         private static Type? __rarity_type = null;
 
         public static Type RarityType
@@ -202,8 +201,5 @@ namespace CobaltCoreModLoader.Utils
                 return null;
             return Convert.ChangeType(Enum.ToObject(DeckType, deck_id), DeckType);
         }
-
-        
-
     }
 }

@@ -12,8 +12,10 @@ namespace DemoMod
 
         public IEnumerable<string> Dependencies => new string[0];
 
-        private static ExternalSprite? card_art_sprite;
-        private static ExternalSprite? pinker_per_border_over_sprite;
+        private ExternalSprite? card_art_sprite;
+        private ExternalSprite? pinker_per_border_over_sprite;
+
+        private ExternalSprite? mini_dracula_sprite;
 
         public void BootMod(IModLoaderContact contact)
         {
@@ -40,6 +42,12 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(card_art_sprite))
                     throw new Exception("Cannot register sprite.");
                 EWandererDemoCard.card_sprite = (Spr)(card_art_sprite.Id ?? throw new NullReferenceException());
+            }
+            {
+                mini_dracula_sprite = new ExternalSprite("EWanderer.DemoMod.dracular.mini", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\dracula_mini_0.png"));
+                if (!artRegistry.RegisterArt(mini_dracula_sprite))
+                    throw new Exception("Cannot register sprite.");
+                EWandererDemoCard.card_sprite = (Spr)(mini_dracula_sprite.Id ?? throw new NullReferenceException());
             }
         }
 
@@ -94,12 +102,10 @@ namespace DemoMod
             */
 
             MakeDracularPlayable(dbRegistry);
-
         }
 
         private void MakeDracularPlayable(IDbRegistry registry)
         {
-
             var dracular_art = registry.GetOriginalSprite((int)Spr.cards_colorless);
             var dracular_border = registry.GetOriginalSprite((int)Spr.cardShared_border_dracula);
             var dracular_spr = registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_0);
@@ -109,7 +115,23 @@ namespace DemoMod
                 return;
             var start_crads = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
 
-            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck, dracular_spr, start_crads, new Type[0]);
+            var default_animation = new ExternalAnimation("ewanderer.demomod.dracula.neutral", dracula_deck, "neutral", false, new ExternalSprite[] {
+                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_0),
+                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_1),
+                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_2),
+                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_3),
+                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_4),
+            });
+
+            registry.RegisterAnimation(default_animation);
+            if (mini_dracula_sprite == null)
+                throw new Exception();
+
+            var mini_animation = new ExternalAnimation("ewanderer.demomod.dracula.mini", dracula_deck, "mini", false, new ExternalSprite[] { mini_dracula_sprite });
+
+            registry.RegisterAnimation(mini_animation);
+
+            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck, dracular_spr, start_crads, new Type[0], default_animation, mini_animation);
             playable_dracular_character.AddNameLocalisation("Count Dracula");
             playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
             registry.RegisterCharacter(playable_dracular_character);
