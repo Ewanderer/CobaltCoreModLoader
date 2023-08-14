@@ -102,6 +102,55 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        private static Type? __story_vars_type = null;
+
+        public static Type StoryVarsType
+        {
+            get
+            {
+                if (__story_vars_type != null)
+                    return __story_vars_type;
+                return __story_vars_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StoryVars") ?? throw new Exception("StoryVars type not found");
+            }
+        }
+
+        private static Type? __enum_extensions_type = null;
+
+        public static Type EnumExtensionsType
+        {
+            get
+            {
+                if (__enum_extensions_type != null)
+                    return __enum_extensions_type;
+                return __enum_extensions_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("EnumExtensions") ?? throw new Exception("EnumExtensions type not found");
+            }
+        }
+
+        private static Type? __starter_Deck_type = null;
+
+        public static Type StarterDeckType
+        {
+            get
+            {
+                if (__starter_Deck_type != null)
+                    return __starter_Deck_type;
+                return __starter_Deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterDeck") ?? throw new Exception("StarterDeck type not found");
+            }
+        }
+
+        private static Type? __artifact_type = null;
+
+        public static Type ArtifactType
+        {
+            get
+            {
+                if (__artifact_type != null)
+                    return __artifact_type;
+                return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
+            }
+        }
+
+
         private static Type? __rarity_type = null;
 
         public static Type RarityType
@@ -111,6 +160,18 @@ namespace CobaltCoreModLoader.Utils
                 if (__rarity_type != null)
                     return __rarity_type;
                 return __rarity_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Rarity") ?? throw new Exception("Rarity type not found");
+            }
+        }
+
+        private static Type? __new_run_options_type = null;
+
+        public static Type NewRunOptionsType
+        {
+            get
+            {
+                if (__new_run_options_type != null)
+                    return __new_run_options_type;
+                return __new_run_options_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("NewRunOptions") ?? throw new Exception("NewRunOptions type not found");
             }
         }
 
@@ -141,5 +202,8 @@ namespace CobaltCoreModLoader.Utils
                 return null;
             return Convert.ChangeType(Enum.ToObject(DeckType, deck_id), DeckType);
         }
+
+        
+
     }
 }

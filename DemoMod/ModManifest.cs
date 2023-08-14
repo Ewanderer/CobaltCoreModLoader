@@ -55,7 +55,7 @@ namespace DemoMod
             dbRegistry.RegisterCard(card);
 
             //make peri deck mod
-            var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_AbyssalVisions);
+            var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_WaveBeam);
             var border = dbRegistry.GetOriginalSprite((int)Spr.cardShared_border_ephemeral);
 
             var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.FromArgb(255, 186, 224), System.Drawing.Color.Black, art_default, border, pinker_per_border_over_sprite);
@@ -72,6 +72,8 @@ namespace DemoMod
                 UpgradesTo = new int[] { (int)Upgrade.A, (int)Upgrade.B },
                 WeirdCard = false
             };
+
+            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
 
             var better_dodge = new PartialCardStatOverwrite("ewanderer.demomod.betterdodge", typeof(DodgeColorless)) { Cost = 0, Buoyant = true, Retain = true };
 
@@ -90,6 +92,26 @@ namespace DemoMod
                 }
             }
             */
+
+            MakeDracularPlayable(dbRegistry);
+
+        }
+
+        private void MakeDracularPlayable(IDbRegistry registry)
+        {
+
+            var dracular_art = registry.GetOriginalSprite((int)Spr.cards_colorless);
+            var dracular_border = registry.GetOriginalSprite((int)Spr.cardShared_border_dracula);
+            var dracular_spr = registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_0);
+            var dracula_deck = new ExternalDeck("EWanderer.Demomod.DraculaDeck", System.Drawing.Color.Crimson, System.Drawing.Color.Purple, dracular_art, dracular_border, null);
+
+            if (!registry.RegisterDeck(dracula_deck))
+                return;
+            var start_crads = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
+
+            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck, dracular_spr, start_crads, new Type[0]);
+
+            registry.RegisterCharacter(playable_dracular_character);
         }
     }
 }
