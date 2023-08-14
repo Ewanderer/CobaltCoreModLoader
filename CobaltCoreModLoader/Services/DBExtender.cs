@@ -126,7 +126,7 @@ namespace CobaltCoreModLoader.Services
                     card_arr.SetValue(card_instance, i);
                 }
 
-                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterDeck.Count());
+                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterArtifacts.Count());
                 for (int i = 0; i < character.StarterArtifacts.Count(); i++)
                 {
                     var artifact_instance = Activator.CreateInstance(character.StarterArtifacts.ElementAt(i));
@@ -210,17 +210,36 @@ namespace CobaltCoreModLoader.Services
                 if (!__result.TryAdd(key, text))
                     Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
             }
-            //character names
+            //character names + descriptuions
             foreach (var character in registered_characters.Values)
             {
                 if (string.IsNullOrWhiteSpace(character.GlobalName))
                     continue;
                 string? text = character.GetCharacterName(locale);
-                if (string.IsNullOrWhiteSpace(text))
-                    continue;
-                var key = "char." + character.GlobalName;
-                if (!__result.TryAdd(key, text))
-                    Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+
+                    var key = "char." + character.GlobalName;
+                    if (!__result.TryAdd(key, text))
+                        Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                    
+
+                }
+                string? desc = character.GetDesc(locale);
+                if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    var deck_val = TypesAndEnums.IntToSpr(character.Deck.Id);
+                    if (deck_val != null)
+                    {
+                        var key = "char." + deck_val.ToString() + ".desc";
+                        if (!__result.TryAdd(key, desc))
+                            Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+
+                    }
+                }
+
+
+
             }
 
 
