@@ -16,7 +16,7 @@ namespace CobaltCoreModLoader.Services
     public class DBExtender : IDbRegistry
     {
         private const int deck_counter_start = 10000;
-        private static Type? __db_type = null;
+
 
         /// <summary>
         /// GlobalName -> Card Meta
@@ -35,7 +35,7 @@ namespace CobaltCoreModLoader.Services
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
         private static ILogger<DBExtender>? Logger;
 
-        private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
+
         private static Dictionary<string, ExternalCard> registered_cards = new Dictionary<string, ExternalCard>();
         private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
         private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
@@ -50,15 +50,7 @@ namespace CobaltCoreModLoader.Services
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
 
-        private static Type db_type
-        {
-            get
-            {
-                if (__db_type != null) return __db_type;
 
-                return __db_type = (CobaltCoreHandler.CobaltCoreAssembly?.GetType("DB") ?? throw new Exception("DB not found."));
-            }
-        }
 
         private Type card_type { get; init; }
 
@@ -67,10 +59,7 @@ namespace CobaltCoreModLoader.Services
             return SpriteExtender.LookupSprite(globalName);
         }
 
-        ExternalSprite IDbRegistry.GetOriginalSprite(int sprVal)
-        {
-            return TypesAndEnums.GetOriginalSprite(sprVal);
-        }
+      
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.
@@ -84,7 +73,7 @@ namespace CobaltCoreModLoader.Services
 
             //patch DB
 
-            var make_init_queue_function = db_type.GetMethod("MakeInitQueue") ?? throw new Exception("make init queue method not found");
+            var make_init_queue_function = TypesAndEnums.DbType.GetMethod("MakeInitQueue") ?? throw new Exception("make init queue method not found");
 
             var make_init_queue_postfix = typeof(DBExtender).GetMethod("MakeInitQueue_Postfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
 
@@ -92,7 +81,7 @@ namespace CobaltCoreModLoader.Services
 
             //patch localisation loder
 
-            var load_strings_for_locale_method = db_type.GetMethod("LoadStringsForLocale", BindingFlags.Public | BindingFlags.Static) ?? throw new Exception("load_strings_for_locale_method not found");
+            var load_strings_for_locale_method = TypesAndEnums.DbType.GetMethod("LoadStringsForLocale", BindingFlags.Public | BindingFlags.Static) ?? throw new Exception("load_strings_for_locale_method not found");
 
             var load_strings_for_locale_postfix = typeof(DBExtender).GetMethod("LoadStringsForLocale_PostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
 
@@ -114,29 +103,7 @@ namespace CobaltCoreModLoader.Services
             PatchStarterSets();
         }
 
-        bool IDbRegistry.RegisterAnimation(ExternalAnimation animation)
-        {
-            //
-            if (string.IsNullOrEmpty(animation.GlobalName))
-            {
-                Logger?.LogWarning("animation without global name");
-                return false;
-            }
 
-            if (string.IsNullOrEmpty(animation.Tag))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
-                return false;
-            }
-
-            if (!registered_animations.TryAdd(animation.GlobalName, animation))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
-                return false;
-            }
-
-            return true;
-        }
 
         bool IDbRegistry.RegisterArtifact(ExternalArtifact artifact)
         {
@@ -333,7 +300,7 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void InsertNewDeckAndStatus()
         {
-            IDictionary deck_dict = db_type.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
+            IDictionary deck_dict = TypesAndEnums.DbType.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
 
             var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
             var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
@@ -399,32 +366,32 @@ namespace CobaltCoreModLoader.Services
             {
                 /*
                 //patch into all fields
-                var db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
+                var TypesAndEnums.db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
 
-                var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
+                var card_dict = TypesAndEnums.db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(card_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Card"));
 
-                var enemies_dict = db_type.GetField("enemies")?.GetValue(null) as Dictionary<string, Type>;
+                var enemies_dict = TypesAndEnums.db_type.GetField("enemies")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(enemies_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("AI"));
 
-                var modifiers_dict = db_type.GetField("modifiers")?.GetValue(null) as Dictionary<string, Type>;
+                var modifiers_dict = TypesAndEnums.db_type.GetField("modifiers")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(modifiers_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("FightModifier"));
 
-                var artifacts_dict = db_type.GetField("artifacts")?.GetValue(null) as Dictionary<string, Type>;
+                var artifacts_dict = TypesAndEnums.db_type.GetField("artifacts")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(artifacts_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Artifact"));
 
-                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
+                var midrowStuff_dict = TypesAndEnums.db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(midrowStuff_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("StuffBase"));
 
-                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
+                var backgrounds_dict = TypesAndEnums.db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(backgrounds_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("BG"));
 
-                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
+                var maps_dict = TypesAndEnums.db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(maps_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("MapBase"));
                 */
 
                 {
-                    var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
+                    var card_dict = TypesAndEnums.DbType.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
 
                     //Overwrite card dictionary.
 
@@ -466,9 +433,9 @@ namespace CobaltCoreModLoader.Services
                     }
                 }
 
-                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
-                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
-                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
+                var midrowStuff_dict = TypesAndEnums.DbType.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
+                var backgrounds_dict = TypesAndEnums.DbType.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
+                var maps_dict = TypesAndEnums.DbType.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
             }
         }
 
@@ -595,7 +562,7 @@ namespace CobaltCoreModLoader.Services
         private static void PatchExtraItemSprites()
         {
             //cards
-            IDictionary card_art_dictionary = db_type.GetField("cardArt", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new Exception("card art dictionary not found");
+            IDictionary card_art_dictionary = TypesAndEnums.DbType.GetField("cardArt", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new Exception("card art dictionary not found");
 
             foreach (var card in registered_cards.Values)
             {
@@ -634,9 +601,9 @@ namespace CobaltCoreModLoader.Services
             }
 
             //decks
-            IDictionary deck_borders_dict = db_type.GetField("deckBorders")?.GetValue(null) as IDictionary ?? throw new Exception();
-            IDictionary deck_borders_over_dict = db_type.GetField("deckBordersOver")?.GetValue(null) as IDictionary ?? throw new Exception();
-            IDictionary card_art_deck_default_dict = db_type.GetField("cardArtDeckDefault")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary deck_borders_dict = TypesAndEnums.DbType.GetField("deckBorders")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary deck_borders_over_dict = TypesAndEnums.DbType.GetField("deckBordersOver")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary card_art_deck_default_dict = TypesAndEnums.DbType.GetField("cardArtDeckDefault")?.GetValue(null) as IDictionary ?? throw new Exception();
             foreach (var deck in registered_decks.Values)
             {
                 if (deck.Id == null)
@@ -706,68 +673,11 @@ namespace CobaltCoreModLoader.Services
                 }
             }
 
-            // animations
-
-            IDictionary char_animation_dictionary = db_type.GetField("charAnimations")?.GetValue(null) as IDictionary ?? throw new Exception();
-            var spr_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.SprType);
-            var new_char_anim_dict_type = typeof(Dictionary<,>).MakeGenericType(typeof(string), spr_list_type);
-
-            foreach (var character_animation_group in registered_animations.Values.GroupBy(e => e.Deck.GlobalName))
-            {
-                IDictionary? animation_lookup = null;
-                if (!char_animation_dictionary.Contains(character_animation_group.Key))
-                {
-                    animation_lookup = Activator.CreateInstance(new_char_anim_dict_type) as IDictionary ?? throw new Exception();
-                    char_animation_dictionary.Add(character_animation_group.Key, animation_lookup);
-                }
-                else
-                {
-                    animation_lookup = char_animation_dictionary[character_animation_group.Key] as IDictionary ?? throw new Exception();
-                }
-
-                //iterate over all animations in group
-
-                foreach (var animation in character_animation_group)
-                {
-                    //create sprite list
-                    var spr_list = Activator.CreateInstance(spr_list_type) as IList ?? throw new Exception();
-                    //populate it
-                    bool valid = true;
-
-                    foreach (var frame in animation.Frames)
-                    {
-                        var spr_val = TypesAndEnums.IntToSpr(frame?.Id);
-                        if (spr_val == null)
-                        {
-                            Logger?.LogWarning("ExternalAnimation {0} Frame Sprite {1} was not resolved to Spr object. skipping animation entirely", animation.GlobalName, frame?.GlobalName ?? "NULL");
-                            valid = false;
-                            continue;
-                        }
-
-                        spr_list.Add(spr_val);
-                    }
-                    if (!valid) { continue; }
-
-                    //either overwrite or add list.
-
-                    if (!animation_lookup.Contains(animation.Tag))
-                    {
-                        animation_lookup.Add(animation.Tag, spr_list);
-                    }
-                    else if (animation.IntendedOverwrite)
-                    {
-                        animation_lookup[animation.Tag] = spr_list;
-                    }
-                    else
-                    {
-                        Logger?.LogWarning("Collision of external animation {0} detected for character {1} with tag {2}. if you inteded to overwrite, set ExternalAnimation.intendedoverwrite during construction", animation.GlobalName, character_animation_group.Key, animation.Tag);
-                    }
-                }
-            }
+            AnimationRegistry.PatchAnimations();
 
             //characters
 
-            IDictionary char_panels_dict = db_type.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
+            IDictionary char_panels_dict = TypesAndEnums.DbType.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
 
             foreach (var character in registered_characters.Values)
             {
@@ -791,7 +701,7 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void PatchMetasAndStoryFunctions()
         {
-            IDictionary card_meta_dictionary = db_type.GetField("cardMetas")?.GetValue(null) as IDictionary ?? throw new Exception("card meta dictionary not found");
+            IDictionary card_meta_dictionary = TypesAndEnums.DbType.GetField("cardMetas")?.GetValue(null) as IDictionary ?? throw new Exception("card meta dictionary not found");
 
             {
                 var deck_field = TypesAndEnums.CardMetaType.GetField("deck");
@@ -933,7 +843,7 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 //prevent existing enums to be prematurely written and breaking their sprites.
                 if (Enum.IsDefined(TypesAndEnums.DeckType, deck_val))
-                    continue;                
+                    continue;
                 if (!deck_str_dictionary.Contains(deck_val))
                     deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
             }

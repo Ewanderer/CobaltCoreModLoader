@@ -23,6 +23,7 @@ public static class Program
             builder.Services.AddSingleton<DBExtender>();
             builder.Services.AddSingleton<ModAssemblyHandler>();
             builder.Services.AddSingleton<SpriteExtender>();
+            builder.Services.AddSingleton<AnimationRegistry>();
 
             var host = builder.Build();
 
@@ -39,6 +40,8 @@ public static class Program
 
             //patch art.
             host.Services.GetRequiredService<SpriteExtender>().PatchSpriteSystem();
+            //patch animation
+            host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
 

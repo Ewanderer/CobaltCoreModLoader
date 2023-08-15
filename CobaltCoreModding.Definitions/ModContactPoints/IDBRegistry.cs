@@ -21,7 +21,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 
         bool RegisterSpaceThing(ExternalSpaceThing spaceThing);
 
-        bool RegisterAnimation(ExternalAnimation animation);
+       
 
         /// <summary>
         ///
@@ -41,7 +41,5 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         bool RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key);
 
         ExternalSprite? GetModSprite(string globalName);
-
-        ExternalSprite GetOriginalSprite(int sprVal);
     }
 }
