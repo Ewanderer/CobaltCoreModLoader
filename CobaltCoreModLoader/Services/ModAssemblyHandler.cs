@@ -35,6 +35,9 @@ namespace CobaltCoreModLoader.Services
         private static List<IAnimationManifest> animationManifests = new();
         public static IEnumerable<IAnimationManifest> AnimationManifests => animationManifests.ToArray();
 
+        private static List<IDeckManifest> deckManifests = new();
+        public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
+
         private void ExtractManifestFromAssembly(Assembly assembly)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
