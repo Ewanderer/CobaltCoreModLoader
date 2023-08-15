@@ -15,9 +15,31 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class DBExtender : IDbRegistry
     {
+        private const int deck_counter_start = 10000;
+        private static Type? __db_type = null;
+
+        /// <summary>
+        /// GlobalName -> Card Meta
+        /// </summary>
+        private static Dictionary<string, CardMetaOverwrite> card_meta_lookup = new Dictionary<string, CardMetaOverwrite>();
+
+        /// <summary>
+        /// CardType -> Card Meta
+        /// </summary>
+        private static Dictionary<string, CardMetaOverwrite> card_meta_overwrites = new Dictionary<string, CardMetaOverwrite>();
+
+        private static Dictionary<string, ExternalCard> card_overwrites = new Dictionary<string, ExternalCard>();
+        private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
+        private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
+        private static int deck_counter = deck_counter_start;
+        private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
         private static ILogger<DBExtender>? Logger;
 
-        private Type card_type { get; init; }
+        private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
+        private static Dictionary<string, ExternalCard> registered_cards = new Dictionary<string, ExternalCard>();
+        private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+        private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
+        private Harmony? harmony;
 
         public DBExtender(CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler, ILogger<DBExtender> logger)
         {
@@ -26,15 +48,28 @@ namespace CobaltCoreModLoader.Services
             PartialCardStatOverwrite.SprType = TypesAndEnums.SprType;
         }
 
-        private Harmony? harmony;
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
 
-        private void LoadDbManifests()
+        private static Type db_type
         {
-            foreach (var manifest in ModAssemblyHandler.DBManifests)
+            get
             {
-                if (manifest == null) continue;
-                manifest.LoadManifest(this);
+                if (__db_type != null) return __db_type;
+
+                return __db_type = (CobaltCoreHandler.CobaltCoreAssembly?.GetType("DB") ?? throw new Exception("DB not found."));
             }
+        }
+
+        private Type card_type { get; init; }
+
+        ExternalSprite? IDbRegistry.GetModSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName);
+        }
+
+        ExternalSprite IDbRegistry.GetOriginalSprite(int sprVal)
+        {
+            return TypesAndEnums.GetOriginalSprite(sprVal);
         }
 
         /// <summary>
@@ -79,89 +114,202 @@ namespace CobaltCoreModLoader.Services
             PatchStarterSets();
         }
 
-        /// <summary>
-        /// Activate characters
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private void PatchNewRunOptions()
+        bool IDbRegistry.RegisterAnimation(ExternalAnimation animation)
         {
-            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
-            foreach (var character in registered_characters.Values)
+            //
+            if (string.IsNullOrEmpty(animation.GlobalName))
             {
-                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
-                if (deck_val == null)
-                    continue;
-                if (all_char_list.Contains(deck_val))
-                    continue;
-                all_char_list.Add(deck_val);
+                Logger?.LogWarning("animation without global name");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(animation.Tag))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
+                return false;
+            }
+
+            if (!registered_animations.TryAdd(animation.GlobalName, animation))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
+                return false;
+            }
+
+            return true;
+        }
+
+        bool IDbRegistry.RegisterArtifact(ExternalArtifact artifact)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IDbRegistry.RegisterCard(ExternalCard card, string? overwrite)
+        {
+            if (!card.CardType.IsSubclassOf(card_type))
+            {
+                Logger?.LogCritical("ExternalCard {0} isn't a card but type {1}", card.GlobalName, card.CardType.Name);
+                return false;
+            }
+
+            if (registered_cards.ContainsKey(card.GlobalName))
+            {
+                Logger?.LogCritical($"Tried to register a card with the global name {card.GlobalName} twice! Rejecting second card");
+                return false;
+            }
+
+            //check if card is valid
+
+            if (!card.ValidReferences())
+            {
+                Logger?.LogCritical($"Card with gloabl name {card.GlobalName} has unregistered assets.");
+                return false;
+            }
+
+            //mark overwrite
+            if (overwrite != null)
+            {
+                if (card_overwrites.TryAdd(overwrite, card))
+                {
+                    Logger?.LogInformation("Collision in overwrite of type {0}. Replacing {1} with {2}", overwrite, card_overwrites[overwrite].GlobalName, card.GlobalName);
+                    card_overwrites[overwrite] = card;
+                }
+            }
+            else
+            {
+                //add card into registy
+                registered_cards.Add(card.GlobalName, card);
+            }
+
+            return true;
+        }
+
+        bool IDbRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
+        {
+            if (string.IsNullOrEmpty(cardMeta.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card meta without global name. rejected.");
+                return false;
+            }
+            if (!card_meta_lookup.TryAdd(cardMeta.GlobalName, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} cannot be added, because global name already registered", cardMeta.GlobalName);
+                return false;
+            }
+            if (!card_meta_overwrites.TryAdd(card_key, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} will overwrite anoter overwrite meta {1}", cardMeta.GlobalName, card_meta_lookup[card_key].GlobalName);
+                card_meta_lookup[card_key] = cardMeta;
+            }
+            return true;
+        }
+
+        bool IDbRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
+        {
+            if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card stat overwrite without global name. rejected.");
+                return false;
+            }
+            if (!statOverwrite.CardType.IsSubclassOf(TypesAndEnums.CardType))
+            {
+                Logger?.LogWarning("Card overwrite {0} doesn't target a class of the card type.", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_lookup.TryAdd(statOverwrite.GlobalName, statOverwrite))
+            {
+                Logger?.LogWarning("Collission in card overwrite global name {0} ", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
+                card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
+            return true;
+        }
+
+        bool IDbRegistry.RegisterCharacter(ExternalCharacter character)
+        {
+            if (string.IsNullOrEmpty(character.GlobalName))
+            {
+                return false;
+            }
+
+            if (!registered_characters.TryAdd(character.GlobalName, character))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        bool IDbRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)
+        {
+            if (deck.Id != null)
+            {
+                Logger?.LogWarning("Deck already has an ID");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(deck.GlobalName))
+            {
+                Logger?.LogWarning("Deck with empty global name");
+                return false;
+            }
+            if (deck_lookup.ContainsKey(deck.GlobalName))
+            {
+                Logger?.LogWarning("Deck GlobalName collision:" + deck.GlobalName);
+                return false;
+            }
+
+            if (overwrite == null)
+            {
+                deck_lookup.Add(deck.GlobalName, deck);
+                registered_decks.Add(deck_counter, deck);
+                deck.Id = deck_counter;
+                deck_counter++;
+                return true;
+            }
+            else
+            {
+                if (overwrite < 0 || deck_counter_start <= overwrite)
+                {
+                    Logger?.LogError("Attempted overwrite of non card value");
+                    return false;
+                }
+
+                deck_lookup.Add(deck.GlobalName, deck);
+                if (!registered_decks.TryAdd(overwrite.Value, deck))
+                {
+                    Logger?.LogWarning("Collision Deck Overwrite between {0} and {1} on value {2}. {1} will be used unless other overwrite happens.",
+                        registered_decks[overwrite.Value].GlobalName, deck.GlobalName, overwrite.Value, deck.GlobalName);
+                    registered_decks[overwrite.Value] = deck;
+                }
+                deck.Id = overwrite.Value;
+                return true;
             }
         }
 
-        private void PatchStarterSets()
+        bool IDbRegistry.RegisterEnemy(ExternalEnemy enemy)
         {
-            var starter_sets_dictionary = TypesAndEnums.StarterDeckType.GetField("starterSets")?.GetValue(null) as IDictionary ?? throw new Exception("couldn't find starterdeck.startersets");
-            var card_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.CardType);
-            var artifact_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.ArtifactType);
-
-            var cards_field = TypesAndEnums.StarterDeckType.GetField("cards") ?? throw new Exception("StarterDeck.cards not found");
-            var artifacts_field = TypesAndEnums.StarterDeckType.GetField("artifacts") ?? throw new Exception("StarterDeck.artifacts not found");
-
-            foreach (var character in registered_characters.Values)
-            {
-                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
-
-                if (deck_val == null)
-                    continue;
-                if (starter_sets_dictionary.Contains(deck_val))
-                {
-                    Logger?.LogWarning("ExternalCharacter {0} Starter Deck {1} is already registered. Skipping. Consider using StarterDeckOverwrite", character.GlobalName, deck_val.ToString());
-                    continue;
-                }
-                var card_arr = Array.CreateInstance(TypesAndEnums.CardType, character.StarterDeck.Count());
-                for (int i = 0; i < character.StarterDeck.Count(); i++)
-                {
-                    var card_instance = Activator.CreateInstance(character.StarterDeck.ElementAt(i));
-                    card_arr.SetValue(card_instance, i);
-                }
-
-                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterArtifacts.Count());
-                for (int i = 0; i < character.StarterArtifacts.Count(); i++)
-                {
-                    var artifact_instance = Activator.CreateInstance(character.StarterArtifacts.ElementAt(i));
-                    artifact_arr.SetValue(artifact_instance, i);
-                }
-
-                var card_list = Activator.CreateInstance(card_list_type, new object[] { card_arr });
-                var artifact_list = Activator.CreateInstance(artifact_list_type, new object[] { artifact_arr });
-
-                var new_starter_deck = Activator.CreateInstance(TypesAndEnums.StarterDeckType);
-
-                if (new_starter_deck == null)
-                {
-                    continue;
-                }
-
-                cards_field.SetValue(new_starter_deck, card_list);
-                artifacts_field.SetValue(new_starter_deck, artifact_list);
-                starter_sets_dictionary.Add(deck_val, new_starter_deck);
-            }
+            throw new NotImplementedException();
         }
 
-        private void PatchEnumExtension()
+        bool IDbRegistry.RegisterMidrowItem(ExternalMidrowItem midrowItem)
         {
-            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
-
-            foreach (var deck in registered_decks)
-            {
-                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
-                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
-                    continue;
-                if (!deck_str_dictionary.Contains(deck_val))
-                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
-            }
+            throw new NotImplementedException();
         }
 
-        private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+        bool IDbRegistry.RegisterModifier(ExternalModifier modifier)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IDbRegistry.RegisterSpaceThing(ExternalSpaceThing spaceThing)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IDbRegistry.RegisterStatus(ExternalStatus status)
+        {
+            throw new NotImplementedException();
+        }
 
         private static void GetUnlockedCharactersPostfix(ref object __result)
         {
@@ -180,7 +328,149 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
+        /// <summary>
+        /// Decks and Statuses need to be patched into DB.
+        /// </summary>
+        private static void InsertNewDeckAndStatus()
+        {
+            IDictionary deck_dict = db_type.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
+
+            var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
+            var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
+
+            foreach (var deck in registered_decks.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("externaldeck {0} id {1} not converted into deck enum. skipping...", deck.GlobalName, deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+
+                //create colors
+                var deck_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.DeckColor.ToArgb());
+
+                if (deck_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+
+
+                var title_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.TitleColor.ToArgb());
+                if (title_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Title Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+
+                object? deck_registry;
+                //check if overwrite or new val
+                if (deck_dict.Contains(deck_val))
+                {
+                    deck_registry = deck_dict[deck_val];
+                }
+                else
+                {
+                    //new entrie
+                    //spawn instance.
+                    deck_registry = Activator.CreateInstance(TypesAndEnums.DeckDefType);
+                    if (deck_registry == null)
+                    {
+                        continue;
+                    }
+                    deck_dict.Add(deck_val, deck_registry);
+
+                }
+
+                if (deck_registry == null)
+                    continue;
+                //assign colors
+                color_field.SetValue(deck_registry, deck_color);
+                title_color_field.SetValue(deck_registry, title_color);
+                //store reference in deck
+                deck.DeckDefReference = deck_registry;
+            }
+        }
+
+        private static void InsertNewLogicItems()
+        {
+            if (CobaltCoreHandler.CobaltCoreAssembly != null)
+            {
+                /*
+                //patch into all fields
+                var db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
+
+                var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(card_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Card"));
+
+                var enemies_dict = db_type.GetField("enemies")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(enemies_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("AI"));
+
+                var modifiers_dict = db_type.GetField("modifiers")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(modifiers_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("FightModifier"));
+
+                var artifacts_dict = db_type.GetField("artifacts")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(artifacts_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Artifact"));
+
+                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(midrowStuff_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("StuffBase"));
+
+                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(backgrounds_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("BG"));
+
+                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
+                LoadAllSubclasses(maps_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("MapBase"));
+                */
+
+                {
+                    var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
+
+                    //Overwrite card dictionary.
+
+                    if (card_dict != null)
+                    {
+                        foreach (var card in registered_cards.Values)
+                        {
+                            if (card == null) continue;
+
+                            if (!card_dict.TryAdd(card.CardType.Name, card.CardType))
+                            {
+                                Logger?.LogWarning($"ExternalCard {card.GlobalName} couldn't be added into DB.card dictionary because of collision in type name.");
+                            }
+                        }
+
+                        foreach (var overwrite in card_overwrites)
+                        {
+                            if (!card_dict.ContainsKey(overwrite.Key))
+                            {
+                                Logger?.LogWarning("ExternalCard {0} overwrite of {1} failed because no key found.", overwrite.Value.GlobalName, overwrite.Key);
+                                continue;
+                            }
+                            else
+                            {
+                                card_dict[overwrite.Key] = overwrite.Value.CardType;
+                            }
+                        }
+                    }
+                }
+                //inject card stat overwrites
+                {
+                    var base_stat_postfix = typeof(DBExtender).GetMethod("OverwriteCardStats", BindingFlags.Static | BindingFlags.NonPublic);
+                    var harmony = new Harmony("modloader.dbextender.card_stat_overwrites");
+                    foreach (var overwrite in card_stat_overwrites)
+                    {
+                        //These are virtual and thus need to be retrieved everytime, but also improves ingame performance.
+                        var base_stat_method = overwrite.Key.GetMethod("GetData") ?? throw new Exception();
+                        harmony.Patch(base_stat_method, postfix: new HarmonyMethod(base_stat_postfix));
+                    }
+                }
+
+                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
+                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
+                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
+            }
+        }
 
         private static void LoadStringsForLocale_PostFix(string locale, ref Dictionary<string, string> __result)
         {
@@ -230,18 +520,6 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private static Type? __db_type = null;
-
-        private static Type db_type
-        {
-            get
-            {
-                if (__db_type != null) return __db_type;
-
-                return __db_type = (CobaltCoreHandler.CobaltCoreAssembly?.GetType("DB") ?? throw new Exception("DB not found."));
-            }
-        }
-
         private static Queue<Action> MakeInitQueue_Postfix(Queue<Action> __result)
         {
             //extract each action and splice in custom actions.
@@ -286,125 +564,29 @@ namespace CobaltCoreModLoader.Services
             return patched_result;
         }
 
-        /// <summary>
-        /// while card and artifact metas are generated by attribute, some last minute resolutions are needed.
-        /// this includes card meta.deck for external decks, those ids are not know during compile time and thus cannot easily added into the attribute.
-        /// </summary>
-        private static void PatchMetasAndStoryFunctions()
+        private static void OverwriteCardStats(ref object __result, object __instance, object state)
         {
-            IDictionary card_meta_dictionary = db_type.GetField("cardMetas")?.GetValue(null) as IDictionary ?? throw new Exception("card meta dictionary not found");
-
+            var lookup_type = __instance.GetType();
+            if (card_stat_overwrites.TryGetValue(lookup_type, out var overwrite_passes))
             {
-                var deck_field = TypesAndEnums.CardMetaType.GetField("deck");
-                if (deck_field != null)
+                foreach (var pass in overwrite_passes)
                 {
-                    foreach (var card in registered_cards.Values.Where(e => e != null && e.ActualDeck != null))
+                    if (pass is ActiveCardStatOverwrite active_overwrite)
                     {
-                        if (card == null) continue;
-
-                        if (!card_meta_dictionary.Contains(card.CardType.Name))
-                            continue;
-                        var meta = card_meta_dictionary[card.CardType.Name];
-                        var deck_val = TypesAndEnums.IntToDeck(card.ActualDeck?.Id);
-                        if (deck_val == null)
-                        {
-                            Logger?.LogError("External Card {0} bad actual deck definition", card.GlobalName);
-                            continue;
-                        }
-                        deck_field.SetValue(meta, deck_val);
+                        var new_stats = active_overwrite.GetStatFunction(state, __result);
+                        __result = new_stats;
                     }
-
-                    foreach (var overwrite in card_overwrites.Where(e => e.Value != null && e.Value.ActualDeck != null))
+                    else if (pass is PartialCardStatOverwrite partial_overwrite)
                     {
-                        var card = overwrite.Value;
-                        if (card == null) continue;
-
-                        if (!card_meta_dictionary.Contains(overwrite.Value))
-                            continue;
-                        var meta = card_meta_dictionary[overwrite.Value];
-                        var deck_val = TypesAndEnums.IntToDeck(card.ActualDeck?.Id);
-                        if (deck_val == null)
-                        {
-                            Logger?.LogError("External Card {0} bad actual deck definition", card.GlobalName);
-                            continue;
-                        }
-                        deck_field.SetValue(meta, deck_val);
+                        partial_overwrite.ApplyOverwrite(ref __result);
                     }
-
-                    var dont_offer_field = TypesAndEnums.CardMetaType.GetField("dontOffer") ?? throw new Exception("deck meta dont offer field not found");
-                    var unreleased_field = TypesAndEnums.CardMetaType.GetField("unreleased") ?? throw new Exception("deck meta unreleased field not found");
-                    var dont_loc_field = TypesAndEnums.CardMetaType.GetField("dontLoc") ?? throw new Exception("deck meta dontLoc field not found");
-                    var upgrades_to_field = TypesAndEnums.CardMetaType.GetField("upgradesTo") ?? throw new Exception("deck meta upgradesTo field not found");
-                    var rarity_field = TypesAndEnums.CardMetaType.GetField("rarity") ?? throw new Exception("deck meta rarity field not found");
-                    var extra_glossary_field = TypesAndEnums.CardMetaType.GetField("extraGlossary") ?? throw new Exception("deck meta extraGlossary field not found");
-                    var weird_card_field = TypesAndEnums.CardMetaType.GetField("weirdCard") ?? throw new Exception("deck meta weirdCard field not found");
-
-                    foreach (var meta_overwrite in card_meta_overwrites)
+                    else
                     {
-                        if (!card_meta_dictionary.Contains(meta_overwrite.Key))
-                        {
-                            Logger?.LogInformation("ExternalCardMeta {0} no target for overwrite {1}.", meta_overwrite.Value.GlobalName, meta_overwrite.Key);
-                            continue;
-                        }
-                        var original_meta = card_meta_dictionary[meta_overwrite.Key];
-
-                        var new_meta = meta_overwrite.Value;
-                        if (new_meta == null)
-                            continue;
-                        //only set fields that are not null
-                        if (new_meta.Unreleased != null)
-                        {
-                            unreleased_field.SetValue(original_meta, new_meta.Unreleased);
-                        }
-                        if (new_meta.WeirdCard != null)
-                        {
-                            weird_card_field.SetValue(original_meta, new_meta.WeirdCard);
-                        }
-                        if (new_meta.ExtraGlossary != null)
-                        {
-                            extra_glossary_field.SetValue(original_meta, new_meta.ExtraGlossary);
-                        }
-
-                        if (new_meta.UpgradesTo != null)
-                        {
-                            var upgrade_vals = new_meta.UpgradesTo.Select(e => TypesAndEnums.IntToUpgrade(e)).Where(e => e != null).ToArray();
-                            var upgrade_arr = Array.CreateInstance(TypesAndEnums.UpgradeType, upgrade_vals.Length);
-                            for (int i = 0; i < upgrade_vals.Length; i++)
-                            {
-                                upgrade_arr.SetValue(upgrade_vals[i], i);
-                            }
-                            upgrades_to_field.SetValue(original_meta, upgrade_arr);
-                        }
-
-                        if (new_meta.Deck != null)
-                        {
-                            var deck_val = TypesAndEnums.IntToDeck(new_meta.Deck.Id);
-                            deck_field.SetValue(original_meta, deck_val);
-                        }
-
-                        if (new_meta.DontLoc != null)
-                        {
-                            dont_loc_field.SetValue(original_meta, new_meta.DontLoc);
-                        }
-
-                        if (new_meta.DontOffer != null)
-                        {
-                            dont_offer_field.SetValue(original_meta, new_meta.DontOffer);
-                        }
-                        if (new_meta.Rarity != null)
-                        {
-                            var rarity_val = TypesAndEnums.IntToRarity(new_meta.Rarity);
-                            if (rarity_val != null)
-                                rarity_field.SetValue(original_meta, rarity_val);
-                        }
+                        Logger?.LogCritical("Unkown card stat overwrite {0} type {1}. skipping", pass.GlobalName, pass.GetType().Name);
                     }
                 }
-                else
-                    throw new Exception("Deck field in card meta type not found.");
             }
         }
-
-        private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
 
         /// <summary>
         /// Cards, decks, icons, maps, characters, artifacts and other things need their sprite additionaly registered in db.
@@ -604,137 +786,224 @@ namespace CobaltCoreModLoader.Services
         }
 
         /// <summary>
+        /// while card and artifact metas are generated by attribute, some last minute resolutions are needed.
+        /// this includes card meta.deck for external decks, those ids are not know during compile time and thus cannot easily added into the attribute.
+        /// </summary>
+        private static void PatchMetasAndStoryFunctions()
+        {
+            IDictionary card_meta_dictionary = db_type.GetField("cardMetas")?.GetValue(null) as IDictionary ?? throw new Exception("card meta dictionary not found");
+
+            {
+                var deck_field = TypesAndEnums.CardMetaType.GetField("deck");
+                if (deck_field != null)
+                {
+                    foreach (var card in registered_cards.Values.Where(e => e != null && e.ActualDeck != null))
+                    {
+                        if (card == null) continue;
+
+                        if (!card_meta_dictionary.Contains(card.CardType.Name))
+                            continue;
+                        var meta = card_meta_dictionary[card.CardType.Name];
+                        var deck_val = TypesAndEnums.IntToDeck(card.ActualDeck?.Id);
+                        if (deck_val == null)
+                        {
+                            Logger?.LogError("External Card {0} bad actual deck definition", card.GlobalName);
+                            continue;
+                        }
+                        deck_field.SetValue(meta, deck_val);
+                    }
+
+                    foreach (var overwrite in card_overwrites.Where(e => e.Value != null && e.Value.ActualDeck != null))
+                    {
+                        var card = overwrite.Value;
+                        if (card == null) continue;
+
+                        if (!card_meta_dictionary.Contains(overwrite.Value))
+                            continue;
+                        var meta = card_meta_dictionary[overwrite.Value];
+                        var deck_val = TypesAndEnums.IntToDeck(card.ActualDeck?.Id);
+                        if (deck_val == null)
+                        {
+                            Logger?.LogError("External Card {0} bad actual deck definition", card.GlobalName);
+                            continue;
+                        }
+                        deck_field.SetValue(meta, deck_val);
+                    }
+
+                    var dont_offer_field = TypesAndEnums.CardMetaType.GetField("dontOffer") ?? throw new Exception("deck meta dont offer field not found");
+                    var unreleased_field = TypesAndEnums.CardMetaType.GetField("unreleased") ?? throw new Exception("deck meta unreleased field not found");
+                    var dont_loc_field = TypesAndEnums.CardMetaType.GetField("dontLoc") ?? throw new Exception("deck meta dontLoc field not found");
+                    var upgrades_to_field = TypesAndEnums.CardMetaType.GetField("upgradesTo") ?? throw new Exception("deck meta upgradesTo field not found");
+                    var rarity_field = TypesAndEnums.CardMetaType.GetField("rarity") ?? throw new Exception("deck meta rarity field not found");
+                    var extra_glossary_field = TypesAndEnums.CardMetaType.GetField("extraGlossary") ?? throw new Exception("deck meta extraGlossary field not found");
+                    var weird_card_field = TypesAndEnums.CardMetaType.GetField("weirdCard") ?? throw new Exception("deck meta weirdCard field not found");
+
+                    foreach (var meta_overwrite in card_meta_overwrites)
+                    {
+                        if (!card_meta_dictionary.Contains(meta_overwrite.Key))
+                        {
+                            Logger?.LogInformation("ExternalCardMeta {0} no target for overwrite {1}.", meta_overwrite.Value.GlobalName, meta_overwrite.Key);
+                            continue;
+                        }
+                        var original_meta = card_meta_dictionary[meta_overwrite.Key];
+
+                        var new_meta = meta_overwrite.Value;
+                        if (new_meta == null)
+                            continue;
+                        //only set fields that are not null
+                        if (new_meta.Unreleased != null)
+                        {
+                            unreleased_field.SetValue(original_meta, new_meta.Unreleased);
+                        }
+                        if (new_meta.WeirdCard != null)
+                        {
+                            weird_card_field.SetValue(original_meta, new_meta.WeirdCard);
+                        }
+                        if (new_meta.ExtraGlossary != null)
+                        {
+                            extra_glossary_field.SetValue(original_meta, new_meta.ExtraGlossary);
+                        }
+
+                        if (new_meta.UpgradesTo != null)
+                        {
+                            var upgrade_vals = new_meta.UpgradesTo.Select(e => TypesAndEnums.IntToUpgrade(e)).Where(e => e != null).ToArray();
+                            var upgrade_arr = Array.CreateInstance(TypesAndEnums.UpgradeType, upgrade_vals.Length);
+                            for (int i = 0; i < upgrade_vals.Length; i++)
+                            {
+                                upgrade_arr.SetValue(upgrade_vals[i], i);
+                            }
+                            upgrades_to_field.SetValue(original_meta, upgrade_arr);
+                        }
+
+                        if (new_meta.Deck != null)
+                        {
+                            var deck_val = TypesAndEnums.IntToDeck(new_meta.Deck.Id);
+                            deck_field.SetValue(original_meta, deck_val);
+                        }
+
+                        if (new_meta.DontLoc != null)
+                        {
+                            dont_loc_field.SetValue(original_meta, new_meta.DontLoc);
+                        }
+
+                        if (new_meta.DontOffer != null)
+                        {
+                            dont_offer_field.SetValue(original_meta, new_meta.DontOffer);
+                        }
+                        if (new_meta.Rarity != null)
+                        {
+                            var rarity_val = TypesAndEnums.IntToRarity(new_meta.Rarity);
+                            if (rarity_val != null)
+                                rarity_field.SetValue(original_meta, rarity_val);
+                        }
+                    }
+                }
+                else
+                    throw new Exception("Deck field in card meta type not found.");
+            }
+        }
+
+        /// <summary>
         /// Do anything to db.story.
         /// </summary>
         private static void PatchStory()
         {
         }
 
-        /// <summary>
-        /// Decks and Statuses need to be patched into DB.
-        /// </summary>
-        private static void InsertNewDeckAndStatus()
+        private void LoadDbManifests()
         {
-            IDictionary deck_dict = db_type.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
-
-            var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
-            var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
-
-            foreach (var deck in registered_decks.Values)
+            foreach (var manifest in ModAssemblyHandler.DBManifests)
             {
-                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
-                if (deck_val == null)
-                {
-                    Logger?.LogError("externaldeck {0} id {1} not converted into deck enum. skipping...", deck.GlobalName, deck.Id?.ToString() ?? "NULL");
-                    continue;
-                }
-                //create deck def object
-                var new_deck_def = Activator.CreateInstance(TypesAndEnums.DeckDefType);
-
-                var deck_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.DeckColor.ToArgb());
-                if (deck_color == null)
-                {
-                    Logger?.LogWarning("ExternalDeck {0} Color couldn't be initalized", deck.GlobalName);
-                    continue;
-                }
-                var title_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.TitleColor.ToArgb());
-                if (title_color == null)
-                {
-                    Logger?.LogWarning("ExternalDeck {0} Title Color couldn't be initalized", deck.GlobalName);
-                    continue;
-                }
-
-                color_field.SetValue(new_deck_def, deck_color);
-                title_color_field.SetValue(new_deck_def, title_color);
-
-                deck.DeckDefReference = new_deck_def;
-                if (deck_dict.Contains(deck_val))
-                {
-                    deck_dict[deck_val] = new_deck_def;
-                }
-                else
-                {
-                    deck_dict.Add(deck_val, new_deck_def);
-                }
+                if (manifest == null) continue;
+                manifest.LoadManifest(this);
             }
         }
 
-        private static void InsertNewLogicItems()
+        private void PatchEnumExtension()
         {
-            if (CobaltCoreHandler.CobaltCoreAssembly != null)
+            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
+
+            foreach (var deck in registered_decks)
             {
-                /*
-                //patch into all fields
-                var db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
+                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
 
-                var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(card_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Card"));
 
-                var enemies_dict = db_type.GetField("enemies")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(enemies_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("AI"));
 
-                var modifiers_dict = db_type.GetField("modifiers")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(modifiers_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("FightModifier"));
+                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
+                    continue;
+                //prevent existing enums to be prematurely written and breaking their sprites.
+                if (Enum.IsDefined(TypesAndEnums.DeckType, deck_val))
+                    continue;                
+                if (!deck_str_dictionary.Contains(deck_val))
+                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
+            }
+        }
 
-                var artifacts_dict = db_type.GetField("artifacts")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(artifacts_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Artifact"));
+        /// <summary>
+        /// Activate characters
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void PatchNewRunOptions()
+        {
+            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                    continue;
+                if (all_char_list.Contains(deck_val))
+                    continue;
+                all_char_list.Add(deck_val);
+            }
+        }
 
-                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(midrowStuff_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("StuffBase"));
+        private void PatchStarterSets()
+        {
+            var starter_sets_dictionary = TypesAndEnums.StarterDeckType.GetField("starterSets")?.GetValue(null) as IDictionary ?? throw new Exception("couldn't find starterdeck.startersets");
+            var card_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.CardType);
+            var artifact_list_type = typeof(List<>).MakeGenericType(TypesAndEnums.ArtifactType);
 
-                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(backgrounds_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("BG"));
+            var cards_field = TypesAndEnums.StarterDeckType.GetField("cards") ?? throw new Exception("StarterDeck.cards not found");
+            var artifacts_field = TypesAndEnums.StarterDeckType.GetField("artifacts") ?? throw new Exception("StarterDeck.artifacts not found");
 
-                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(maps_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("MapBase"));
-                */
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
 
+                if (deck_val == null)
+                    continue;
+                if (starter_sets_dictionary.Contains(deck_val))
                 {
-                    var card_dict = db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
-
-                    //Overwrite card dictionary.
-
-                    if (card_dict != null)
-                    {
-                        foreach (var card in registered_cards.Values)
-                        {
-                            if (card == null) continue;
-
-                            if (!card_dict.TryAdd(card.CardType.Name, card.CardType))
-                            {
-                                Logger?.LogWarning($"ExternalCard {card.GlobalName} couldn't be added into DB.card dictionary because of collision in type name.");
-                            }
-                        }
-
-                        foreach (var overwrite in card_overwrites)
-                        {
-                            if (!card_dict.ContainsKey(overwrite.Key))
-                            {
-                                Logger?.LogWarning("ExternalCard {0} overwrite of {1} failed because no key found.", overwrite.Value.GlobalName, overwrite.Key);
-                                continue;
-                            }
-                            else
-                            {
-                                card_dict[overwrite.Key] = overwrite.Value.CardType;
-                            }
-                        }
-                    }
+                    Logger?.LogWarning("ExternalCharacter {0} Starter Deck {1} is already registered. Skipping. Consider using StarterDeckOverwrite", character.GlobalName, deck_val.ToString());
+                    continue;
                 }
-                //inject card stat overwrites
+                var card_arr = Array.CreateInstance(TypesAndEnums.CardType, character.StarterDeck.Count());
+                for (int i = 0; i < character.StarterDeck.Count(); i++)
                 {
-                    var base_stat_postfix = typeof(DBExtender).GetMethod("OverwriteCardStats", BindingFlags.Static | BindingFlags.NonPublic);
-                    var harmony = new Harmony("modloader.dbextender.card_stat_overwrites");
-                    foreach (var overwrite in card_stat_overwrites)
-                    {
-                        //These are virtual and thus need to be retrieved everytime, but also improves ingame performance.
-                        var base_stat_method = overwrite.Key.GetMethod("GetData") ?? throw new Exception();
-                        harmony.Patch(base_stat_method, postfix: new HarmonyMethod(base_stat_postfix));
-                    }
+                    var card_instance = Activator.CreateInstance(character.StarterDeck.ElementAt(i));
+                    card_arr.SetValue(card_instance, i);
                 }
 
-                var midrowStuff_dict = db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
-                var backgrounds_dict = db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
-                var maps_dict = db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
+                var artifact_arr = Array.CreateInstance(TypesAndEnums.ArtifactType, character.StarterArtifacts.Count());
+                for (int i = 0; i < character.StarterArtifacts.Count(); i++)
+                {
+                    var artifact_instance = Activator.CreateInstance(character.StarterArtifacts.ElementAt(i));
+                    artifact_arr.SetValue(artifact_instance, i);
+                }
+
+                var card_list = Activator.CreateInstance(card_list_type, new object[] { card_arr });
+                var artifact_list = Activator.CreateInstance(artifact_list_type, new object[] { artifact_arr });
+
+                var new_starter_deck = Activator.CreateInstance(TypesAndEnums.StarterDeckType);
+
+                if (new_starter_deck == null)
+                {
+                    continue;
+                }
+
+                cards_field.SetValue(new_starter_deck, card_list);
+                artifacts_field.SetValue(new_starter_deck, artifact_list);
+                starter_sets_dictionary.Add(deck_val, new_starter_deck);
             }
         }
 
@@ -772,259 +1041,5 @@ namespace CobaltCoreModLoader.Services
             }
         }
         */
-
-        private static Dictionary<string, ExternalCard> registered_cards = new Dictionary<string, ExternalCard>();
-
-        private static Dictionary<string, ExternalCard> card_overwrites = new Dictionary<string, ExternalCard>();
-
-        bool IDbRegistry.RegisterArtifact(ExternalArtifact artifact)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void OverwriteCardStats(ref object __result, object __instance, object state)
-        {
-            var lookup_type = __instance.GetType();
-            if (card_stat_overwrites.TryGetValue(lookup_type, out var overwrite_passes))
-            {
-                foreach (var pass in overwrite_passes)
-                {
-                    if (pass is ActiveCardStatOverwrite active_overwrite)
-                    {
-                        var new_stats = active_overwrite.GetStatFunction(state, __result);
-                        __result = new_stats;
-                    }
-                    else if (pass is PartialCardStatOverwrite partial_overwrite)
-                    {
-                        partial_overwrite.ApplyOverwrite(ref __result);
-                    }
-                    else
-                    {
-                        Logger?.LogCritical("Unkown card stat overwrite {0} type {1}. skipping", pass.GlobalName, pass.GetType().Name);
-                    }
-                }
-            }
-        }
-
-        bool IDbRegistry.RegisterCard(ExternalCard card, string? overwrite)
-        {
-            if (!card.CardType.IsSubclassOf(card_type))
-            {
-                Logger?.LogCritical("ExternalCard {0} isn't a card but type {1}", card.GlobalName, card.CardType.Name);
-                return false;
-            }
-
-            if (registered_cards.ContainsKey(card.GlobalName))
-            {
-                Logger?.LogCritical($"Tried to register a card with the global name {card.GlobalName} twice! Rejecting second card");
-                return false;
-            }
-
-            //check if card is valid
-
-            if (!card.ValidReferences())
-            {
-                Logger?.LogCritical($"Card with gloabl name {card.GlobalName} has unregistered assets.");
-                return false;
-            }
-
-            //mark overwrite
-            if (overwrite != null)
-            {
-                if (card_overwrites.TryAdd(overwrite, card))
-                {
-                    Logger?.LogInformation("Collision in overwrite of type {0}. Replacing {1} with {2}", overwrite, card_overwrites[overwrite].GlobalName, card.GlobalName);
-                    card_overwrites[overwrite] = card;
-                }
-            }
-            else
-            {
-                //add card into registy
-                registered_cards.Add(card.GlobalName, card);
-            }
-
-            return true;
-        }
-
-        bool IDbRegistry.RegisterCharacter(ExternalCharacter character)
-        {
-            if (string.IsNullOrEmpty(character.GlobalName))
-            {
-                return false;
-            }
-
-            if (!registered_characters.TryAdd(character.GlobalName, character))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private const int deck_counter_start = 10000;
-        private static int deck_counter = deck_counter_start;
-
-        private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
-        private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
-
-        bool IDbRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)
-        {
-            if (deck.Id != null)
-            {
-                Logger?.LogWarning("Deck already has an ID");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(deck.GlobalName))
-            {
-                Logger?.LogWarning("Deck with empty global name");
-                return false;
-            }
-            if (deck_lookup.ContainsKey(deck.GlobalName))
-            {
-                Logger?.LogWarning("Deck GlobalName collision:" + deck.GlobalName);
-                return false;
-            }
-
-            if (overwrite == null)
-            {
-                deck_lookup.Add(deck.GlobalName, deck);
-                registered_decks.Add(deck_counter, deck);
-                deck.Id = deck_counter;
-                deck_counter++;
-                return true;
-            }
-            else
-            {
-                if (overwrite < 0 || deck_counter_start <= overwrite)
-                {
-                    Logger?.LogError("Attempted overwrite of non card value");
-                    return false;
-                }
-
-                deck_lookup.Add(deck.GlobalName, deck);
-                if (!registered_decks.TryAdd(overwrite.Value, deck))
-                {
-                    Logger?.LogWarning("Collision Deck Overwrite between {0} and {1} on value {2}. {1} will be used unless other overwrite happens.",
-                        registered_decks[overwrite.Value].GlobalName, deck.GlobalName, overwrite.Value, deck.GlobalName);
-                    registered_decks[overwrite.Value] = deck;
-                }
-                deck.Id = overwrite.Value;
-                return true;
-            }
-        }
-
-        bool IDbRegistry.RegisterEnemy(ExternalEnemy enemy)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterMidrowItem(ExternalMidrowItem midrowItem)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterModifier(ExternalModifier modifier)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterSpaceThing(ExternalSpaceThing spaceThing)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterStatus(ExternalStatus status)
-        {
-            throw new NotImplementedException();
-        }
-
-        ExternalSprite? IDbRegistry.GetModSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName);
-        }
-
-        ExternalSprite IDbRegistry.GetOriginalSprite(int sprVal)
-        {
-            return TypesAndEnums.GetOriginalSprite(sprVal);
-        }
-
-        /// <summary>
-        /// CardType -> Card Meta
-        /// </summary>
-        private static Dictionary<string, CardMetaOverwrite> card_meta_overwrites = new Dictionary<string, CardMetaOverwrite>();
-
-        /// <summary>
-        /// GlobalName -> Card Meta
-        /// </summary>
-        private static Dictionary<string, CardMetaOverwrite> card_meta_lookup = new Dictionary<string, CardMetaOverwrite>();
-
-        bool IDbRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
-        {
-            if (string.IsNullOrEmpty(cardMeta.GlobalName))
-            {
-                Logger?.LogWarning("Attempted to register card meta without global name. rejected.");
-                return false;
-            }
-            if (!card_meta_lookup.TryAdd(cardMeta.GlobalName, cardMeta))
-            {
-                Logger?.LogWarning("ExternalCardMeta {0} cannot be added, because global name already registered", cardMeta.GlobalName);
-                return false;
-            }
-            if (!card_meta_overwrites.TryAdd(card_key, cardMeta))
-            {
-                Logger?.LogWarning("ExternalCardMeta {0} will overwrite anoter overwrite meta {1}", cardMeta.GlobalName, card_meta_lookup[card_key].GlobalName);
-                card_meta_lookup[card_key] = cardMeta;
-            }
-            return true;
-        }
-
-        private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
-        private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
-
-        bool IDbRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
-        {
-            if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
-            {
-                Logger?.LogWarning("Attempted to register card stat overwrite without global name. rejected.");
-                return false;
-            }
-            if (!statOverwrite.CardType.IsSubclassOf(TypesAndEnums.CardType))
-            {
-                Logger?.LogWarning("Card overwrite {0} doesn't target a class of the card type.", statOverwrite.GlobalName);
-                return false;
-            }
-            if (!card_stat_lookup.TryAdd(statOverwrite.GlobalName, statOverwrite))
-            {
-                Logger?.LogWarning("Collission in card overwrite global name {0} ", statOverwrite.GlobalName);
-                return false;
-            }
-            if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
-                card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
-            return true;
-        }
-
-        bool IDbRegistry.RegisterAnimation(ExternalAnimation animation)
-        {
-            //
-            if (string.IsNullOrEmpty(animation.GlobalName))
-            {
-                Logger?.LogWarning("animation without global name");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(animation.Tag))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
-                return false;
-            }
-
-            if (!registered_animations.TryAdd(animation.GlobalName, animation))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
-                return false;
-            }
-
-            return true;
-        }
     }
 }
