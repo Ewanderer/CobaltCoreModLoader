@@ -38,6 +38,9 @@ namespace CobaltCoreModLoader.Services
         private static List<IDeckManifest> deckManifests = new();
         public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
 
+        private static List<ICardManifest> cardManifests = new();
+        public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
+
         private void ExtractManifestFromAssembly(Assembly assembly)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
@@ -73,6 +76,10 @@ namespace CobaltCoreModLoader.Services
                     dBManifests.Add(db_manifest);
                 if (spanwed_manifest is IAnimationManifest anim_manifest)
                     animationManifests.Add(anim_manifest);
+                if (spanwed_manifest is IDeckManifest deckManifest)
+                    deckManifests.Add(deckManifest);
+                if (spanwed_manifest is ICardManifest card_manifest)
+                    cardManifests.Add(card_manifest);
             }
         }
 
