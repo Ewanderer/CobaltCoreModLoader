@@ -42,6 +42,8 @@ public static class Program
             host.Services.GetRequiredService<SpriteExtender>().PatchSpriteSystem();
             //patch deck
             host.Services.GetRequiredService<DeckRegistry>().LoadManifests();
+            //patch cards
+            host.Services.GetRequiredService<CardRegistry>().LoadManifests();
             //patch animation
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch db

@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest
     {
         public string Name => "EWanderer.DemoMod";
 
@@ -59,17 +59,6 @@ namespace DemoMod
 
         public void LoadManifest(IDbRegistry dbRegistry)
         {
-            if (card_art_sprite == null)
-                return;
-            //make card meta data
-            var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null);
-            //add card name in english
-            card.AddLocalisation("Schwarzmagier");
-            //register card in the db extender.
-            dbRegistry.RegisterCard(card);
-
-
-
             var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
             {
                 Deck = ExternalDeck.GetRaw((int)Deck.dracula),
@@ -155,6 +144,18 @@ namespace DemoMod
             if (!registry.RegisterDeck(dracula_deck))
                 return;
 
+        }
+
+        public void LoadManifest(ICardRegistry registry)
+        {
+            if (card_art_sprite == null)
+                return;
+            //make card meta data
+            var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null);
+            //add card name in english
+            card.AddLocalisation("Schwarzmagier");
+            //register card in the db extender.
+            registry.RegisterCard(card);
         }
     }
 }

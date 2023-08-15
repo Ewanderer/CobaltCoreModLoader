@@ -7,7 +7,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     {
         bool RegisterArtifact(ExternalArtifact artifact);
 
-        bool RegisterCard(ExternalCard card, string? overwrite = null);
+
 
         bool RegisterCharacter(ExternalCharacter character);
 
