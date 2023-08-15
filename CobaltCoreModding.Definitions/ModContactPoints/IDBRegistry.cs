@@ -11,7 +11,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 
         bool RegisterCharacter(ExternalCharacter character);
 
-        bool RegisterDeck(ExternalDeck deck, int? overwrite = null);
+
 
         bool RegisterEnemy(ExternalEnemy enemy);
 
