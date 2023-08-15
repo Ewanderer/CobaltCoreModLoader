@@ -66,7 +66,7 @@ namespace DemoMod
             var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_WaveBeam);
             var border = dbRegistry.GetOriginalSprite((int)Spr.cardShared_border_ephemeral);
 
-            var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.FromArgb(255, 186, 224), System.Drawing.Color.Black, art_default, border, pinker_per_border_over_sprite);
+            var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.Brown, System.Drawing.Color.Yellow, art_default, border, pinker_per_border_over_sprite);
             dbRegistry.RegisterDeck(pinker_peri, (int)Deck.peri);
 
             var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
