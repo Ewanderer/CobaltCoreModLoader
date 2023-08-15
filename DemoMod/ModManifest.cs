@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest
     {
         public string Name => "EWanderer.DemoMod";
 
@@ -59,37 +59,7 @@ namespace DemoMod
 
         public void LoadManifest(IDbRegistry dbRegistry)
         {
-            var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
-            {
-                Deck = ExternalDeck.GetRaw((int)Deck.dracula),
-                DontLoc = false,
-                DontOffer = false,
-                ExtraGlossary = new string[] { "Help", "Why" },
-                Rarity = (int)Rarity.rare,
-                Unreleased = false,
-                UpgradesTo = new int[] { (int)Upgrade.A, (int)Upgrade.B },
-                WeirdCard = false
-            };
-
-            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
-
-            var better_dodge = new PartialCardStatOverwrite("ewanderer.demomod.betterdodge", typeof(DodgeColorless)) { Cost = 0, Buoyant = true, Retain = true };
-
-            dbRegistry.RegisterCardStatOverwrite(better_dodge);
-
-            /*
-            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
-            var all_normal_cards = Assembly.GetAssembly(typeof(Card))?.GetTypes().Where(e => !e.IsAbstract && e.IsClass && e.IsSubclassOf(typeof(Card)));
-            if (all_normal_cards != null)
-            {
-                foreach (var card_type in all_normal_cards)
-                {
-                    var zero_cost_overwrite = new PartialCardStatOverwrite("ewanderer.demomod.partialoverwrite." + card_type.Name, card_type);
-                    zero_cost_overwrite.Cost = -1;
-                    dbRegistry.RegisterCardStatOverwrite(zero_cost_overwrite);
-                }
-            }
-            */
+            
 
             MakeDracularPlayable(dbRegistry);
         }
@@ -156,6 +126,41 @@ namespace DemoMod
             card.AddLocalisation("Schwarzmagier");
             //register card in the db extender.
             registry.RegisterCard(card);
+        }
+
+        public void LoadManifest(ICardOverwriteRegistry registry)
+        {
+            var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
+            {
+                Deck = ExternalDeck.GetRaw((int)Deck.dracula),
+                DontLoc = false,
+                DontOffer = false,
+                ExtraGlossary = new string[] { "Help", "Why" },
+                Rarity = (int)Rarity.rare,
+                Unreleased = false,
+                UpgradesTo = new int[] { (int)Upgrade.A, (int)Upgrade.B },
+                WeirdCard = false
+            };
+
+            registry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
+
+            var better_dodge = new PartialCardStatOverwrite("ewanderer.demomod.betterdodge", typeof(DodgeColorless)) { Cost = 0, Buoyant = true, Retain = true };
+
+            registry.RegisterCardStatOverwrite(better_dodge);
+
+            /*
+            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
+            var all_normal_cards = Assembly.GetAssembly(typeof(Card))?.GetTypes().Where(e => !e.IsAbstract && e.IsClass && e.IsSubclassOf(typeof(Card)));
+            if (all_normal_cards != null)
+            {
+                foreach (var card_type in all_normal_cards)
+                {
+                    var zero_cost_overwrite = new PartialCardStatOverwrite("ewanderer.demomod.partialoverwrite." + card_type.Name, card_type);
+                    zero_cost_overwrite.Cost = -1;
+                    registry.RegisterCardStatOverwrite(zero_cost_overwrite);
+                }
+            }
+            */
         }
     }
 }

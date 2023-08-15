@@ -41,6 +41,9 @@ namespace CobaltCoreModLoader.Services
         private static List<ICardManifest> cardManifests = new();
         public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
 
+        private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
+        public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
+
         private void ExtractManifestFromAssembly(Assembly assembly)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
@@ -80,6 +83,8 @@ namespace CobaltCoreModLoader.Services
                     deckManifests.Add(deckManifest);
                 if (spanwed_manifest is ICardManifest card_manifest)
                     cardManifests.Add(card_manifest);
+                if(spanwed_manifest is ICardOverwriteManifest card_overwrite_manifest)
+                    cardOverwriteManifests.Add(card_overwrite_manifest);
             }
         }
 
@@ -96,28 +101,6 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 manifest.BootMod(this);
             }
-        }
-
-        private T? FindManifest<T>(Assembly assembly) where T : class
-        {
-            var manifest_types = assembly.GetTypes().Where(type => type.IsClass && !type.IsAbstract && type.GetInterfaces().Contains(typeof(T)));
-            T? manifest = null;
-            if (manifest_types.Count() == 0)
-            {
-                logger.LogInformation($"Mod assembly contains no {typeof(T).Name}.");
-            }
-            else
-            {
-                if (manifest_types.Count() > 1)
-                {
-                    logger.LogWarning($"Mod assembly contains more than one {typeof(T).Name}. Will use manifest type {manifest_types.First().Name}");
-                }
-                var manifest_instance = (manifest_types.First().GetConstructor(Type.EmptyTypes)?.Invoke(new object[0]));
-                if (manifest_instance == null)
-                    logger.LogError($"No empty constructor found in manifest {manifest_types.First().Name}");
-                manifest = manifest_instance as T;
-            }
-            return manifest;
         }
 
         public void LoadModAssembly(FileInfo mod_file)

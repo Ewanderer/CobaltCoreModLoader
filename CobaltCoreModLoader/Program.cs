@@ -44,6 +44,8 @@ public static class Program
             host.Services.GetRequiredService<DeckRegistry>().LoadManifests();
             //patch cards
             host.Services.GetRequiredService<CardRegistry>().LoadManifests();
+            //card overwrites
+            host.Services.GetRequiredService<CardOverwriteRegistry>().LoadManifests();
             //patch animation
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch db
