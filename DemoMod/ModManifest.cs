@@ -6,23 +6,24 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest
     {
-        public string Name => "EWanderer.DemoMod";
-
-        public IEnumerable<string> Dependencies => new string[0];
-
+        internal static int x = 0;
         private ExternalSprite? card_art_sprite;
-        private ExternalSprite? pinker_per_border_over_sprite;
-
+        private ExternalAnimation? default_animation;
+        private ExternalDeck? dracula_deck;
+        private ExternalSprite? dracular_art;
+        private ExternalSprite? dracular_border;
+        private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
+        private ExternalSprite? pinker_per_border_over_sprite;
+        public IEnumerable<string> Dependencies => new string[0];
+        public string Name => "EWanderer.DemoMod";
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
-
-        internal static int x = 0;
 
         public void LoadManifest(IArtRegistry artRegistry)
         {
@@ -53,6 +54,47 @@ namespace DemoMod
 
         public void LoadManifest(IDbRegistry dbRegistry)
         {
+        }
+
+        public void LoadManifest(IAnimationRegistry registry)
+        {
+            default_animation = new ExternalAnimation("ewanderer.demomod.dracula.neutral", dracula_deck ?? throw new NullReferenceException(), "neutral", false, new ExternalSprite[] {
+                ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0),
+                ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_1),
+                ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_2),
+                ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_3),
+                ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_4),
+            });
+
+            registry.RegisterAnimation(default_animation);
+            if (mini_dracula_sprite == null)
+                throw new Exception();
+
+            mini_animation = new ExternalAnimation("ewanderer.demomod.dracula.mini", dracula_deck, "mini", false, new ExternalSprite[] { mini_dracula_sprite });
+
+            registry.RegisterAnimation(mini_animation);
+        }
+
+        public void LoadManifest(IDeckRegistry registry)
+        {
+            //make peri deck mod
+            var art_default = ExternalSprite.GetRaw((int)Spr.cards_WaveBeam);
+            var border = ExternalSprite.GetRaw((int)Spr.cardShared_border_ephemeral);
+
+            var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.Brown, System.Drawing.Color.Yellow, art_default, border, pinker_per_border_over_sprite);
+            registry.RegisterDeck(pinker_peri, (int)Deck.peri);
+
+            dracular_art = ExternalSprite.GetRaw((int)Spr.cards_colorless);
+            dracular_border = ExternalSprite.GetRaw((int)Spr.cardShared_border_dracula);
+
+            dracula_deck = new ExternalDeck("EWanderer.Demomod.DraculaDeck", System.Drawing.Color.Crimson, System.Drawing.Color.Purple, dracular_art ?? throw new NullReferenceException(), dracular_border ?? throw new NullReferenceException(), null);
+
+            if (!registry.RegisterDeck(dracula_deck))
+                return;
+        }
+
+        public void LoadManifest(ICardRegistry registry)
+        {
             if (card_art_sprite == null)
                 return;
             //make card meta data
@@ -60,15 +102,11 @@ namespace DemoMod
             //add card name in english
             card.AddLocalisation("Schwarzmagier");
             //register card in the db extender.
-            dbRegistry.RegisterCard(card);
+            registry.RegisterCard(card);
+        }
 
-            //make peri deck mod
-            var art_default = dbRegistry.GetOriginalSprite((int)Spr.cards_WaveBeam);
-            var border = dbRegistry.GetOriginalSprite((int)Spr.cardShared_border_ephemeral);
-
-            var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.Brown, System.Drawing.Color.Yellow, art_default, border, pinker_per_border_over_sprite);
-            dbRegistry.RegisterDeck(pinker_peri, (int)Deck.peri);
-
+        public void LoadManifest(ICardOverwriteRegistry registry)
+        {
             var new_meta = new CardMetaOverwrite("EWanderer.DemoMod.Meta")
             {
                 Deck = ExternalDeck.GetRaw((int)Deck.dracula),
@@ -81,11 +119,11 @@ namespace DemoMod
                 WeirdCard = false
             };
 
-            dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
+            registry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
 
             var better_dodge = new PartialCardStatOverwrite("ewanderer.demomod.betterdodge", typeof(DodgeColorless)) { Cost = 0, Buoyant = true, Retain = true };
 
-            dbRegistry.RegisterCardStatOverwrite(better_dodge);
+            registry.RegisterCardStatOverwrite(better_dodge);
 
             /*
             dbRegistry.RegisterCardMetaOverwrite(new_meta, typeof(CannonColorless).Name);
@@ -96,42 +134,18 @@ namespace DemoMod
                 {
                     var zero_cost_overwrite = new PartialCardStatOverwrite("ewanderer.demomod.partialoverwrite." + card_type.Name, card_type);
                     zero_cost_overwrite.Cost = -1;
-                    dbRegistry.RegisterCardStatOverwrite(zero_cost_overwrite);
+                    registry.RegisterCardStatOverwrite(zero_cost_overwrite);
                 }
             }
             */
-
-            MakeDracularPlayable(dbRegistry);
         }
 
-        private void MakeDracularPlayable(IDbRegistry registry)
+        public void LoadManifest(ICharacterRegistry registry)
         {
-            var dracular_art = registry.GetOriginalSprite((int)Spr.cards_colorless);
-            var dracular_border = registry.GetOriginalSprite((int)Spr.cardShared_border_dracula);
-            var dracular_spr = registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_0);
-            var dracula_deck = new ExternalDeck("EWanderer.Demomod.DraculaDeck", System.Drawing.Color.Crimson, System.Drawing.Color.Purple, dracular_art, dracular_border, null);
+            var dracular_spr = ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0);
 
-            if (!registry.RegisterDeck(dracula_deck))
-                return;
-            var start_crads = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
-
-            var default_animation = new ExternalAnimation("ewanderer.demomod.dracula.neutral", dracula_deck, "neutral", false, new ExternalSprite[] {
-                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_0),
-                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_1),
-                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_2),
-                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_3),
-                registry.GetOriginalSprite((int)Spr.characters_dracula_dracula_neutral_4),
-            });
-
-            registry.RegisterAnimation(default_animation);
-            if (mini_dracula_sprite == null)
-                throw new Exception();
-
-            var mini_animation = new ExternalAnimation("ewanderer.demomod.dracula.mini", dracula_deck, "mini", false, new ExternalSprite[] { mini_dracula_sprite });
-
-            registry.RegisterAnimation(mini_animation);
-
-            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck, dracular_spr, start_crads, new Type[0], default_animation, mini_animation);
+            var start_cards = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
+            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck ?? throw new NullReferenceException(), dracular_spr, start_cards, new Type[0], default_animation ?? throw new NullReferenceException(), mini_animation ?? throw new NullReferenceException());
             playable_dracular_character.AddNameLocalisation("Count Dracula");
             playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
             registry.RegisterCharacter(playable_dracular_character);

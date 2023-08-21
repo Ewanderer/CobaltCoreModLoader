@@ -5,37 +5,11 @@
     /// </summary>
     public class ExternalSprite
     {
-        /// <summary>
-        /// This must be a unique name across all mods to be used for cross mod sprite usage.
-        /// </summary>
-        public string GlobalName { get; init; }
-
-        private int? id;
-
-        /// <summary>
-        /// The Spr value assigned to this Sprite. By the time any other external ressource needs this value, it will already be assigned aka not null
-        /// </summary>
-        public int? Id
-        {
-            get => id; set
-            {
-                if (id != null)
-                    throw new InvalidOperationException("This ExternalSprite was already registered");
-                id = value;
-            }
-        }
-
         public FileInfo? physical_location;
+
         public Func<Stream>? virtual_location;
 
-        /// <summary>
-        /// for mods way out there they are free to create their own texture2d object and feed it here. will only be used if both location entries are null.
-        /// </summary>
-        /// <returns>A texture2d object</returns>
-        public virtual object? GetTexture()
-        {
-            return null;
-        }
+        private int? id;
 
         /// <summary>
         /// Path to the sprite file on disc to be used.
@@ -65,6 +39,24 @@
         }
 
         /// <summary>
+        /// This must be a unique name across all mods to be used for cross mod sprite usage.
+        /// </summary>
+        public string GlobalName { get; init; }
+
+        /// <summary>
+        /// The Spr value assigned to this Sprite. By the time any other external ressource needs this value, it will already be assigned aka not null
+        /// </summary>
+        public int? Id
+        {
+            get => id; set
+            {
+                if (id != null)
+                    throw new InvalidOperationException("This ExternalSprite was already registered");
+                id = value;
+            }
+        }
+
+        /// <summary>
         /// This function is used by mod loader to create an art asset with an id of an cobalt core spr value.
         /// mods should not use this unless they feed it direct Spr values.
         /// cannot be registered in the art registry but otherwise be used.
@@ -74,6 +66,15 @@
         public static ExternalSprite GetRaw(int id)
         {
             return new ExternalSprite(id);
+        }
+
+        /// <summary>
+        /// for mods way out there they are free to create their own texture2d object and feed it here. will only be used if both location entries are null.
+        /// </summary>
+        /// <returns>A texture2d object</returns>
+        public virtual object? GetTexture()
+        {
+            return null;
         }
     }
 }
