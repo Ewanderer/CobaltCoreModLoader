@@ -6,16 +6,6 @@
     /// </summary>
     public class ExternalCharacter
     {
-        public ExternalDeck Deck { get; init; }
-
-        public string GlobalName { get; init; }
-
-        public ExternalSprite CharPanelSpr { get; init; }
-
-        public IEnumerable<Type> StarterDeck { get; init; }
-
-        public IEnumerable<Type> StarterArtifacts { get; init; }
-
         /// <summary>
         ///
         /// </summary>
@@ -45,21 +35,25 @@
                 throw new ArgumentException("default animation must have \"mini\" tag");
         }
 
-        private Dictionary<string, string> name_localisations { get; init; } = new Dictionary<string, string>();
-        private Dictionary<string, string> desc_localisations { get; init; } = new Dictionary<string, string>();
+        public ExternalSprite CharPanelSpr { get; init; }
+        public ExternalDeck Deck { get; init; }
 
-        public string? GetDesc(string loacle)
-        {
-            if (!desc_localisations.TryGetValue(loacle, out string? name))
-                if (!desc_localisations.TryGetValue("en", out name))
-                    return null;
-            return name;
-        }
+        public string GlobalName { get; init; }
+        public IEnumerable<Type> StarterArtifacts { get; init; }
+        public IEnumerable<Type> StarterDeck { get; init; }
+        private Dictionary<string, string> desc_localisations { get; init; } = new Dictionary<string, string>();
+        private Dictionary<string, string> name_localisations { get; init; } = new Dictionary<string, string>();
 
         public void AddDescLocalisation(string desc, string locale = "en")
         {
             if (!desc_localisations.TryAdd(locale, desc))
                 desc_localisations[locale] = desc;
+        }
+
+        public void AddNameLocalisation(string name, string locale = "en")
+        {
+            if (!name_localisations.TryAdd(locale, name))
+                name_localisations[locale] = name;
         }
 
         public string? GetCharacterName(string loacle)
@@ -70,10 +64,12 @@
             return name;
         }
 
-        public void AddNameLocalisation(string name, string locale = "en")
+        public string? GetDesc(string loacle)
         {
-            if (!name_localisations.TryAdd(locale, name))
-                name_localisations[locale] = name;
+            if (!desc_localisations.TryGetValue(loacle, out string? name))
+                if (!desc_localisations.TryGetValue("en", out name))
+                    return null;
+            return name;
         }
     }
 }

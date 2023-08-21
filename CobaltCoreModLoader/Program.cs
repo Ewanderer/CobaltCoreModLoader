@@ -23,13 +23,17 @@ public static class Program
             builder.Services.AddSingleton<DBExtender>();
             builder.Services.AddSingleton<ModAssemblyHandler>();
             builder.Services.AddSingleton<SpriteExtender>();
+            builder.Services.AddSingleton<AnimationRegistry>();
+            builder.Services.AddSingleton<DeckRegistry>();
+            builder.Services.AddSingleton<CardRegistry>();
+            builder.Services.AddSingleton<CardOverwriteRegistry>();
+            builder.Services.AddSingleton<CharacterRegistry>();
 
             var host = builder.Build();
 
             host.Start();
 
             //load cobalt core assembly
-
             var cobalt_core = host.Services.GetRequiredService<CobaltCoreHandler>();
             cobalt_core.LoadupCobaltCore(new FileInfo("O:\\SteamLibrary\\steamapps\\common\\Cobalt Core\\CobaltCore.exe"));
             //load mods and their manifests.
@@ -39,6 +43,16 @@ public static class Program
 
             //patch art.
             host.Services.GetRequiredService<SpriteExtender>().PatchSpriteSystem();
+            //patch deck
+            host.Services.GetRequiredService<DeckRegistry>().LoadManifests();
+            //patch cards
+            host.Services.GetRequiredService<CardRegistry>().LoadManifests();
+            //card overwrites
+            host.Services.GetRequiredService<CardOverwriteRegistry>().LoadManifests();
+            //patch animation
+            host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
+            //patch characters
+            host.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
 
