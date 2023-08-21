@@ -44,6 +44,9 @@ namespace CobaltCoreModLoader.Services
         private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
         public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
 
+        private static List<ICharacterManifest> characterManifests = new();
+        public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
+
         private void ExtractManifestFromAssembly(Assembly assembly)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
@@ -85,6 +88,8 @@ namespace CobaltCoreModLoader.Services
                     cardManifests.Add(card_manifest);
                 if(spanwed_manifest is ICardOverwriteManifest card_overwrite_manifest)
                     cardOverwriteManifests.Add(card_overwrite_manifest);
+                if(spanwed_manifest is ICharacterManifest character_manifest)
+                    characterManifests.Add(character_manifest);
             }
         }
 

@@ -25,6 +25,9 @@ public static class Program
             builder.Services.AddSingleton<SpriteExtender>();
             builder.Services.AddSingleton<AnimationRegistry>();
             builder.Services.AddSingleton<DeckRegistry>();
+            builder.Services.AddSingleton<CardRegistry>();
+            builder.Services.AddSingleton<CardOverwriteRegistry>();
+            builder.Services.AddSingleton<CharacterRegistry>();
 
             var host = builder.Build();
 
@@ -48,6 +51,8 @@ public static class Program
             host.Services.GetRequiredService<CardOverwriteRegistry>().LoadManifests();
             //patch animation
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
+            //patch characters
+            host.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
 
