@@ -1,5 +1,4 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
-using CobaltCoreModLoader.Services;
+﻿using CobaltCoreModLoader.Services;
 
 namespace CobaltCoreModLoader.Utils
 {
@@ -8,7 +7,42 @@ namespace CobaltCoreModLoader.Utils
     /// </summary>
     internal class TypesAndEnums
     {
+        private static Type? __artifact_type = null;
         private static Type? __card_meta_type = null;
+
+        private static Type? __card_type = null;
+
+        private static Type? __cobalt_color_type = null;
+
+        private static Type? __db_type = null;
+
+        private static Type? __deck_def_type = null;
+
+        private static Type? __deck_type = null;
+
+        private static Type? __enum_extensions_type = null;
+
+        private static Type? __new_run_options_type = null;
+
+        private static Type? __rarity_type = null;
+
+        private static Type? __spr_type = null;
+
+        private static Type? __starter_Deck_type = null;
+
+        private static Type? __story_vars_type = null;
+
+        private static Type? __upgrade_type = null;
+
+        public static Type ArtifactType
+        {
+            get
+            {
+                if (__artifact_type != null)
+                    return __artifact_type;
+                return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
+            }
+        }
 
         public static Type CardMetaType
         {
@@ -20,8 +54,6 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-        private static Type? __card_type = null;
-
         public static Type CardType
         {
             get
@@ -32,33 +64,15 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-        private static Type? __spr_type = null;
-
-        public static Type SprType
+        public static Type CobaltColorType
         {
             get
             {
-                if (__spr_type != null)
-                    return __spr_type;
-                return __spr_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
+                if (__cobalt_color_type != null)
+                    return __cobalt_color_type;
+                return __cobalt_color_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Color") ?? throw new Exception("Color type not found");
             }
         }
-
-        private static Type? __deck_type = null;
-
-        public static Type DeckType
-        {
-            get
-            {
-                if (__deck_type != null)
-                    return __deck_type;
-                return __deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Deck") ?? throw new Exception("Deck type not found");
-            }
-        }
-
-        private static Type? __deck_def_type = null;
-
-        private static Type? __db_type = null;
 
         public static Type DbType
         {
@@ -80,43 +94,15 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-        private static Type? __cobalt_color_type = null;
-
-        public static Type CobaltColorType
+        public static Type DeckType
         {
             get
             {
-                if (__cobalt_color_type != null)
-                    return __cobalt_color_type;
-                return __cobalt_color_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Color") ?? throw new Exception("Color type not found");
+                if (__deck_type != null)
+                    return __deck_type;
+                return __deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Deck") ?? throw new Exception("Deck type not found");
             }
         }
-
-        private static Type? __upgrade_type = null;
-
-        public static Type UpgradeType
-        {
-            get
-            {
-                if (__upgrade_type != null)
-                    return __upgrade_type;
-                return __upgrade_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Upgrade") ?? throw new Exception("Upgrade type not found");
-            }
-        }
-
-        private static Type? __story_vars_type = null;
-
-        public static Type StoryVarsType
-        {
-            get
-            {
-                if (__story_vars_type != null)
-                    return __story_vars_type;
-                return __story_vars_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StoryVars") ?? throw new Exception("StoryVars type not found");
-            }
-        }
-
-        private static Type? __enum_extensions_type = null;
 
         public static Type EnumExtensionsType
         {
@@ -128,31 +114,15 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-        private static Type? __starter_Deck_type = null;
-
-        public static Type StarterDeckType
+        public static Type NewRunOptionsType
         {
             get
             {
-                if (__starter_Deck_type != null)
-                    return __starter_Deck_type;
-                return __starter_Deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterDeck") ?? throw new Exception("StarterDeck type not found");
+                if (__new_run_options_type != null)
+                    return __new_run_options_type;
+                return __new_run_options_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("NewRunOptions") ?? throw new Exception("NewRunOptions type not found");
             }
         }
-
-        private static Type? __artifact_type = null;
-
-        public static Type ArtifactType
-        {
-            get
-            {
-                if (__artifact_type != null)
-                    return __artifact_type;
-                return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
-            }
-        }
-
-        private static Type? __rarity_type = null;
 
         public static Type RarityType
         {
@@ -164,16 +134,51 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
-        private static Type? __new_run_options_type = null;
-
-        public static Type NewRunOptionsType
+        public static Type SprType
         {
             get
             {
-                if (__new_run_options_type != null)
-                    return __new_run_options_type;
-                return __new_run_options_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("NewRunOptions") ?? throw new Exception("NewRunOptions type not found");
+                if (__spr_type != null)
+                    return __spr_type;
+                return __spr_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
             }
+        }
+
+        public static Type StarterDeckType
+        {
+            get
+            {
+                if (__starter_Deck_type != null)
+                    return __starter_Deck_type;
+                return __starter_Deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterDeck") ?? throw new Exception("StarterDeck type not found");
+            }
+        }
+
+        public static Type StoryVarsType
+        {
+            get
+            {
+                if (__story_vars_type != null)
+                    return __story_vars_type;
+                return __story_vars_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StoryVars") ?? throw new Exception("StoryVars type not found");
+            }
+        }
+
+        public static Type UpgradeType
+        {
+            get
+            {
+                if (__upgrade_type != null)
+                    return __upgrade_type;
+                return __upgrade_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Upgrade") ?? throw new Exception("Upgrade type not found");
+            }
+        }
+
+        public static object? IntToDeck(int? deck_id)
+        {
+            if (deck_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(DeckType, deck_id), DeckType);
         }
 
         public static object? IntToRarity(int? rarity_id)
@@ -183,13 +188,6 @@ namespace CobaltCoreModLoader.Utils
             return Convert.ChangeType(Enum.ToObject(RarityType, rarity_id), RarityType);
         }
 
-        public static object? IntToUpgrade(int? upgrade_id)
-        {
-            if (upgrade_id == null)
-                return null;
-            return Convert.ChangeType(Enum.ToObject(UpgradeType, upgrade_id), UpgradeType);
-        }
-
         public static object? IntToSpr(int? spr_id)
         {
             if (spr_id == null)
@@ -197,11 +195,11 @@ namespace CobaltCoreModLoader.Utils
             return Convert.ChangeType(Enum.ToObject(SprType, spr_id), SprType);
         }
 
-        public static object? IntToDeck(int? deck_id)
+        public static object? IntToUpgrade(int? upgrade_id)
         {
-            if (deck_id == null)
+            if (upgrade_id == null)
                 return null;
-            return Convert.ChangeType(Enum.ToObject(DeckType, deck_id), DeckType);
+            return Convert.ChangeType(Enum.ToObject(UpgradeType, upgrade_id), UpgradeType);
         }
     }
 }

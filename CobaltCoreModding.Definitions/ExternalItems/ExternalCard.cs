@@ -2,17 +2,10 @@
 {
     public class ExternalCard
     {
-        public string GlobalName { get; init; }
-
-        public Type CardType { get; init; }
-
-        public ExternalSprite CardArt { get; init; }
-
         /// <summary>
-        /// Since you cannot put custom decks into deck meta attribute,
-        /// so if need be they can be fed here and the DB Extender will overwrite the CardMeta Entry in the DB.
+        /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for
         /// </summary>
-        public ExternalDeck? ActualDeck { get; init; }
+        private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
 
         public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
@@ -26,14 +19,24 @@
         }
 
         /// <summary>
-        /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for
+        /// Since you cannot put custom decks into deck meta attribute,
+        /// so if need be they can be fed here and the DB Extender will overwrite the CardMeta Entry in the DB.
         /// </summary>
-        private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
+        public ExternalDeck? ActualDeck { get; init; }
+
+        public ExternalSprite CardArt { get; init; }
+        public Type CardType { get; init; }
+        public string GlobalName { get; init; }
 
         public void AddLocalisation(string text, string locale = "en")
         {
             if (!localized_card_names.TryAdd(locale, text))
                 localized_card_names[locale] = text;
+        }
+
+        public void GenerateCardNamesFromResourceFile()
+        {
+#warning todo
         }
 
         public string? GetLocalisation(string locale)
@@ -42,11 +45,6 @@
             if (!localized_card_names.TryGetValue(locale, out var text))
                 localized_card_names.TryGetValue("en", out text);
             return text;
-        }
-
-        public void GenerateCardNamesFromResourceFile()
-        {
-#warning todo
         }
 
         public bool ValidReferences()

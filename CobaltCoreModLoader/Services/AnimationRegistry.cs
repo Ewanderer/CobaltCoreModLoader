@@ -2,26 +2,15 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using SingleFileExtractor.Core;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     public class AnimationRegistry : IAnimationRegistry
     {
-
         private static ILogger<IAnimationRegistry>? Logger;
 
-
-
         private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
-
 
         public AnimationRegistry(ILogger<IAnimationRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
@@ -34,7 +23,32 @@ namespace CobaltCoreModLoader.Services
                 manifest.LoadManifest(this);
         }
 
-        internal static void PatchAnimations() {
+        bool IAnimationRegistry.RegisterAnimation(ExternalAnimation animation)
+        {
+            //
+            if (string.IsNullOrEmpty(animation.GlobalName))
+            {
+                Logger?.LogWarning("animation without global name");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(animation.Tag))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
+                return false;
+            }
+
+            if (!registered_animations.TryAdd(animation.GlobalName, animation))
+            {
+                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
+                return false;
+            }
+
+            return true;
+        }
+
+        internal static void PatchAnimations()
+        {
             // animations
 
             IDictionary char_animation_dictionary = TypesAndEnums.DbType.GetField("charAnimations")?.GetValue(null) as IDictionary ?? throw new Exception();
@@ -94,30 +108,5 @@ namespace CobaltCoreModLoader.Services
                 }
             }
         }
-
-        bool IAnimationRegistry.RegisterAnimation(ExternalAnimation animation)
-        {
-            //
-            if (string.IsNullOrEmpty(animation.GlobalName))
-            {
-                Logger?.LogWarning("animation without global name");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(animation.Tag))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} has not tag value", animation.GlobalName);
-                return false;
-            }
-
-            if (!registered_animations.TryAdd(animation.GlobalName, animation))
-            {
-                Logger?.LogWarning("ExternalAnimation {0} already has an entry in registry. possible global name collision!", animation.GlobalName);
-                return false;
-            }
-
-            return true;
-        }
-
     }
 }

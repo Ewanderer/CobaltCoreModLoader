@@ -3,32 +3,27 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Cards;
-using Microsoft.Win32;
 
 namespace DemoMod
 {
     public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest
     {
-        public string Name => "EWanderer.DemoMod";
-
-        public IEnumerable<string> Dependencies => new string[0];
-
+        internal static int x = 0;
         private ExternalSprite? card_art_sprite;
-        private ExternalSprite? pinker_per_border_over_sprite;
-
+        private ExternalAnimation? default_animation;
+        private ExternalDeck? dracula_deck;
+        private ExternalSprite? dracular_art;
+        private ExternalSprite? dracular_border;
+        private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
+        private ExternalSprite? pinker_per_border_over_sprite;
+        public IEnumerable<string> Dependencies => new string[0];
+        public string Name => "EWanderer.DemoMod";
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
-
-        internal static int x = 0;
-        private ExternalDeck? dracula_deck;
-        private ExternalAnimation? default_animation;
-        private ExternalAnimation? mini_animation;
-        private ExternalSprite? dracular_art;
-        private ExternalSprite? dracular_border;
 
         public void LoadManifest(IArtRegistry artRegistry)
         {
@@ -59,12 +54,7 @@ namespace DemoMod
 
         public void LoadManifest(IDbRegistry dbRegistry)
         {
-
         }
-
-
-
-
 
         public void LoadManifest(IAnimationRegistry registry)
         {
@@ -94,7 +84,6 @@ namespace DemoMod
             var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.Brown, System.Drawing.Color.Yellow, art_default, border, pinker_per_border_over_sprite);
             registry.RegisterDeck(pinker_peri, (int)Deck.peri);
 
-
             dracular_art = ExternalSprite.GetRaw((int)Spr.cards_colorless);
             dracular_border = ExternalSprite.GetRaw((int)Spr.cardShared_border_dracula);
 
@@ -102,7 +91,6 @@ namespace DemoMod
 
             if (!registry.RegisterDeck(dracula_deck))
                 return;
-
         }
 
         public void LoadManifest(ICardRegistry registry)
@@ -152,11 +140,8 @@ namespace DemoMod
             */
         }
 
-
-
         public void LoadManifest(ICharacterRegistry registry)
         {
-     
             var dracular_spr = ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0);
 
             var start_cards = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };

@@ -4,8 +4,6 @@ using CobaltCoreModding.Definitions.OverwriteItems;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using System.Collections;
-using System.Data;
 using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
@@ -15,14 +13,7 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class DBExtender : IDbRegistry
     {
-
-
-
         private static ILogger<DBExtender>? Logger;
-
-
-
-
 
         private Harmony? harmony;
 
@@ -35,16 +26,12 @@ namespace CobaltCoreModLoader.Services
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
 
-
-
         private Type card_type { get; init; }
 
         ExternalSprite? IDbRegistry.GetModSprite(string globalName)
         {
             return SpriteExtender.LookupSprite(globalName);
         }
-
-
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.
@@ -72,14 +59,8 @@ namespace CobaltCoreModLoader.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
 
-
-
             LoadDbManifests();
-
-
         }
-
-
 
         bool IDbRegistry.RegisterArtifact(ExternalArtifact artifact)
         {
@@ -110,8 +91,6 @@ namespace CobaltCoreModLoader.Services
         {
             throw new NotImplementedException();
         }
-
-
 
         /// <summary>
         /// Decks and Statuses need to be patched into DB.
@@ -150,7 +129,6 @@ namespace CobaltCoreModLoader.Services
                 var maps_dict = TypesAndEnums.db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
                 LoadAllSubclasses(maps_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("MapBase"));
                 */
-
 
                 CardRegistry.PatchCardData();
 
@@ -213,8 +191,6 @@ namespace CobaltCoreModLoader.Services
             return patched_result;
         }
 
-
-
         /// <summary>
         /// Cards, decks, icons, maps, characters, artifacts and other things need their sprite additionaly registered in db.
         /// this is done here.
@@ -245,7 +221,6 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static void PatchStory()
         {
-
         }
 
         private void LoadDbManifests()
@@ -256,11 +231,6 @@ namespace CobaltCoreModLoader.Services
                 manifest.LoadManifest(this);
             }
         }
-
-
-
-
-
 
         /*
         private static void LoadAllSubclasses(Dictionary<string, Type>? target, Type? lookup_type)
