@@ -1,9 +1,4 @@
 ﻿using CobaltCoreModding.Definitions.OverwriteItems;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
 {
@@ -16,13 +11,12 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="card_key">the name of the card to be overwritten</param>
         /// <returns>if the overwrite was successfully registered</returns>
         bool RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key);
+
         /// <summary>
         ///
         /// </summary>
         /// <param name="statOverwrite"></param>
         /// <returns></returns>
         bool RegisterCardStatOverwrite(CardStatOverwrite statOverwrite);
-
-
     }
 }

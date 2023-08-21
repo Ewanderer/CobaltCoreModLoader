@@ -3,27 +3,13 @@ using CobaltCoreModding.Definitions.OverwriteItems;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace CobaltCoreModLoader.Services
 {
     public class CardOverwriteRegistry : ICardOverwriteRegistry
     {
-
-        private static ILogger? Logger;
-
-        public CardOverwriteRegistry(ILogger<ICardOverwriteRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
-        {
-            Logger = logger;
-        }
-
         /// <summary>
         /// GlobalName -> Card Meta
         /// </summary>
@@ -34,14 +20,61 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static Dictionary<string, CardMetaOverwrite> card_meta_overwrites = new Dictionary<string, CardMetaOverwrite>();
 
-
         private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
         private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
+        private static ILogger? Logger;
 
+        public CardOverwriteRegistry(ILogger<ICardOverwriteRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
+        {
+            Logger = logger;
+        }
 
-        public void LoadManifests() {
+        public void LoadManifests()
+        {
             foreach (var manifest in ModAssemblyHandler.CardOverwriteManifests)
                 manifest.LoadManifest(this);
+        }
+
+        bool ICardOverwriteRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
+        {
+            if (string.IsNullOrEmpty(cardMeta.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card meta without global name. rejected.");
+                return false;
+            }
+            if (!card_meta_lookup.TryAdd(cardMeta.GlobalName, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} cannot be added, because global name already registered", cardMeta.GlobalName);
+                return false;
+            }
+            if (!card_meta_overwrites.TryAdd(card_key, cardMeta))
+            {
+                Logger?.LogWarning("ExternalCardMeta {0} will overwrite anoter overwrite meta {1}", cardMeta.GlobalName, card_meta_lookup[card_key].GlobalName);
+                card_meta_lookup[card_key] = cardMeta;
+            }
+            return true;
+        }
+
+        bool ICardOverwriteRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
+        {
+            if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
+            {
+                Logger?.LogWarning("Attempted to register card stat overwrite without global name. rejected.");
+                return false;
+            }
+            if (!statOverwrite.CardType.IsSubclassOf(TypesAndEnums.CardType))
+            {
+                Logger?.LogWarning("Card overwrite {0} doesn't target a class of the card type.", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_lookup.TryAdd(statOverwrite.GlobalName, statOverwrite))
+            {
+                Logger?.LogWarning("Collission in card overwrite global name {0} ", statOverwrite.GlobalName);
+                return false;
+            }
+            if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
+                card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
+            return true;
         }
 
         internal static void PatchLogic()
@@ -55,36 +88,6 @@ namespace CobaltCoreModLoader.Services
                     //These are virtual and thus need to be retrieved everytime, but also improves ingame performance.
                     var base_stat_method = overwrite.Key.GetMethod("GetData") ?? throw new Exception();
                     harmony.Patch(base_stat_method, postfix: new HarmonyMethod(base_stat_postfix));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Postfix
-        /// </summary>
-        /// <param name="__result"></param>
-        /// <param name="__instance"></param>
-        /// <param name="state"></param>
-        private static void OverwriteCardStats(ref object __result, object __instance, object state)
-        {
-            var lookup_type = __instance.GetType();
-            if (card_stat_overwrites.TryGetValue(lookup_type, out var overwrite_passes))
-            {
-                foreach (var pass in overwrite_passes)
-                {
-                    if (pass is ActiveCardStatOverwrite active_overwrite)
-                    {
-                        var new_stats = active_overwrite.GetStatFunction(state, __result);
-                        __result = new_stats;
-                    }
-                    else if (pass is PartialCardStatOverwrite partial_overwrite)
-                    {
-                        partial_overwrite.ApplyOverwrite(ref __result);
-                    }
-                    else
-                    {
-                        Logger?.LogCritical("Unkown card stat overwrite {0} type {1}. skipping", pass.GlobalName, pass.GetType().Name);
-                    }
                 }
             }
         }
@@ -162,47 +165,34 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        bool ICardOverwriteRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
+        /// <summary>
+        /// Postfix
+        /// </summary>
+        /// <param name="__result"></param>
+        /// <param name="__instance"></param>
+        /// <param name="state"></param>
+        private static void OverwriteCardStats(ref object __result, object __instance, object state)
         {
-            if (string.IsNullOrEmpty(cardMeta.GlobalName))
+            var lookup_type = __instance.GetType();
+            if (card_stat_overwrites.TryGetValue(lookup_type, out var overwrite_passes))
             {
-                Logger?.LogWarning("Attempted to register card meta without global name. rejected.");
-                return false;
+                foreach (var pass in overwrite_passes)
+                {
+                    if (pass is ActiveCardStatOverwrite active_overwrite)
+                    {
+                        var new_stats = active_overwrite.GetStatFunction(state, __result);
+                        __result = new_stats;
+                    }
+                    else if (pass is PartialCardStatOverwrite partial_overwrite)
+                    {
+                        partial_overwrite.ApplyOverwrite(ref __result);
+                    }
+                    else
+                    {
+                        Logger?.LogCritical("Unkown card stat overwrite {0} type {1}. skipping", pass.GlobalName, pass.GetType().Name);
+                    }
+                }
             }
-            if (!card_meta_lookup.TryAdd(cardMeta.GlobalName, cardMeta))
-            {
-                Logger?.LogWarning("ExternalCardMeta {0} cannot be added, because global name already registered", cardMeta.GlobalName);
-                return false;
-            }
-            if (!card_meta_overwrites.TryAdd(card_key, cardMeta))
-            {
-                Logger?.LogWarning("ExternalCardMeta {0} will overwrite anoter overwrite meta {1}", cardMeta.GlobalName, card_meta_lookup[card_key].GlobalName);
-                card_meta_lookup[card_key] = cardMeta;
-            }
-            return true;
         }
-
-        bool ICardOverwriteRegistry.RegisterCardStatOverwrite(CardStatOverwrite statOverwrite)
-        {
-            if (string.IsNullOrWhiteSpace(statOverwrite.GlobalName))
-            {
-                Logger?.LogWarning("Attempted to register card stat overwrite without global name. rejected.");
-                return false;
-            }
-            if (!statOverwrite.CardType.IsSubclassOf(TypesAndEnums.CardType))
-            {
-                Logger?.LogWarning("Card overwrite {0} doesn't target a class of the card type.", statOverwrite.GlobalName);
-                return false;
-            }
-            if (!card_stat_lookup.TryAdd(statOverwrite.GlobalName, statOverwrite))
-            {
-                Logger?.LogWarning("Collission in card overwrite global name {0} ", statOverwrite.GlobalName);
-                return false;
-            }
-            if (!card_stat_overwrites.TryAdd(statOverwrite.CardType, new HashSet<CardStatOverwrite> { statOverwrite }))
-                card_stat_overwrites[statOverwrite.CardType].Add(statOverwrite);
-            return true;
-        }
-
     }
 }

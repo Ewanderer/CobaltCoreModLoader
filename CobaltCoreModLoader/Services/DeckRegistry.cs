@@ -2,23 +2,17 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     public class DeckRegistry : IDeckRegistry
     {
-        private static ILogger<IDeckRegistry>? Logger;
-
         private const int deck_counter_start = 10000;
         private static int deck_counter = deck_counter_start;
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
+        private static ILogger<IDeckRegistry>? Logger;
         private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
 
         public DeckRegistry(ILogger<IDeckRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
@@ -33,26 +27,111 @@ namespace CobaltCoreModLoader.Services
             PatchEnumExtension();
         }
 
-        private void PatchEnumExtension()
+        bool IDeckRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)
         {
-            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
-
-            foreach (var deck in registered_decks)
+            if (deck.Id != null)
             {
-                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
+                Logger?.LogWarning("Deck already has an ID");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(deck.GlobalName))
+            {
+                Logger?.LogWarning("Deck with empty global name");
+                return false;
+            }
+            if (deck_lookup.ContainsKey(deck.GlobalName))
+            {
+                Logger?.LogWarning("Deck GlobalName collision:" + deck.GlobalName);
+                return false;
+            }
 
+            if (overwrite == null)
+            {
+                deck_lookup.Add(deck.GlobalName, deck);
+                registered_decks.Add(deck_counter, deck);
+                deck.Id = deck_counter;
+                deck_counter++;
+                return true;
+            }
+            else
+            {
+                if (overwrite < 0 || deck_counter_start <= overwrite)
+                {
+                    Logger?.LogError("Attempted overwrite of non card value");
+                    return false;
+                }
 
-
-                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
-                    continue;
-                //prevent existing enums to be prematurely written and breaking their sprites.
-                if (Enum.IsDefined(TypesAndEnums.DeckType, deck_val))
-                    continue;
-                if (!deck_str_dictionary.Contains(deck_val))
-                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
+                deck_lookup.Add(deck.GlobalName, deck);
+                if (!registered_decks.TryAdd(overwrite.Value, deck))
+                {
+                    Logger?.LogWarning("Collision Deck Overwrite between {0} and {1} on value {2}. {1} will be used unless other overwrite happens.",
+                        registered_decks[overwrite.Value].GlobalName, deck.GlobalName, overwrite.Value, deck.GlobalName);
+                    registered_decks[overwrite.Value] = deck;
+                }
+                deck.Id = overwrite.Value;
+                return true;
             }
         }
 
+        internal static void PatchDeckData()
+        {
+            IDictionary deck_dict = TypesAndEnums.DbType.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
+
+            var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
+            var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
+
+            foreach (var deck in registered_decks.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("externaldeck {0} id {1} not converted into deck enum. skipping...", deck.GlobalName, deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+
+                //create colors
+                var deck_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.DeckColor.ToArgb());
+
+                if (deck_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+
+                var title_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.TitleColor.ToArgb());
+                if (title_color == null)
+                {
+                    Logger?.LogWarning("ExternalDeck {0} Title Color couldn't be initalized", deck.GlobalName);
+                    continue;
+                }
+
+                object? deck_registry;
+                //check if overwrite or new val
+                if (deck_dict.Contains(deck_val))
+                {
+                    deck_registry = deck_dict[deck_val];
+                }
+                else
+                {
+                    //new entrie
+                    //spawn instance.
+                    deck_registry = Activator.CreateInstance(TypesAndEnums.DeckDefType);
+                    if (deck_registry == null)
+                    {
+                        continue;
+                    }
+                    deck_dict.Add(deck_val, deck_registry);
+                }
+
+                if (deck_registry == null)
+                    continue;
+                //assign colors
+                color_field.SetValue(deck_registry, deck_color);
+                title_color_field.SetValue(deck_registry, title_color);
+                //store reference in deck
+                deck.DeckDefReference = deck_registry;
+            }
+        }
 
         internal static void PatchDeckSprites()
         {
@@ -130,111 +209,21 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        internal static void PatchDeckData()
+        private void PatchEnumExtension()
         {
-            IDictionary deck_dict = TypesAndEnums.DbType.GetField("decks")?.GetValue(null) as IDictionary ?? throw new Exception("decks dictinoary not found");
+            var deck_str_dictionary = TypesAndEnums.EnumExtensionsType.GetField("deckStrs", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as IDictionary ?? throw new Exception("deckStrs dictionary not found");
 
-            var color_field = TypesAndEnums.DeckDefType.GetField("color") ?? throw new Exception("DeckDef.color not found");
-            var title_color_field = TypesAndEnums.DeckDefType.GetField("titleColor") ?? throw new Exception("DeckDef.titleColor not found");
-
-            foreach (var deck in registered_decks.Values)
+            foreach (var deck in registered_decks)
             {
-                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
-                if (deck_val == null)
-                {
-                    Logger?.LogError("externaldeck {0} id {1} not converted into deck enum. skipping...", deck.GlobalName, deck.Id?.ToString() ?? "NULL");
+                var deck_val = TypesAndEnums.IntToDeck(deck.Key);
+
+                if (deck_val == null || string.IsNullOrEmpty(deck.Value.GlobalName))
                     continue;
-                }
-
-                //create colors
-                var deck_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.DeckColor.ToArgb());
-
-                if (deck_color == null)
-                {
-                    Logger?.LogWarning("ExternalDeck {0} Color couldn't be initalized", deck.GlobalName);
+                //prevent existing enums to be prematurely written and breaking their sprites.
+                if (Enum.IsDefined(TypesAndEnums.DeckType, deck_val))
                     continue;
-                }
-
-
-                var title_color = Activator.CreateInstance(TypesAndEnums.CobaltColorType, (UInt32)deck.TitleColor.ToArgb());
-                if (title_color == null)
-                {
-                    Logger?.LogWarning("ExternalDeck {0} Title Color couldn't be initalized", deck.GlobalName);
-                    continue;
-                }
-
-                object? deck_registry;
-                //check if overwrite or new val
-                if (deck_dict.Contains(deck_val))
-                {
-                    deck_registry = deck_dict[deck_val];
-                }
-                else
-                {
-                    //new entrie
-                    //spawn instance.
-                    deck_registry = Activator.CreateInstance(TypesAndEnums.DeckDefType);
-                    if (deck_registry == null)
-                    {
-                        continue;
-                    }
-                    deck_dict.Add(deck_val, deck_registry);
-
-                }
-
-                if (deck_registry == null)
-                    continue;
-                //assign colors
-                color_field.SetValue(deck_registry, deck_color);
-                title_color_field.SetValue(deck_registry, title_color);
-                //store reference in deck
-                deck.DeckDefReference = deck_registry;
-            }
-        }
-
-        bool IDeckRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)
-        {
-            if (deck.Id != null)
-            {
-                Logger?.LogWarning("Deck already has an ID");
-                return false;
-            }
-            if (string.IsNullOrWhiteSpace(deck.GlobalName))
-            {
-                Logger?.LogWarning("Deck with empty global name");
-                return false;
-            }
-            if (deck_lookup.ContainsKey(deck.GlobalName))
-            {
-                Logger?.LogWarning("Deck GlobalName collision:" + deck.GlobalName);
-                return false;
-            }
-
-            if (overwrite == null)
-            {
-                deck_lookup.Add(deck.GlobalName, deck);
-                registered_decks.Add(deck_counter, deck);
-                deck.Id = deck_counter;
-                deck_counter++;
-                return true;
-            }
-            else
-            {
-                if (overwrite < 0 || deck_counter_start <= overwrite)
-                {
-                    Logger?.LogError("Attempted overwrite of non card value");
-                    return false;
-                }
-
-                deck_lookup.Add(deck.GlobalName, deck);
-                if (!registered_decks.TryAdd(overwrite.Value, deck))
-                {
-                    Logger?.LogWarning("Collision Deck Overwrite between {0} and {1} on value {2}. {1} will be used unless other overwrite happens.",
-                        registered_decks[overwrite.Value].GlobalName, deck.GlobalName, overwrite.Value, deck.GlobalName);
-                    registered_decks[overwrite.Value] = deck;
-                }
-                deck.Id = overwrite.Value;
-                return true;
+                if (!deck_str_dictionary.Contains(deck_val))
+                    deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
             }
         }
     }

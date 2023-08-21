@@ -3,13 +3,8 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -34,6 +29,114 @@ namespace CobaltCoreModLoader.Services
             HarmonyPatches();
             PatchNewRunOptions();
             PatchStarterSets();
+        }
+
+        bool ICharacterRegistry.RegisterCharacter(ExternalCharacter character)
+        {
+            if (string.IsNullOrEmpty(character.GlobalName))
+            {
+                return false;
+            }
+
+            if (!registered_characters.TryAdd(character.GlobalName, character))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        internal static void PatchCharacterLocalisation(string locale, ref Dictionary<string, string> __result)
+        {
+            //character names + descriptuions
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                string? text = character.GetCharacterName(locale);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    var key = "char." + character.Deck.GlobalName;
+                    if (!__result.TryAdd(key, text))
+                        Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                }
+                string? desc = character.GetDesc(locale);
+                if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    var deck_val = TypesAndEnums.IntToSpr(character.Deck.Id);
+                    if (deck_val != null)
+                    {
+                        var key = "char." + deck_val.ToString() + ".desc";
+                        if (!__result.TryAdd(key, desc))
+                            Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
+                    }
+                }
+            }
+        }
+
+        internal static void PatchCharacterSprites()
+        {
+            //characters
+            IDictionary char_panels_dict = TypesAndEnums.DbType.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
+
+            foreach (var character in registered_characters.Values)
+            {
+                if (string.IsNullOrWhiteSpace(character.GlobalName))
+                    continue;
+                var spr_val = TypesAndEnums.IntToSpr(character.CharPanelSpr.Id);
+                if (spr_val == null)
+                    continue;
+                if (char_panels_dict.Contains(character.GlobalName))
+                {
+                    continue;
+                }
+
+                char_panels_dict.Add(character.GlobalName, spr_val);
+            }
+        }
+
+        private static void GetUnlockedCharactersPostfix(ref object __result)
+        {
+            var hash_type = typeof(HashSet<>).MakeGenericType(TypesAndEnums.DeckType);
+            var add_method = hash_type.GetMethod("Add") ?? throw new Exception("HashSet<Deck> doesn't have Add method.");
+
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogError("ExternalCharacter {0} unlocked patch failed because missign deck id {1}", character.GlobalName, character.Deck.Id?.ToString() ?? "NULL");
+                    continue;
+                }
+                add_method.Invoke(__result, new object[] { deck_val });
+            }
+        }
+
+        private void HarmonyPatches()
+        {
+            //patch unlocked characters in the game
+            var harmony = new Harmony("modloader.characterregistry.unlocked_character");
+            var get_unlocked_characters_method = TypesAndEnums.StoryVarsType.GetMethod("GetUnlockedChars", BindingFlags.Public | BindingFlags.Instance) ?? throw new Exception("GetUnlockedChars method not found.");
+            var get_unlocked_characters_postfix = typeof(CharacterRegistry).GetMethod("GetUnlockedCharactersPostfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("GetUnlockedCharactersPostfix not found");
+            harmony.Patch(get_unlocked_characters_method, postfix: new HarmonyMethod(get_unlocked_characters_postfix));
+        }
+
+        /// <summary>
+        /// Activate characters
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void PatchNewRunOptions()
+        {
+            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
+            foreach (var character in registered_characters.Values)
+            {
+                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
+                if (deck_val == null)
+                    continue;
+                if (all_char_list.Contains(deck_val))
+                    continue;
+                all_char_list.Add(deck_val);
+            }
         }
 
         private void PatchStarterSets()
@@ -83,116 +186,6 @@ namespace CobaltCoreModLoader.Services
                 cards_field.SetValue(new_starter_deck, card_list);
                 artifacts_field.SetValue(new_starter_deck, artifact_list);
                 starter_sets_dictionary.Add(deck_val, new_starter_deck);
-            }
-        }
-
-        private void HarmonyPatches()
-        {
-
-
-            //patch unlocked characters in the game
-            var harmony = new Harmony("modloader.characterregistry.unlocked_character");
-            var get_unlocked_characters_method = TypesAndEnums.StoryVarsType.GetMethod("GetUnlockedChars", BindingFlags.Public | BindingFlags.Instance) ?? throw new Exception("GetUnlockedChars method not found.");
-            var get_unlocked_characters_postfix = typeof(CharacterRegistry).GetMethod("GetUnlockedCharactersPostfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("GetUnlockedCharactersPostfix not found");
-            harmony.Patch(get_unlocked_characters_method, postfix: new HarmonyMethod(get_unlocked_characters_postfix));
-        }
-
-        bool ICharacterRegistry.RegisterCharacter(ExternalCharacter character)
-        {
-            if (string.IsNullOrEmpty(character.GlobalName))
-            {
-                return false;
-            }
-
-            if (!registered_characters.TryAdd(character.GlobalName, character))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static void GetUnlockedCharactersPostfix(ref object __result)
-        {
-            var hash_type = typeof(HashSet<>).MakeGenericType(TypesAndEnums.DeckType);
-            var add_method = hash_type.GetMethod("Add") ?? throw new Exception("HashSet<Deck> doesn't have Add method.");
-
-            foreach (var character in registered_characters.Values)
-            {
-                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
-                if (deck_val == null)
-                {
-                    Logger?.LogError("ExternalCharacter {0} unlocked patch failed because missign deck id {1}", character.GlobalName, character.Deck.Id?.ToString() ?? "NULL");
-                    continue;
-                }
-                add_method.Invoke(__result, new object[] { deck_val });
-            }
-        }
-
-        internal static void PatchCharacterSprites()
-        {
-            //characters
-            IDictionary char_panels_dict = TypesAndEnums.DbType.GetField("charPanels")?.GetValue(null) as IDictionary ?? throw new Exception();
-
-            foreach (var character in registered_characters.Values)
-            {
-                if (string.IsNullOrWhiteSpace(character.GlobalName))
-                    continue;
-                var spr_val = TypesAndEnums.IntToSpr(character.CharPanelSpr.Id);
-                if (spr_val == null)
-                    continue;
-                if (char_panels_dict.Contains(character.GlobalName))
-                {
-                    continue;
-                }
-
-                char_panels_dict.Add(character.GlobalName, spr_val);
-            }
-        }
-
-        /// <summary>
-        /// Activate characters
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        private void PatchNewRunOptions()
-        {
-            IList all_char_list = TypesAndEnums.NewRunOptionsType.GetField("allChars", BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as IList ?? throw new Exception();
-            foreach (var character in registered_characters.Values)
-            {
-                var deck_val = TypesAndEnums.IntToDeck(character.Deck.Id);
-                if (deck_val == null)
-                    continue;
-                if (all_char_list.Contains(deck_val))
-                    continue;
-                all_char_list.Add(deck_val);
-            }
-        }
-
-        internal static void PatchCharacterLocalisation(string locale, ref Dictionary<string, string> __result)
-        {
-            //character names + descriptuions
-            foreach (var character in registered_characters.Values)
-            {
-                if (string.IsNullOrWhiteSpace(character.GlobalName))
-                    continue;
-                string? text = character.GetCharacterName(locale);
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    var key = "char." + character.Deck.GlobalName;
-                    if (!__result.TryAdd(key, text))
-                        Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
-                }
-                string? desc = character.GetDesc(locale);
-                if (!string.IsNullOrWhiteSpace(desc))
-                {
-                    var deck_val = TypesAndEnums.IntToSpr(character.Deck.Id);
-                    if (deck_val != null)
-                    {
-                        var key = "char." + deck_val.ToString() + ".desc";
-                        if (!__result.TryAdd(key, desc))
-                            Logger?.LogCritical("Cannot add {0} to localisations, since already know. skipping", key);
-                    }
-                }
             }
         }
     }
