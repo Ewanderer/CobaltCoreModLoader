@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest
     {
         public string Name => "EWanderer.DemoMod";
 
@@ -59,25 +59,10 @@ namespace DemoMod
 
         public void LoadManifest(IDbRegistry dbRegistry)
         {
-            
 
-            MakeDracularPlayable(dbRegistry);
         }
 
-        private void MakeDracularPlayable(IDbRegistry registry)
-        {
-            dracular_art = ExternalSprite.GetRaw((int)Spr.cards_colorless);
-            dracular_border = ExternalSprite.GetRaw((int)Spr.cardShared_border_dracula);
-            var dracular_spr = ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0);
 
-
-
-            var start_cards = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
-            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck ?? throw new NullReferenceException(), dracular_spr, start_cards, new Type[0], default_animation ?? throw new NullReferenceException(), mini_animation ?? throw new NullReferenceException());
-            playable_dracular_character.AddNameLocalisation("Count Dracula");
-            playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
-            registry.RegisterCharacter(playable_dracular_character);
-        }
 
 
 
@@ -108,6 +93,10 @@ namespace DemoMod
 
             var pinker_peri = new ExternalDeck("Ewanderer.DemoMod.PinkerPeri", System.Drawing.Color.Brown, System.Drawing.Color.Yellow, art_default, border, pinker_per_border_over_sprite);
             registry.RegisterDeck(pinker_peri, (int)Deck.peri);
+
+
+            dracular_art = ExternalSprite.GetRaw((int)Spr.cards_colorless);
+            dracular_border = ExternalSprite.GetRaw((int)Spr.cardShared_border_dracula);
 
             dracula_deck = new ExternalDeck("EWanderer.Demomod.DraculaDeck", System.Drawing.Color.Crimson, System.Drawing.Color.Purple, dracular_art ?? throw new NullReferenceException(), dracular_border ?? throw new NullReferenceException(), null);
 
@@ -161,6 +150,20 @@ namespace DemoMod
                 }
             }
             */
+        }
+
+
+
+        public void LoadManifest(ICharacterRegistry registry)
+        {
+     
+            var dracular_spr = ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0);
+
+            var start_cards = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
+            var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck ?? throw new NullReferenceException(), dracular_spr, start_cards, new Type[0], default_animation ?? throw new NullReferenceException(), mini_animation ?? throw new NullReferenceException());
+            playable_dracular_character.AddNameLocalisation("Count Dracula");
+            playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
+            registry.RegisterCharacter(playable_dracular_character);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
 
 
 
-        bool RegisterCharacter(ExternalCharacter character);
+
 
 
 
