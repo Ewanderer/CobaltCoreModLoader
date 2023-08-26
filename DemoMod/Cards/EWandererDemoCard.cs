@@ -1,4 +1,6 @@
-﻿namespace DemoMod.Cards
+﻿using DemoMod.Actions;
+
+namespace DemoMod.Cards
 {
     [CardMeta(deck = Deck.riggs, rarity = Rarity.common, upgradesTo = new Upgrade[] { Upgrade.A, Upgrade.B })]
     public class EWandererDemoCard : Card
@@ -13,7 +15,7 @@
                 case Upgrade.None:
                     list.Add(new ADrawCard() { count = 100 });
                     list.Add(new AAttack() { damage = 10, fast = true });
-
+                    list.Add(new EWandererDemoAction());
                     break;
 
                 case Upgrade.A:
@@ -25,7 +27,7 @@
                     break;
 
                 case (Upgrade)3:
-                    list.Add(new ABubbleField() { all = true });
+                    list.Add(new ABubbleField() {  });
                     break;
             }
 
@@ -37,6 +39,8 @@
             cost = 0,
             art = new Spr?(card_sprite),
         };
+
+
 
         public override string Name() => "EWDemoCard";
     }

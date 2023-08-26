@@ -104,32 +104,7 @@ namespace CobaltCoreModLoader.Services
         {
             if (CobaltCoreHandler.CobaltCoreAssembly != null)
             {
-                /*
-                //patch into all fields
-                var TypesAndEnums.db_type = CobaltCoreHandler.CobaltCoreAssembly.GetType("DB") ?? throw new Exception();
-
-                var card_dict = TypesAndEnums.db_type.GetField("cards")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(card_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Card"));
-
-                var enemies_dict = TypesAndEnums.db_type.GetField("enemies")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(enemies_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("AI"));
-
-                var modifiers_dict = TypesAndEnums.db_type.GetField("modifiers")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(modifiers_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("FightModifier"));
-
-                var artifacts_dict = TypesAndEnums.db_type.GetField("artifacts")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(artifacts_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("Artifact"));
-
-                var midrowStuff_dict = TypesAndEnums.db_type.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(midrowStuff_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("StuffBase"));
-
-                var backgrounds_dict = TypesAndEnums.db_type.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(backgrounds_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("BG"));
-
-                var maps_dict = TypesAndEnums.db_type.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
-                LoadAllSubclasses(maps_dict, CobaltCoreHandler.CobaltCoreAssembly.GetType("MapBase"));
-                */
-
+           
                 CardRegistry.PatchCardData();
 
                 CardOverwriteRegistry.PatchLogic();
@@ -145,6 +120,7 @@ namespace CobaltCoreModLoader.Services
             //Find all localisations to be added.
             CardRegistry.PatchCardLocalisation(locale, ref __result);
             CharacterRegistry.PatchCharacterLocalisation(locale, ref __result);
+            GlossaryRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<Action> MakeInitQueue_Postfix(Queue<Action> __result)
@@ -204,6 +180,8 @@ namespace CobaltCoreModLoader.Services
             AnimationRegistry.PatchAnimations();
 
             CharacterRegistry.PatchCharacterSprites();
+
+            GlossaryRegistry.PathIconSprites();
         }
 
         /// <summary>
