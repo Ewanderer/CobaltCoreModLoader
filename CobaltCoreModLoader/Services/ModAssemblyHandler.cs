@@ -21,6 +21,7 @@ namespace CobaltCoreModLoader.Services
         private static List<IModManifest> modManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
+        private static List<IGlossaryManifest> glossaryManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -36,6 +37,7 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
         public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
+        public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
@@ -123,6 +125,8 @@ namespace CobaltCoreModLoader.Services
                     cardOverwriteManifests.Add(card_overwrite_manifest);
                 if (spanwed_manifest is ICharacterManifest character_manifest)
                     characterManifests.Add(character_manifest);
+                if(spanwed_manifest is IGlossaryManifest glossary_manifest)
+                    glossaryManifests.Add(glossary_manifest);
             }
         }
     }
