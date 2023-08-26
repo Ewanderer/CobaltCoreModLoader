@@ -28,7 +28,7 @@ public static class Program
             builder.Services.AddSingleton<CardRegistry>();
             builder.Services.AddSingleton<CardOverwriteRegistry>();
             builder.Services.AddSingleton<CharacterRegistry>();
-
+            builder.Services.AddSingleton<GlossaryRegistry>();
             var host = builder.Build();
 
             host.Start();
@@ -43,6 +43,8 @@ public static class Program
 
             //patch art.
             host.Services.GetRequiredService<SpriteExtender>().PatchSpriteSystem();
+            //patch glossary
+            host.Services.GetRequiredService<GlossaryRegistry>().LoadManifests();
             //patch deck
             host.Services.GetRequiredService<DeckRegistry>().LoadManifests();
             //patch cards

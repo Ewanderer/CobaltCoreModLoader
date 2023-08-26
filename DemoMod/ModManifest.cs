@@ -2,11 +2,12 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
+using DemoMod.Actions;
 using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest
     {
         internal static int x = 0;
         private ExternalSprite? card_art_sprite;
@@ -149,6 +150,15 @@ namespace DemoMod
             playable_dracular_character.AddNameLocalisation("Count Dracula");
             playable_dracular_character.AddDescLocalisation("A vampire using blood magic to invoke the powers of the void.");
             registry.RegisterCharacter(playable_dracular_character);
+        }
+
+        public void LoadManifest(IGlossaryRegisty registry)
+        {
+            var icon = ExternalSprite.GetRaw((int)Spr.icons_ace);
+            var glossary = new ExternalGlossary("Ewanderer.DemoMod.DemoCard.Glossary", "ewandererdemocard", false, ExternalGlossary.GlossayType.action, icon);
+            glossary.AddLocalisation("en", "EWDemoaction", "Have all the cheesecake in the world!");
+            registry.RegisterGlossary(glossary);
+            EWandererDemoAction.glossary_item = glossary.Head;
         }
     }
 }
