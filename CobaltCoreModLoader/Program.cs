@@ -29,6 +29,7 @@ public static class Program
             builder.Services.AddSingleton<CardOverwriteRegistry>();
             builder.Services.AddSingleton<CharacterRegistry>();
             builder.Services.AddSingleton<GlossaryRegistry>();
+            builder.Services.AddSingleton<ArtifactRegistry>();
             var host = builder.Build();
 
             host.Start();
@@ -51,6 +52,10 @@ public static class Program
             host.Services.GetRequiredService<CardRegistry>().LoadManifests();
             //card overwrites
             host.Services.GetRequiredService<CardOverwriteRegistry>().LoadManifests();
+            //patch artifacts
+            host.Services.GetRequiredService<ArtifactRegistry>().LoadManifests();
+
+
             //patch animation
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch characters
