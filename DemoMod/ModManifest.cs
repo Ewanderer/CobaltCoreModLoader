@@ -7,7 +7,7 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest
     {
         internal static int x = 0;
         private ExternalSprite? card_art_sprite;
@@ -159,6 +159,14 @@ namespace DemoMod
             glossary.AddLocalisation("en", "EWDemoaction", "Have all the cheesecake in the world!");
             registry.RegisterGlossary(glossary);
             EWandererDemoAction.glossary_item = glossary.Head;
+        }
+
+        public void LoadManifest(IArtifactRegistry registry)
+        {
+            var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
+            var artifact = new ExternalArtifact(typeof(Artifacts.PortableBlackHole), "EWanderer.DemoMod.PortableBlackHoleArtifact", spr, null, new ExternalGlossary[0]);
+            artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
+            registry.RegisterArtifact(artifact);
         }
     }
 }
