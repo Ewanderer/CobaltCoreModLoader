@@ -8,6 +8,9 @@ namespace CobaltCoreModLoader.Utils
     internal class TypesAndEnums
     {
         private static Type? __artifact_type = null;
+
+        private static Type? __artifact_meta_type = null;
+
         private static Type? __card_meta_type = null;
 
         private static Type? __card_type = null;
@@ -41,6 +44,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__artifact_type != null)
                     return __artifact_type;
                 return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
+            }
+        }
+
+        public static Type ArtifactMetaType
+        {
+            get
+            {
+                if (__artifact_meta_type != null)
+                    return __artifact_meta_type;
+                return __artifact_meta_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("ArtifactMeta") ?? throw new Exception("ArtifactMeta type not found");
             }
         }
 

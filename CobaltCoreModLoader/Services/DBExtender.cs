@@ -109,6 +109,8 @@ namespace CobaltCoreModLoader.Services
 
                 CardOverwriteRegistry.PatchLogic();
 
+                ArtifactRegistry.PatchArtifactData();
+
                 var midrowStuff_dict = TypesAndEnums.DbType.GetField("midrowStuff")?.GetValue(null) as Dictionary<string, Type>;
                 var backgrounds_dict = TypesAndEnums.DbType.GetField("backgrounds")?.GetValue(null) as Dictionary<string, Type>;
                 var maps_dict = TypesAndEnums.DbType.GetField("maps")?.GetValue(null) as Dictionary<string, Type>;
@@ -121,6 +123,7 @@ namespace CobaltCoreModLoader.Services
             CardRegistry.PatchCardLocalisation(locale, ref __result);
             CharacterRegistry.PatchCharacterLocalisation(locale, ref __result);
             GlossaryRegistry.PatchLocalisations(locale, ref __result);
+            ArtifactRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<Action> MakeInitQueue_Postfix(Queue<Action> __result)
@@ -182,6 +185,8 @@ namespace CobaltCoreModLoader.Services
             CharacterRegistry.PatchCharacterSprites();
 
             GlossaryRegistry.PathIconSprites();
+
+            ArtifactRegistry.PatchArtifactSprites();
         }
 
         /// <summary>
@@ -191,6 +196,7 @@ namespace CobaltCoreModLoader.Services
         private static void PatchMetasAndStoryFunctions()
         {
             CardRegistry.PatchCardMetas();
+            ArtifactRegistry.PatchArtifactMetas();
             CardOverwriteRegistry.PatchMeta();
         }
 
