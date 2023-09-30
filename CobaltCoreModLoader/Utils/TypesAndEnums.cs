@@ -7,10 +7,8 @@ namespace CobaltCoreModLoader.Utils
     /// </summary>
     internal class TypesAndEnums
     {
-        private static Type? __artifact_type = null;
-
         private static Type? __artifact_meta_type = null;
-
+        private static Type? __artifact_type = null;
         private static Type? __card_meta_type = null;
 
         private static Type? __card_type = null;
@@ -31,21 +29,12 @@ namespace CobaltCoreModLoader.Utils
 
         private static Type? __spr_type = null;
 
+        private static Type? __sprite_path_type = null;
         private static Type? __starter_Deck_type = null;
 
         private static Type? __story_vars_type = null;
 
         private static Type? __upgrade_type = null;
-
-        public static Type ArtifactType
-        {
-            get
-            {
-                if (__artifact_type != null)
-                    return __artifact_type;
-                return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
-            }
-        }
 
         public static Type ArtifactMetaType
         {
@@ -54,6 +43,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__artifact_meta_type != null)
                     return __artifact_meta_type;
                 return __artifact_meta_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("ArtifactMeta") ?? throw new Exception("ArtifactMeta type not found");
+            }
+        }
+
+        public static Type ArtifactType
+        {
+            get
+            {
+                if (__artifact_type != null)
+                    return __artifact_type;
+                return __artifact_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Artifact") ?? throw new Exception("Artifact type not found");
             }
         }
 
@@ -144,6 +143,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__rarity_type != null)
                     return __rarity_type;
                 return __rarity_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Rarity") ?? throw new Exception("Rarity type not found");
+            }
+        }
+
+        public static Type SpritePathType
+        {
+            get
+            {
+                if (__sprite_path_type != null)
+                    return __sprite_path_type;
+                return __sprite_path_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("SpritePath") ?? throw new Exception("SpritePath type not found");
             }
         }
 

@@ -65,7 +65,7 @@ namespace CobaltCoreModLoader.Services
 
                 var rvs_mapping_field = sprite_mapping.GetField("strToId") ?? throw new Exception("strToId dictonary field not found.");
 
-                var spr_to_str_dictionary = (mapping_field.GetValue(null) as IDictionary) ?? throw new Exception("couldn't retrieve mapping dictonary");
+                var spr_to_path_dictionary = (mapping_field.GetValue(null) as IDictionary) ?? throw new Exception("couldn't retrieve mapping dictonary");
 
                 var str_to_spr_dictionary = (rvs_mapping_field.GetValue(null) as IDictionary) ?? throw new Exception("couldn't retrieve strToId dictonary");
 
@@ -77,13 +77,17 @@ namespace CobaltCoreModLoader.Services
                     if (sprite.Id == null)
                         continue;
                     var spr_val = Convert.ChangeType(Enum.ToObject(spr_type, sprite.Id), spr_type) ?? throw new Exception("Cast failed");
+
+             
+
                     var str = $"@mod{sprite.Id}";
+                    var spr_path = Activator.CreateInstance(TypesAndEnums.SpritePathType, str) ?? throw new Exception("Sprite Path wasn't created");
                     //update or add registed sprite data.
 
-                    if (spr_to_str_dictionary.Contains(spr_val))
-                        spr_to_str_dictionary[spr_val] = str;
+                    if (spr_to_path_dictionary.Contains(spr_val))
+                        spr_to_path_dictionary[spr_val] = spr_path;
                     else
-                        spr_to_str_dictionary.Add(spr_val, str);
+                        spr_to_path_dictionary.Add(spr_val, spr_path);
                     if (!Enum.IsDefined(spr_type, spr_val))
                     {
                         if (str_to_spr_dictionary.Contains(str))
@@ -210,20 +214,20 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private static bool LoadFileToTexPrefix(string fullPath, ref Texture2D? __result)
+        private static bool LoadFileToTexPrefix(string path, ref Texture2D? __result)
         {
-            if (!fullPath.StartsWith("@mod"))
+            if (!path.StartsWith("@mod"))
                 return true;
-            if (!int.TryParse(fullPath.Substring(4), out int key))
+            if (!int.TryParse(path.Substring(4), out int key))
             {
                 __result = null;
-                logger?.LogCritical("ill formed sprite id:" + fullPath);
+                logger?.LogCritical("ill formed sprite id:" + path);
                 return false;
             }
             if (!sprite_registry.ContainsKey(key))
             {
                 __result = null;
-                logger?.LogCritical("unkown sprite id:" + fullPath);
+                logger?.LogCritical("unkown sprite id:" + path);
                 return false;
             }
 
@@ -308,8 +312,8 @@ namespace CobaltCoreModLoader.Services
         internal static void BreakAtlas()
         {
             //get db type.
-            var db_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("DB") ?? throw new Exception();
-            var spr_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Spr") ?? throw new Exception("spr type not found");
+            var db_type = TypesAndEnums.DbType;
+            var spr_type = TypesAndEnums.SprType;
             var atlas = db_type.GetField("atlas")?.GetValue(null) as IDictionary;
             if (atlas != null)
             {
