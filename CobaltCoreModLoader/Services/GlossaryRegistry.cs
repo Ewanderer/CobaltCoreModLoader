@@ -2,22 +2,14 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     public class GlossaryRegistry : IGlossaryRegisty
     {
-
-        private static ILogger<IGlossaryRegisty>? Logger;
-
         private static readonly Dictionary<string, ExternalGlossary> registered_glossary = new Dictionary<string, ExternalGlossary>();
+        private static ILogger<IGlossaryRegisty>? Logger;
 
         public GlossaryRegistry(ILogger<IGlossaryRegisty> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
@@ -69,18 +61,15 @@ namespace CobaltCoreModLoader.Services
             IDictionary icon_dict = TypesAndEnums.DbType.GetField("icons", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new Exception("Icon Dictionary not found in DB.");
             foreach (var glossary in registered_glossary.Values)
             {
-
                 var sprite = TypesAndEnums.IntToSpr(glossary.Icon.Id);
                 if (sprite == null)
                 {
-
                     Logger?.LogWarning("Glossary {0} Icon Spr Id {1} cannot be converted to Spr object", glossary.GlobalName, glossary.Icon.Id);
                     continue;
                 }
 
                 if (glossary.IntendedOverwrite)
                 {
-
                     if (icon_dict.Contains(glossary.ItemName))
                     {
                         icon_dict[glossary.ItemName] = sprite;
@@ -89,7 +78,6 @@ namespace CobaltCoreModLoader.Services
                     {
                         icon_dict.Add(glossary.ItemName, sprite);
                     }
-
                 }
                 else
                 {
@@ -104,12 +92,11 @@ namespace CobaltCoreModLoader.Services
                     }
                 }
             }
-
         }
 
         internal void LoadManifests()
         {
-            foreach(var manifest in ModAssemblyHandler.GlossaryManifests)
+            foreach (var manifest in ModAssemblyHandler.GlossaryManifests)
             {
                 manifest.LoadManifest(this);
             }

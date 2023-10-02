@@ -12,17 +12,17 @@ namespace CobaltCoreModLoader.Services
     public class ModAssemblyHandler : IModLoaderContact
     {
         private static List<IAnimationManifest> animationManifests = new();
+        private static List<IArtifactManifest> artifactManifests = new();
         private static List<ICardManifest> cardManifests = new();
         private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
         private static List<ICharacterManifest> characterManifests = new();
         private static List<IDBManifest> dBManifests = new();
         private static List<IDeckManifest> deckManifests = new();
+        private static List<IGlossaryManifest> glossaryManifests = new();
         private static HashSet<Assembly> modAssemblies = new();
         private static List<IModManifest> modManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
-        private static List<IGlossaryManifest> glossaryManifests = new();
-        private static List<IArtifactManifest> artifactManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -30,16 +30,16 @@ namespace CobaltCoreModLoader.Services
         }
 
         public static IEnumerable<IAnimationManifest> AnimationManifests => animationManifests.ToArray();
+        public static IEnumerable<IArtifactManifest> ArtifactManifests => artifactManifests.ToArray();
         public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
         public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
         public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
         public static IEnumerable<IDBManifest> DBManifests => dBManifests.ToArray();
         public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
+        public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
         public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
-        public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
-        public static IEnumerable<IArtifactManifest> ArtifactManifests => artifactManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
@@ -57,7 +57,7 @@ namespace CobaltCoreModLoader.Services
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
-                    ExtractManifestFromAssembly(assembly, mod_file.Directory??throw new Exception("Mod file has no parent directory!"));
+                    ExtractManifestFromAssembly(assembly, mod_file.Directory ?? throw new Exception("Mod file has no parent directory!"));
             }
             catch (Exception err)
             {
@@ -68,7 +68,7 @@ namespace CobaltCoreModLoader.Services
         bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly,working_directory);
+                ExtractManifestFromAssembly(assembly, working_directory);
 
             return true;
         }
