@@ -57,7 +57,7 @@ namespace CobaltCoreModLoader.Services
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
-                    ExtractManifestFromAssembly(assembly);
+                    ExtractManifestFromAssembly(assembly, mod_file.Directory??throw new Exception("Mod file has no parent directory!"));
             }
             catch (Exception err)
             {
@@ -65,10 +65,10 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly)
+        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly);
+                ExtractManifestFromAssembly(assembly,working_directory);
 
             return true;
         }
@@ -84,7 +84,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private void ExtractManifestFromAssembly(Assembly assembly)
+        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
 
@@ -103,14 +103,15 @@ namespace CobaltCoreModLoader.Services
                 //should not happen so we don't bother with logging
                 if (spanwed_manifest == null)
                     continue;
-                //sort manifest into the various manifest lists.
+                //set working directoy
+                spanwed_manifest.ModRootFolder = working_directory;
 
+                //sort manifest into the various manifest lists.
                 if (!registered_manifests.TryAdd(spanwed_manifest.Name, spanwed_manifest))
                 {
                     logger.LogCritical("Collision in manifest name {0}. skipping type {1} for {2}", spanwed_manifest.Name, type.Name, registered_manifests[spanwed_manifest.Name].GetType().Name);
                     continue;
                 }
-
                 if (spanwed_manifest is IModManifest mod_manifest)
                     modManifests.Add(mod_manifest);
                 if (spanwed_manifest is ISpriteManifest sprite_manifest)
