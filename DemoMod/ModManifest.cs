@@ -21,6 +21,8 @@ namespace DemoMod
         public IEnumerable<string> Dependencies => new string[0];
         public string Name => "EWanderer.DemoMod";
 
+       public DirectoryInfo? ModRootFolder { get; set; }
+
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
@@ -28,25 +30,31 @@ namespace DemoMod
 
         public void LoadManifest(IArtRegistry artRegistry)
         {
+            if (ModRootFolder == null)
+                throw new Exception("No root folder set!");
             {
-                var sprite = new ExternalSprite("EWanderer.DemoMod.Patched_Cobalt_Core", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\patched_cobalt_core.png"));
+                var path = Path.Combine(ModRootFolder.FullName,"Sprites", Path.GetFileName("patched_cobalt_core.png"));
+                var sprite = new ExternalSprite("EWanderer.DemoMod.Patched_Cobalt_Core", new FileInfo(path));
                 artRegistry.RegisterArt(sprite, (int)Spr.cockpit_cobalt_core);
             }
 
             {
-                pinker_per_border_over_sprite = new ExternalSprite("EWanderer.DemoMod.PinkerPeri.BorderOver", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\border_over_pinker_peri.png"));
+                var path = Path.Combine(ModRootFolder.FullName, "Sprites", Path.GetFileName("border_over_pinker_peri.png"));
+                pinker_per_border_over_sprite = new ExternalSprite("EWanderer.DemoMod.PinkerPeri.BorderOver", new FileInfo(path));
                 if (!artRegistry.RegisterArt(pinker_per_border_over_sprite))
                     throw new Exception("Cannot register sprite.");
             }
 
             {
-                card_art_sprite = new ExternalSprite("EWanderer.DemoMod.DemoCardArt", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\Shield.png"));
+                var path = Path.Combine(ModRootFolder.FullName, "Sprites", Path.GetFileName("Shield.png"));
+                card_art_sprite = new ExternalSprite("EWanderer.DemoMod.DemoCardArt", new FileInfo(path));
                 if (!artRegistry.RegisterArt(card_art_sprite))
                     throw new Exception("Cannot register sprite.");
                 EWandererDemoCard.card_sprite = (Spr)(card_art_sprite.Id ?? throw new NullReferenceException());
             }
             {
-                mini_dracula_sprite = new ExternalSprite("EWanderer.DemoMod.dracular.mini", new FileInfo("X:\\PROGRAMMING\\CobaltCoreModLoader\\DemoMod\\Sprites\\dracula_mini_0.png"));
+                var path = Path.Combine(ModRootFolder.FullName, "Sprites", Path.GetFileName("dracula_mini_0.png"));
+                mini_dracula_sprite = new ExternalSprite("EWanderer.DemoMod.dracular.mini", new FileInfo(path));
                 if (!artRegistry.RegisterArt(mini_dracula_sprite))
                     throw new Exception("Cannot register sprite.");
                 EWandererDemoCard.card_sprite = (Spr)(mini_dracula_sprite.Id ?? throw new NullReferenceException());
