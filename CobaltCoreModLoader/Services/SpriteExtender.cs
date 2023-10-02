@@ -78,8 +78,6 @@ namespace CobaltCoreModLoader.Services
                         continue;
                     var spr_val = Convert.ChangeType(Enum.ToObject(spr_type, sprite.Id), spr_type) ?? throw new Exception("Cast failed");
 
-             
-
                     var str = $"@mod{sprite.Id}";
                     var spr_path = Activator.CreateInstance(TypesAndEnums.SpritePathType, str) ?? throw new Exception("Sprite Path wasn't created");
                     //update or add registed sprite data.

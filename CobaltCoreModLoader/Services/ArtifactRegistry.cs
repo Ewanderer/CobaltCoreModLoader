@@ -2,36 +2,28 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     internal class ArtifactRegistry : IArtifactRegistry
     {
-
+        /// <summary>
+        /// Under what name artifacts are registered.
+        /// </summary>
+        private static Dictionary<string, Tuple<ExternalArtifact, bool>> artifact_targets = new();
 
         private static ILogger<IArtifactRegistry>? Logger;
-
-        public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
-        {
-            Logger = logger;
-        }
 
         /// <summary>
         /// global name artifact lookup.
         /// </summary>
         private static Dictionary<string, ExternalArtifact> registered_artifacts = new Dictionary<string, ExternalArtifact>();
 
-        /// <summary>
-        /// Under what name artifacts are registered.
-        /// </summary>
-        private static Dictionary<string, Tuple<ExternalArtifact, bool>> artifact_targets = new();
-
+        public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
+        {
+            Logger = logger;
+        }
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
         {
@@ -69,7 +61,6 @@ namespace CobaltCoreModLoader.Services
                         Logger?.LogWarning("Overwriting External artifact overwrite {0} for target {1} with artifact {2}", artifact_targets[overwrite].Item1.GlobalName, overwrite, artifact.GlobalName);
                     artifact_targets[overwrite] = new(artifact, true);
                 }
-
             }
             else
             {
@@ -98,14 +89,37 @@ namespace CobaltCoreModLoader.Services
                     }
 
                     artifact_dict[artifact_data.Key] = artifact_data.Value.Item1.ArtifactType;
-
                 }
                 else
                 {
                     artifact_dict.Add(artifact_data.Key, artifact_data.Value.Item1.ArtifactType);
                 }
             }
+        }
 
+        internal static void PatchArtifactMetas()
+        {
+            IDictionary artifact_meta_dict = TypesAndEnums.DbType.GetField("artifactMetas", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new NullReferenceException("Cannot fiend db.artifactMetas");
+
+            var deck_field = TypesAndEnums.ArtifactMetaType.GetField("owner") ?? throw new NullReferenceException("cannot find cardmeta.owner field.");
+
+            foreach (var artifact_data in artifact_targets)
+            {
+                var artifact = artifact_data.Value.Item1;
+                if (artifact.OwnerDeck == null)
+                    continue;
+                var deck = artifact.OwnerDeck;
+                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
+                if (deck_val == null)
+                {
+                    Logger?.LogWarning("Cannot convert deck {0} of artifact {1} into deck enum val", deck.GlobalName, artifact.GlobalName);
+                    continue;
+                }
+
+                var key = artifact_data.Key;
+                var artifact_meta = artifact_meta_dict[key];
+                deck_field.SetValue(artifact_meta, deck_val);
+            }
         }
 
         internal static void PatchArtifactSprites()
@@ -137,41 +151,6 @@ namespace CobaltCoreModLoader.Services
                 {
                     artifact_sprite_dict.Add(key, spr);
                 }
-
-            }
-        }
-
-        internal static void PatchArtifactMetas()
-        {
-            IDictionary artifact_meta_dict = TypesAndEnums.DbType.GetField("artifactMetas", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public)?.GetValue(null) as IDictionary ?? throw new NullReferenceException("Cannot fiend db.artifactMetas");
-
-            var deck_field = TypesAndEnums.ArtifactMetaType.GetField("owner") ?? throw new NullReferenceException("cannot find cardmeta.owner field.");
-
-            foreach (var artifact_data in artifact_targets)
-            {
-                var artifact = artifact_data.Value.Item1;
-                if (artifact.OwnerDeck == null)
-                    continue;
-                var deck = artifact.OwnerDeck;
-                var deck_val = TypesAndEnums.IntToDeck(deck.Id);
-                if (deck_val == null)
-                {
-                    Logger?.LogWarning("Cannot convert deck {0} of artifact {1} into deck enum val", deck.GlobalName, artifact.GlobalName);
-                    continue;
-                }
-
-
-                var key = artifact_data.Key;
-                var artifact_meta = artifact_meta_dict[key];
-                deck_field.SetValue(artifact_meta, deck_val);
-            }
-        }
-
-        internal void LoadManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
-            {
-                manifest.LoadManifest(this);
             }
         }
 
@@ -193,6 +172,14 @@ namespace CobaltCoreModLoader.Services
                     loc_dictionary[name_key] = name;
                 if (loc_dictionary.TryAdd(desc_key, description))
                     loc_dictionary[desc_key] = description;
+            }
+        }
+
+        internal void LoadManifests()
+        {
+            foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
+            {
+                manifest.LoadManifest(this);
             }
         }
     }
