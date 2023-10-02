@@ -104,7 +104,6 @@ namespace CobaltCoreModLoader.Services
         {
             if (CobaltCoreHandler.CobaltCoreAssembly != null)
             {
-           
                 CardRegistry.PatchCardData();
 
                 CardOverwriteRegistry.PatchLogic();
