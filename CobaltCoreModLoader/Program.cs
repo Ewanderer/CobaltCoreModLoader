@@ -7,15 +7,14 @@ using System.Diagnostics;
 
 public static class Program
 {
-    private static Stopwatch mod_boot_timer = new Stopwatch();
     private static IHost? host;
+    private static Stopwatch mod_boot_timer = new Stopwatch();
 
     [STAThread]
     private static int Main(string[] args)
     {
         try
         {
-
             mod_boot_timer.Start();
             HostApplicationBuilder builder = new HostApplicationBuilder();
             builder.Services.AddLogging();
@@ -113,16 +112,64 @@ public static class Program
         }
     }
 
-    private static void SetupPaths()
+    private static void SetupCobaltCorePath(SettingService setting_service, ILogger logger)
     {
-        if (host == null)
-            throw new Exception("No host.");
-        var setting_service = host.Services.GetRequiredService<SettingService>();
-        var logger = host.Services.GetRequiredService<ILogger<SettingService>>();
-        var host_env = host.Services.GetRequiredService<IHostEnvironment>();
-        SetupCobaltCorePath(setting_service, logger);
-        SetupModLibPath(setting_service, logger, host_env);
+        if (setting_service.CobaltCoreGamePath == null || !setting_service.CobaltCoreGamePath.Exists || !File.Exists(Path.Combine(setting_service.CobaltCoreGamePath.FullName, Path.GetFileName("CobaltCore.exe"))))
+        {
+            mod_boot_timer.Stop();
+            logger.LogInformation("Please enter CobaltCore game path:");
+            //loop until setting is nailed down...
+            while (true)
+            {
+                //ask user for cobalt core exe path.
+                var path = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    logger.LogWarning("Empty input. Try again:");
+                    continue;
+                }
 
+                var executable = new FileInfo(path);
+                var directory = new DirectoryInfo(path);
+                if (!executable.Exists && !directory.Exists)
+                {
+                    logger.LogWarning("Input not a valid path or doesn't exist. Try again:");
+                    continue;
+                }
+                if (executable.Exists)
+                {
+                    if (string.Compare(executable.Name, "CobaltCore.exe", true) == 0)
+                    {
+                        setting_service.CobaltCoreGamePath = executable.Directory ?? throw new Exception("Executable has no parent directory");
+                        break;
+                    }
+                    else
+                    {
+                        logger.LogWarning("Executable is not CobaltCore.exe. Try again:");
+                    }
+                }
+                else if (directory.Exists)
+                {
+                    //check if contains cobalt core executable
+                    if (File.Exists(Path.Combine(directory.FullName, Path.GetFileName("CobaltCore.exe"))))
+                    {
+                        setting_service.CobaltCoreGamePath = directory;
+                        break;
+                    }
+                    else
+                    {
+                        logger.LogWarning("Directory doesn't contain \"CobaltCore.exe\". Try again:");
+                    }
+                }
+            }
+            mod_boot_timer.Start();
+            logger.LogInformation("Cobalt Core Game path successfully set and saved to settings.");
+        }
+        else
+        {
+            logger.LogInformation("Using Cobalt Core in: " + setting_service.CobaltCoreGamePath.FullName);
+            logger.LogInformation("If you wish to change this, edit or delete setting file.");
+        }
     }
 
     private static void SetupModLibPath(SettingService setting_service, ILogger logger, IHostEnvironment host_env)
@@ -176,68 +223,16 @@ public static class Program
                 logger.LogWarning("Directory does not exist.");
             }
         }
-
     }
 
-    private static void SetupCobaltCorePath(SettingService setting_service, ILogger logger)
+    private static void SetupPaths()
     {
-        if (setting_service.CobaltCoreGamePath == null || !setting_service.CobaltCoreGamePath.Exists || !File.Exists(Path.Combine(setting_service.CobaltCoreGamePath.FullName, Path.GetFileName("CobaltCore.exe"))))
-        {
-            mod_boot_timer.Stop();
-            logger.LogInformation("Please enter CobaltCore game path:");
-            //loop until setting is nailed down...
-            while (true)
-            {
-                //ask user for cobalt core exe path.          
-                var path = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    logger.LogWarning("Empty input. Try again:");
-                    continue;
-                }
-
-                var executable = new FileInfo(path);
-                var directory = new DirectoryInfo(path);
-                if (!executable.Exists && !directory.Exists)
-                {
-                    logger.LogWarning("Input not a valid path or doesn't exist. Try again:");
-                    continue;
-                }
-                if (executable.Exists)
-                {
-                    if (string.Compare(executable.Name, "CobaltCore.exe", true) == 0)
-                    {
-                        setting_service.CobaltCoreGamePath = executable.Directory ?? throw new Exception("Executable has no parent directory");
-                        break;
-                    }
-                    else
-                    {
-                        logger.LogWarning("Executable is not CobaltCore.exe. Try again:");
-                    }
-                }
-                else if (directory.Exists)
-                {
-                    //check if contains cobalt core executable
-                    if (File.Exists(Path.Combine(directory.FullName, Path.GetFileName("CobaltCore.exe"))))
-                    {
-                        setting_service.CobaltCoreGamePath = directory;
-                        break;
-                    }
-                    else
-                    {
-                        logger.LogWarning("Directory doesn't contain \"CobaltCore.exe\". Try again:");
-                    }
-                }
-            }
-            mod_boot_timer.Start();
-            logger.LogInformation("Cobalt Core Game path successfully set and saved to settings.");
-        }
-        else
-        {
-            logger.LogInformation("Using Cobalt Core in: " + setting_service.CobaltCoreGamePath.FullName);
-            logger.LogInformation("If you wish to change this, edit or delete setting file.");
-        }
-
+        if (host == null)
+            throw new Exception("No host.");
+        var setting_service = host.Services.GetRequiredService<SettingService>();
+        var logger = host.Services.GetRequiredService<ILogger<SettingService>>();
+        var host_env = host.Services.GetRequiredService<IHostEnvironment>();
+        SetupCobaltCorePath(setting_service, logger);
+        SetupModLibPath(setting_service, logger, host_env);
     }
-
 }

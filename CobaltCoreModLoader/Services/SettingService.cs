@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 
 namespace CobaltCoreModLoader.Services
 {
     public class SettingService
     {
-
-
+        private const string settings_file_name = "ModLoaderSettings.json";
+        private readonly ILogger<SettingService> logger;
         private Settings current_settings;
 
-        const string settings_file_name = "ModLoaderSettings.json";
-        private readonly ILogger<SettingService> logger;
-
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public SettingService(ILogger<SettingService> logger)
         {
@@ -32,7 +24,7 @@ namespace CobaltCoreModLoader.Services
                 {
                     using (var stream = file_info.OpenRead())
                     {
-                        current_settings = JsonSerializer.Deserialize<Settings>(stream)??throw new Exception();
+                        current_settings = JsonSerializer.Deserialize<Settings>(stream) ?? throw new Exception();
                     }
                 }
                 else
@@ -46,7 +38,6 @@ namespace CobaltCoreModLoader.Services
                 logger.LogError("Couldn't parse settings file. Continuing with default.");
             }
         }
-
 
         public DirectoryInfo? CobaltCoreGamePath
         {
@@ -68,7 +59,6 @@ namespace CobaltCoreModLoader.Services
                     current_settings.CobaltCoreGamePath = value.FullName;
                     WriteChanges();
                 }
-
             }
         }
 
@@ -83,7 +73,7 @@ namespace CobaltCoreModLoader.Services
                         return result;
                     return null;
                 }
-                catch {return null; }
+                catch { return null; }
             }
             set
             {
@@ -92,7 +82,6 @@ namespace CobaltCoreModLoader.Services
                     current_settings.CobaltCoreModLibPath = value.FullName;
                     WriteChanges();
                 }
-
             }
         }
 
@@ -104,7 +93,6 @@ namespace CobaltCoreModLoader.Services
                 {
                     JsonSerializer.Serialize<Settings>(stream, current_settings);
                 }
-
             }
             catch
             {
@@ -115,12 +103,9 @@ namespace CobaltCoreModLoader.Services
         [Serializable]
         private class Settings
         {
-
             public string CobaltCoreGamePath { get; set; } = "";
 
             public string CobaltCoreModLibPath { get; set; } = "";
-
         }
-
     }
 }
