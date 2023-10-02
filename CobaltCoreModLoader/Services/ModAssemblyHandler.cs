@@ -50,6 +50,8 @@ namespace CobaltCoreModLoader.Services
             return manifest;
         }
 
+        
+
         public void LoadModAssembly(FileInfo mod_file)
         {
             try
