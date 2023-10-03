@@ -195,7 +195,8 @@ namespace CobaltCoreModLoader.Services
                 }
                 else if (sprite.physical_location != null)
                 {
-                    texture = Texture2D.FromFile(GetGraphicsDevice(), sprite.physical_location.FullName);
+                    using (var stream = sprite.physical_location.OpenRead())
+                        texture = Texture2D.FromStream(GetGraphicsDevice(), stream);
                 }
                 else
                 {
