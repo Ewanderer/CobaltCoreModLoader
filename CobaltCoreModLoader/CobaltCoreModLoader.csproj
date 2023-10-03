@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
+    <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     <ProjectReference Include="..\SingleFileExtractor\src\SingleFileExtractor.Core\SingleFileExtractor.Core.csproj" />
   </ItemGroup>
 </Project>
