@@ -40,6 +40,7 @@ public static class Program
             //load cobalt core assembly
             var cobalt_core = host.Services.GetRequiredService<CobaltCoreHandler>();
             cobalt_core.LoadupCobaltCore(new FileInfo(Path.Combine(setting_service.CobaltCoreGamePath?.FullName ?? throw new Exception("Missing path"), Path.GetFileName("CobaltCore.exe"))));
+          
             //load mods and their manifests.
             PickupModsFromLib();
             //patch cobalt core and load various mod components in order of dependency.
@@ -66,6 +67,7 @@ public static class Program
             host.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
             mod_boot_timer.Stop();
             host.Services.GetService<ILogger<Stopwatch>>()?.LogInformation("Mod loader booted in:" + mod_boot_timer.Elapsed.TotalSeconds.ToString());
+            
             //run cobalt core.
             cobalt_core.RunCobaltCore(new string[] { "--debug" });
             host.StopAsync().Wait();
