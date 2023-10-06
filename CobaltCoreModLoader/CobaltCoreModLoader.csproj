@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
@@ -14,14 +14,20 @@
     <None Remove="CobaltCoreCopy\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+    <PackageReference Include="MonoMod.Core" Version="1.0.1" />
+    <PackageReference Include="MonoMod.Utils" Version="25.0.3" />
     <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
     <ProjectReference Include="..\FNA\FNA.Core.csproj" />
     <ProjectReference Include="..\SingleFileExtractor\src\SingleFileExtractor.Core\SingleFileExtractor.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\HarmonyReference\0Harmony.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
