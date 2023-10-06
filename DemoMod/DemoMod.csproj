@@ -12,12 +12,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
+    <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj">
+      <Private>False</Private>
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="CobaltCore">
       <HintPath>CobaltCore.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 
