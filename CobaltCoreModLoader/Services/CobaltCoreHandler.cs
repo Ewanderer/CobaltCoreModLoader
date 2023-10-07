@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -11,6 +12,19 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class CobaltCoreHandler : ICobaltCoreContact
     {
+
+        public static string CobaltCoreExecutableName { get {
+                if(System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows)){
+                    return "CobaltCore.exe";
+
+                }
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    return "CobaltCore";
+                }
+                throw new PlatformNotSupportedException("Unkown platform");
+            } }
+
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
         private ILogger<CobaltCoreHandler> logger;
 
@@ -57,7 +71,7 @@ namespace CobaltCoreModLoader.Services
                                 }
                                 else
                                     asm = Assembly.Load(buffer);
-                                CobaltCoreExecutableAssemblies.Add(asm);
+                                CobaltCoreExecutableAssemblies.Add(asm);                              
                             }
                         }
                         catch

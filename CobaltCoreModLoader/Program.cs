@@ -39,7 +39,7 @@ public static class Program
             var setting_service = host.Services.GetRequiredService<SettingService>();
             //load cobalt core assembly
             var cobalt_core = host.Services.GetRequiredService<CobaltCoreHandler>();
-            cobalt_core.LoadupCobaltCore(new FileInfo(Path.Combine(setting_service.CobaltCoreGamePath?.FullName ?? throw new Exception("Missing path"), Path.GetFileName("CobaltCore.exe"))));
+            cobalt_core.LoadupCobaltCore(new FileInfo(Path.Combine(setting_service.CobaltCoreGamePath?.FullName ?? throw new Exception("Missing path"), Path.GetFileName(CobaltCoreHandler.CobaltCoreExecutableName))));
           
             //load mods and their manifests.
             PickupModsFromLib();
@@ -116,7 +116,7 @@ public static class Program
 
     private static void SetupCobaltCorePath(SettingService setting_service, ILogger logger)
     {
-        if (setting_service.CobaltCoreGamePath == null || !setting_service.CobaltCoreGamePath.Exists || !File.Exists(Path.Combine(setting_service.CobaltCoreGamePath.FullName, Path.GetFileName("CobaltCore.exe"))))
+        if (setting_service.CobaltCoreGamePath == null || !setting_service.CobaltCoreGamePath.Exists || !File.Exists(Path.Combine(setting_service.CobaltCoreGamePath.FullName, Path.GetFileName(CobaltCoreHandler.CobaltCoreExecutableName))))
         {
             mod_boot_timer.Stop();
             logger.LogInformation("Please enter CobaltCore game path:");
@@ -140,27 +140,27 @@ public static class Program
                 }
                 if (executable.Exists)
                 {
-                    if (string.Compare(executable.Name, "CobaltCore.exe", true) == 0)
+                    if (string.Compare(executable.Name, CobaltCoreHandler.CobaltCoreExecutableName, true) == 0)
                     {
                         setting_service.CobaltCoreGamePath = executable.Directory ?? throw new Exception("Executable has no parent directory");
                         break;
                     }
                     else
                     {
-                        logger.LogWarning("Executable is not CobaltCore.exe. Try again:");
+                        logger.LogWarning($"Executable is not {CobaltCoreHandler.CobaltCoreExecutableName}. Try again:");
                     }
                 }
                 else if (directory.Exists)
                 {
                     //check if contains cobalt core executable
-                    if (File.Exists(Path.Combine(directory.FullName, Path.GetFileName("CobaltCore.exe"))))
+                    if (File.Exists(Path.Combine(directory.FullName, Path.GetFileName(CobaltCoreHandler.CobaltCoreExecutableName))))
                     {
                         setting_service.CobaltCoreGamePath = directory;
                         break;
                     }
                     else
                     {
-                        logger.LogWarning("Directory doesn't contain \"CobaltCore.exe\". Try again:");
+                        logger.LogWarning($"Directory doesn't contain \"{CobaltCoreHandler.CobaltCoreExecutableName}\". Try again:");
                     }
                 }
             }
