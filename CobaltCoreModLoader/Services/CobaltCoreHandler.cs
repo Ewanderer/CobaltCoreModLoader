@@ -76,7 +76,6 @@ namespace CobaltCoreModLoader.Services
 
             //Setup assembly resolver for anything else.
             AppDomain.CurrentDomain.AssemblyResolve += (sender, evt) => { return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(e => e.FullName == evt.Name); };
-            
         }
 
         /// <summary>

@@ -134,45 +134,34 @@ namespace CobaltCoreModLoader.Services
             patched_result.Enqueue(__result.Dequeue());
             // We patch our own items into the DB.
             patched_result.Enqueue(() => { InsertNewLogicItems(); });
-
-
             // Cobalt Core loads decks and status data.
             patched_result.Enqueue(__result.Dequeue());
             //we patch out own items into db.
             patched_result.Enqueue(() => { InsertNewDeckAndStatus(); });
-
-            // Cobalt Core loads story.
-            patched_result.Enqueue(__result.Dequeue());
-            // we apply any patches to story item.
-            patched_result.Enqueue(() => { PatchStory(); });
-
-            // cobalt core loads atlas
-            patched_result.Enqueue(__result.Dequeue());
-            //Sprite extender needs to remove stuff from atlas for overwrite...
-            patched_result.Enqueue(() => { SpriteExtender.BreakAtlas(); });
-
-            // cobalt core loads fonts
-            patched_result.Enqueue(__result.Dequeue());
-            // nothing to do here...
-            // cobalt creates extra art dictionaries for various stuff.
-            patched_result.Enqueue(__result.Dequeue());
-            patched_result.Enqueue(() => { PatchExtraItemSprites(); });
-
-
-            //cobalt core creates card, articfact meta, event choice functions and story commands.
-            patched_result.Enqueue(__result.Dequeue());
-            //we do our patches on that.
-            patched_result.Enqueue(() => { PatchMetasAndStoryFunctions(); });
-
-            /*
             //cobalt core loads localisations.
             patched_result.Enqueue(__result.Dequeue());
             // We inject ourselves into the loader directly, so no extra here.
             // Cobalt Core loads platforms.
             patched_result.Enqueue(__result.Dequeue());
             // nothing to do for us here...
-    
-            */
+            // Cobalt Core loads story.
+            patched_result.Enqueue(__result.Dequeue());
+            // we apply any patches to story item.
+            patched_result.Enqueue(() => { PatchStory(); });
+            // cobalt core loads atlas
+            patched_result.Enqueue(__result.Dequeue());
+            //Sprite extender needs to remove stuff from atlas for overwrite...
+            patched_result.Enqueue(() => { SpriteExtender.BreakAtlas(); });
+            // cobalt core loads fonts
+            patched_result.Enqueue(__result.Dequeue());
+            // nothing to do here...
+            // cobalt creates extra art dictionaries for various stuff.
+            patched_result.Enqueue(__result.Dequeue());
+            patched_result.Enqueue(() => { PatchExtraItemSprites(); });
+            //cobalt core creates card, articfact meta, event choice functions and story commands.
+            patched_result.Enqueue(__result.Dequeue());
+            //we do our patches on that.
+            patched_result.Enqueue(() => { PatchMetasAndStoryFunctions(); });
             //cobalt core does stuff not concering us.
             while (__result.Count > 0)
                 patched_result.Enqueue(__result.Dequeue());
