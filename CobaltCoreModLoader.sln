@@ -14,10 +14,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoMod", "DemoMod\DemoMod.csproj", "{9F1AD777-5427-457C-80E7-1D48A9B6BA09}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "References", "References", "{6AC1BBCF-6568-47F4-BE20-6EB174D4BEDD}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FNA.Core", "FNA\FNA.Core.csproj", "{1B3B7218-6242-417B-A476-ED9AD4A32973}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,21 +54,9 @@ Global
 		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|x64.ActiveCfg = Release|Any CPU
 		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|x64.Build.0 = Release|Any CPU
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Debug|Any CPU.Build.0 = Debug|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Debug|x64.ActiveCfg = Debug|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Debug|x64.Build.0 = Debug|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Release|Any CPU.ActiveCfg = Release|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Release|Any CPU.Build.0 = Release|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Release|x64.ActiveCfg = Release|x64
-		{1B3B7218-6242-417B-A476-ED9AD4A32973}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{1465D284-FEF2-44F6-90F5-3F96A8CB029E} = {6AC1BBCF-6568-47F4-BE20-6EB174D4BEDD}
-		{1B3B7218-6242-417B-A476-ED9AD4A32973} = {6AC1BBCF-6568-47F4-BE20-6EB174D4BEDD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CB86932F-B261-4ADD-92A6-E21275896663}
