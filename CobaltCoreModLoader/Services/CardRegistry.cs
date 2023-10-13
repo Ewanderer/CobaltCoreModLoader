@@ -119,28 +119,28 @@ namespace CobaltCoreModLoader.Services
 
                 if (name != null)
                 {
-                    var key = "card." + card.CardType.Name + ".name";
+                    var key = card.NameLocKey;
                     if (!__result.TryAdd(key, name))
                         Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
                 }
 
                 if (description != null)
                 {
-                    var key = "card." + card.CardType.Name + ".desc";
+                    var key = card.DescLocKey;
                     if (!__result.TryAdd(key, description))
                         Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
                 }
 
                 if (descriptionA != null)
                 {
-                    var key = "card." + card.CardType.Name + ".descA";
+                    var key = card.DescALocKey;
                     if (!__result.TryAdd(key, descriptionA))
                         Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
                 }
 
                 if (descriptionB != null)
                 {
-                    var key = "card." + card.CardType.Name + ".descB";
+                    var key = card.DescBLocKey;
                     if (!__result.TryAdd(key, descriptionB))
                         Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
                 }
