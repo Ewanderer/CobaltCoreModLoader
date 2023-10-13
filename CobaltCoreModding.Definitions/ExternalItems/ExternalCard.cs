@@ -6,6 +6,9 @@
         /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for
         /// </summary>
         private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
+        private Dictionary<string, string> localized_card_descriptions = new Dictionary<string, string>();
+        private Dictionary<string, string> localized_card_a_descriptions = new Dictionary<string, string>();
+        private Dictionary<string, string> localized_card_b_descriptions = new Dictionary<string, string>();
 
         public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
@@ -28,10 +31,25 @@
         public Type CardType { get; init; }
         public string GlobalName { get; init; }
 
-        public void AddLocalisation(string text, string locale = "en")
+        public void AddLocalisation(string name, string? desc=null, string? descA=null, string? descB=null, string locale = "en")
         {
-            if (!localized_card_names.TryAdd(locale, text))
-                localized_card_names[locale] = text;
+            if (!localized_card_names.TryAdd(locale, name))
+                localized_card_names[locale] = name;
+            if (desc != null)
+            {
+                if (!localized_card_descriptions.TryAdd(locale, desc))
+                    localized_card_descriptions[locale] = desc;
+            }
+            if (descA != null)
+            {
+                if (!localized_card_a_descriptions.TryAdd(locale, descA))
+                    localized_card_a_descriptions[locale] = descA;
+            }
+            if (descB != null)
+            {
+                if (!localized_card_b_descriptions.TryAdd(locale, descB))
+                    localized_card_b_descriptions[locale] = descB;
+            }
         }
 
         public void GenerateCardNamesFromResourceFile()
@@ -39,12 +57,17 @@
 #warning todo
         }
 
-        public string? GetLocalisation(string locale)
+        public void GetLocalisation(string locale, out string? name, out string? description, out string? descriptionA, out string? descriptionB)
         {
             //look up localisations with en as a fallback.
-            if (!localized_card_names.TryGetValue(locale, out var text))
-                localized_card_names.TryGetValue("en", out text);
-            return text;
+            if (!localized_card_names.TryGetValue(locale, out name))
+                localized_card_names.TryGetValue("en", out name);
+            if (!localized_card_descriptions.TryGetValue(locale, out description))
+                localized_card_descriptions.TryGetValue("en", out description);
+            if (!localized_card_a_descriptions.TryGetValue(locale, out descriptionA))
+                localized_card_a_descriptions.TryGetValue("en", out descriptionA);
+            if (!localized_card_b_descriptions.TryGetValue(locale, out descriptionB))
+                localized_card_b_descriptions.TryGetValue("en", out descriptionB);
         }
 
         public bool ValidReferences()

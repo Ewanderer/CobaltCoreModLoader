@@ -106,8 +106,8 @@ namespace CobaltCoreModLoader.Services
             {
                 if (card == null) continue;
 
-                string? text = card.GetLocalisation(locale);
-                if (text == null)
+                card.GetLocalisation(locale, out var name, out var description, out var descriptionA, out var descriptionB);
+                if (name == null && description == null)
                     continue;
                 //make card and get value
                 var inst = Activator.CreateInstance(card.CardType);
@@ -117,9 +117,33 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 }
 
-                var key = "card." + card.CardType.Name + ".name";
-                if (!__result.TryAdd(key, text))
-                    Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+                if (name != null)
+                {
+                    var key = "card." + card.CardType.Name + ".name";
+                    if (!__result.TryAdd(key, name))
+                        Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+                }
+
+                if (description != null)
+                {
+                    var key = "card." + card.CardType.Name + ".desc";
+                    if (!__result.TryAdd(key, description))
+                        Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+                }
+
+                if (descriptionA != null)
+                {
+                    var key = "card." + card.CardType.Name + ".descA";
+                    if (!__result.TryAdd(key, descriptionA))
+                        Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+                }
+
+                if (descriptionB != null)
+                {
+                    var key = "card." + card.CardType.Name + ".descB";
+                    if (!__result.TryAdd(key, descriptionB))
+                        Logger?.LogCritical($"Cannot add {key} to localisations, since already know. skipping...");
+                }
             }
         }
 
