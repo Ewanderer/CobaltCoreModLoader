@@ -31,6 +31,22 @@
         public Type CardType { get; init; }
         public string GlobalName { get; init; }
 
+        public string NameLocKey => "card." + CardType.Name + ".name";
+
+        public string DescLocKey => "card." + CardType.Name + ".desc";
+
+        public string DescALocKey => "card." + CardType.Name + ".descA";
+
+        public string DescBLocKey => "card." + CardType.Name + ".descB";
+
+        /// <summary>
+        /// Adds name and optional description for a card.
+        /// </summary>
+        /// <param name="name">Card name</param>
+        /// <param name="desc">Description</param>
+        /// <param name="descA">Description for Upgrade A</param>
+        /// <param name="descB">Description for Upgrade b</param>
+        /// <param name="locale">Language code</param>
         public void AddLocalisation(string name, string? desc=null, string? descA=null, string? descB=null, string locale = "en")
         {
             if (!localized_card_names.TryAdd(locale, name))
