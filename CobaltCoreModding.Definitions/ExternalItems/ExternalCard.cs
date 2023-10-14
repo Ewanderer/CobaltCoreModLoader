@@ -2,13 +2,16 @@
 {
     public class ExternalCard
     {
+        private Dictionary<string, string> localized_card_a_descriptions = new Dictionary<string, string>();
+
+        private Dictionary<string, string> localized_card_b_descriptions = new Dictionary<string, string>();
+
+        private Dictionary<string, string> localized_card_descriptions = new Dictionary<string, string>();
+
         /// <summary>
         /// key value pairs are locale and localized card name. will only be applied if card implementation has a value for
         /// </summary>
         private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
-        private Dictionary<string, string> localized_card_descriptions = new Dictionary<string, string>();
-        private Dictionary<string, string> localized_card_a_descriptions = new Dictionary<string, string>();
-        private Dictionary<string, string> localized_card_b_descriptions = new Dictionary<string, string>();
 
         public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
@@ -29,15 +32,12 @@
 
         public ExternalSprite CardArt { get; init; }
         public Type CardType { get; init; }
+        public string DescALocKey => "card." + CardType.Name + ".descA";
+        public string DescBLocKey => "card." + CardType.Name + ".descB";
+        public string DescLocKey => "card." + CardType.Name + ".desc";
         public string GlobalName { get; init; }
 
         public string NameLocKey => "card." + CardType.Name + ".name";
-
-        public string DescLocKey => "card." + CardType.Name + ".desc";
-
-        public string DescALocKey => "card." + CardType.Name + ".descA";
-
-        public string DescBLocKey => "card." + CardType.Name + ".descB";
 
         /// <summary>
         /// Adds name and optional description for a card.
@@ -47,7 +47,7 @@
         /// <param name="descA">Description for Upgrade A</param>
         /// <param name="descB">Description for Upgrade b</param>
         /// <param name="locale">Language code</param>
-        public void AddLocalisation(string name, string? desc=null, string? descA=null, string? descB=null, string locale = "en")
+        public void AddLocalisation(string name, string? desc = null, string? descA = null, string? descB = null, string locale = "en")
         {
             if (!localized_card_names.TryAdd(locale, name))
                 localized_card_names[locale] = name;

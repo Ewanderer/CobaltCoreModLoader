@@ -3,35 +3,25 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
     public class StatusRegistry : IStatusRegistry
     {
-
         private const int status_id_counter_start = 100000;
-        private static int status_id_counter = status_id_counter_start;
-
-        private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
-
-        private static ILogger<StatusRegistry>? logger;
-
         private static readonly Dictionary<int, object> icon_lookup = new Dictionary<int, object>();
+        private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
+        private static Type? buildiconandtext_return_type;
+        private static ILogger<StatusRegistry>? logger;
+        private static int status_id_counter = status_id_counter_start;
+        private static FieldInfo? tt_glossary_key_field;
 
         public StatusRegistry(ILogger<StatusRegistry>? logger)
         {
             StatusRegistry.logger = logger;
-
         }
 
         public static void PatchStatusData()
@@ -70,7 +60,6 @@ namespace CobaltCoreModLoader.Services
 
         public void LoadManifests()
         {
-
             foreach (var manifest in ModAssemblyHandler.StatusManifests)
             {
                 manifest.LoadManifest(this);
@@ -81,12 +70,10 @@ namespace CobaltCoreModLoader.Services
 
             tt_glossary_key_field = TypesAndEnums.TTGlossaryType.GetField("key") ?? throw new Exception("TTGlossary.key not found!");
 
-
             var tt_glossary_build_icon_and_text_method = TypesAndEnums.TTGlossaryType.GetMethod("BuildIconAndText") ?? throw new Exception("TTGlossary.BuildIconAndText method not found");
 
             //  buildiconandtext_return_type = typeof(ValueTuple<,>).MakeGenericType(TypesAndEnums.SprType, typeof(string)) ?? throw new Exception("Unable to create buildiconandtext_return_type");
             buildiconandtext_return_type = tt_glossary_build_icon_and_text_method.ReturnType ?? throw new Exception("Unable to create buildiconandtext_return_type");
-
 
             var tt_glossary_build_icon_and_text_postfix = typeof(StatusRegistry).GetMethod("Glossary_Postfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("StatusRegistry.Glossary_Postfix method not found");
 
@@ -99,50 +86,6 @@ namespace CobaltCoreModLoader.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
              */
-
-        }
-
-        private static FieldInfo? tt_glossary_key_field;
-        private static Type? buildiconandtext_return_type;
-
-        private static void Glossary_Postfix(ref object __result, object __instance)
-        {
-            if (buildiconandtext_return_type == null)
-                return;
-            //check if this tt references a status.
-
-            var key = tt_glossary_key_field?.GetValue(__instance) as string;
-            if (key == null || !key.StartsWith("status"))
-                return;
-            //check if status enum value is an integer aka a custom status added by mod loader
-            var splits = key.Split('.');
-            if (splits.Length < 2)
-                return;
-
-            if (!int.TryParse(splits[1], out var key_id))
-            {
-                return;
-            }
-
-            //check if spr value exists
-            if (!icon_lookup.TryGetValue(key_id, out var icon_spr))
-            {
-                return;
-            }
-            //at this point we must inject.            
-            //result is a valuetuple
-            if (__result is not ITuple tuple)
-                return;
-
-            var text = tuple[1] as string;
-            if (text == null)
-                return;
-            var new_result = Activator.CreateInstance(buildiconandtext_return_type, icon_spr, text);
-            if (new_result == null)
-                return;
-
-            __result = new_result;
-
         }
 
         public bool RegisterStatus(ExternalStatus status)
@@ -185,7 +128,6 @@ namespace CobaltCoreModLoader.Services
 
         internal static void PatchLocalisations(string locale, ref Dictionary<string, string> result)
         {
-
             foreach (var s in total_lookup.Values)
             {
                 if (s.Id == null)
@@ -213,9 +155,46 @@ namespace CobaltCoreModLoader.Services
                 {
                     logger?.LogError("Status {0} has no description found in {1} and english", s.GlobalName, locale);
                 }
+            }
+        }
 
+        private static void Glossary_Postfix(ref object __result, object __instance)
+        {
+            if (buildiconandtext_return_type == null)
+                return;
+            //check if this tt references a status.
+
+            var key = tt_glossary_key_field?.GetValue(__instance) as string;
+            if (key == null || !key.StartsWith("status"))
+                return;
+            //check if status enum value is an integer aka a custom status added by mod loader
+            var splits = key.Split('.');
+            if (splits.Length < 2)
+                return;
+
+            if (!int.TryParse(splits[1], out var key_id))
+            {
+                return;
             }
 
+            //check if spr value exists
+            if (!icon_lookup.TryGetValue(key_id, out var icon_spr))
+            {
+                return;
+            }
+            //at this point we must inject.
+            //result is a valuetuple
+            if (__result is not ITuple tuple)
+                return;
+
+            var text = tuple[1] as string;
+            if (text == null)
+                return;
+            var new_result = Activator.CreateInstance(buildiconandtext_return_type, icon_spr, text);
+            if (new_result == null)
+                return;
+
+            __result = new_result;
         }
     }
 }

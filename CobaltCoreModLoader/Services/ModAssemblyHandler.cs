@@ -20,12 +20,11 @@ namespace CobaltCoreModLoader.Services
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
 
-        private static List<IStatusManifest> statusManifests = new();
-
         private static HashSet<Assembly> modAssemblies = new();
         private static List<IModManifest> modManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
+        private static List<IStatusManifest> statusManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
