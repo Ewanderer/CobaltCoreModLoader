@@ -31,6 +31,7 @@ public static class Program
             builder.Services.AddSingleton<CharacterRegistry>();
             builder.Services.AddSingleton<GlossaryRegistry>();
             builder.Services.AddSingleton<ArtifactRegistry>();
+            builder.Services.AddSingleton<StatusRegistry>();
 
             host = builder.Build();
             host.Start();
@@ -50,6 +51,8 @@ public static class Program
             host.Services.GetRequiredService<GlossaryRegistry>().LoadManifests();
             //patch deck
             host.Services.GetRequiredService<DeckRegistry>().LoadManifests();
+            //patch status
+            host.Services.GetRequiredService<StatusRegistry>().LoadManifests();
             //patch cards
             host.Services.GetRequiredService<CardRegistry>().LoadManifests();
             //card overwrites

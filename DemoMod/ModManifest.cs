@@ -7,7 +7,7 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest
     {
         internal static int x = 0;
         private ExternalSprite? card_art_sprite;
@@ -18,10 +18,14 @@ namespace DemoMod
         private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
+        private ExternalSprite? demo_status_sprite;
+
+        public static ExternalStatus? demo_status;
+
         public IEnumerable<string> Dependencies => new string[0];
         public string Name => "EWanderer.DemoMod";
 
-       public DirectoryInfo? ModRootFolder { get; set; }
+        public DirectoryInfo? ModRootFolder { get; set; }
 
         public void BootMod(IModLoaderContact contact)
         {
@@ -33,7 +37,7 @@ namespace DemoMod
             if (ModRootFolder == null)
                 throw new Exception("No root folder set!");
             {
-                var path = Path.Combine(ModRootFolder.FullName,"Sprites", Path.GetFileName("patched_cobalt_core.png"));
+                var path = Path.Combine(ModRootFolder.FullName, "Sprites", Path.GetFileName("patched_cobalt_core.png"));
                 var sprite = new ExternalSprite("EWanderer.DemoMod.Patched_Cobalt_Core", new FileInfo(path));
                 artRegistry.RegisterArt(sprite, (int)Spr.cockpit_cobalt_core);
             }
@@ -58,6 +62,14 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(mini_dracula_sprite))
                     throw new Exception("Cannot register sprite.");
                 EWandererDemoCard.card_sprite = (Spr)(mini_dracula_sprite.Id ?? throw new NullReferenceException());
+            }
+
+            {
+                var path = Path.Combine(ModRootFolder.FullName, "Sprites", Path.GetFileName("demo_status.png"));
+                demo_status_sprite = new ExternalSprite("EWanderer.DemoMod.demo_status.sprite", new FileInfo(path));
+                if (!artRegistry.RegisterArt(demo_status_sprite))
+                    throw new Exception("Cannot register sprite.");
+
             }
         }
 
@@ -175,6 +187,13 @@ namespace DemoMod
             var artifact = new ExternalArtifact(typeof(Artifacts.PortableBlackHole), "EWanderer.DemoMod.PortableBlackHoleArtifact", spr, null, new ExternalGlossary[0]);
             artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
             registry.RegisterArtifact(artifact);
+        }
+
+        public void LoadManifest(IStatusRegistry statusRegistry)
+        {
+            demo_status = new ExternalStatus("EWanderer.DemoMod.DoomStatus", false, System.Drawing.Color.Red, null, demo_status_sprite ?? throw new Exception("missing sprite"), false);
+            statusRegistry.RegisterStatus(demo_status);
+            demo_status.AddLocalisation("Radio", "We got a signal. Exciting!");
         }
     }
 }
