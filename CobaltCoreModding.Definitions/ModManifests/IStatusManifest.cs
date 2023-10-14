@@ -2,12 +2,12 @@
 
 namespace CobaltCoreModding.Definitions.ModManifests
 {
-    public interface IGlossaryManifest : IManifest
+    public interface IStatusManifest : IManifest
     {
         /// <summary>
-        /// Called by glossary registry when it times for add extra glossary items into the system.
+        /// Called by status registry when it times for add extra statuses into the system.
         /// </summary>
         /// <param name="artRegistry"></param>
-        public void LoadManifest(IGlossaryRegisty registry);
+        public void LoadManifest(IStatusRegistry statusRegistry);
     }
 }
