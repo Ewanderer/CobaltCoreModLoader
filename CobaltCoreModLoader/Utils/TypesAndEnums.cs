@@ -32,8 +32,11 @@ namespace CobaltCoreModLoader.Utils
         private static Type? __sprite_path_type = null;
         private static Type? __starter_Deck_type = null;
 
+        private static Type? __status_def_type = null;
+        private static Type? __status_type = null;
         private static Type? __story_vars_type = null;
 
+        private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
 
         public static Type ArtifactMetaType
@@ -176,6 +179,26 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        public static Type StatusDefType
+        {
+            get
+            {
+                if (__status_def_type != null)
+                    return __status_def_type;
+                return __status_def_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StatusDef") ?? throw new Exception("StatusDef type not found.");
+            }
+        }
+
+        public static Type StatusType
+        {
+            get
+            {
+                if (__status_type != null)
+                    return __status_type;
+                return __status_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Status") ?? throw new Exception("Status type not found.");
+            }
+        }
+
         public static Type StoryVarsType
         {
             get
@@ -183,6 +206,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__story_vars_type != null)
                     return __story_vars_type;
                 return __story_vars_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StoryVars") ?? throw new Exception("StoryVars type not found");
+            }
+        }
+
+        public static Type TTGlossaryType
+        {
+            get
+            {
+                if (__ttglossary_type != null)
+                    return __ttglossary_type;
+                return __ttglossary_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("TTGlossary") ?? throw new Exception("TTGlossary type not found.");
             }
         }
 
@@ -215,6 +248,13 @@ namespace CobaltCoreModLoader.Utils
             if (spr_id == null)
                 return null;
             return Convert.ChangeType(Enum.ToObject(SprType, spr_id), SprType);
+        }
+
+        public static object? IntToStatus(int? status_id)
+        {
+            if (status_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(StatusType, status_id), StatusType);
         }
 
         public static object? IntToUpgrade(int? upgrade_id)

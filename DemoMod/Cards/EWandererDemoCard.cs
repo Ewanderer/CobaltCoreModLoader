@@ -16,6 +16,7 @@ namespace DemoMod.Cards
                     list.Add(new ADrawCard() { count = 100 });
                     list.Add(new AAttack() { damage = 10, fast = true });
                     list.Add(new EWandererDemoAction());
+                    list.Add(new AStatus() { targetPlayer = true, status = (Status)(ModManifest.demo_status?.Id ?? throw new NullReferenceException()), statusAmount = 2 });
                     break;
 
                 case Upgrade.A:
@@ -27,7 +28,7 @@ namespace DemoMod.Cards
                     break;
 
                 case (Upgrade)3:
-                    list.Add(new ABubbleField() {  });
+                    list.Add(new ABubbleField() { });
                     break;
             }
 

@@ -7,13 +7,13 @@
     public interface IManifest
     {
         /// <summary>
-        /// The unique modifier of this manifest. must be unique within and across all assemblies for mods.
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
         /// Will be set by the mod loader to help a manifest find its physical ressources.
         /// </summary>
         public DirectoryInfo? ModRootFolder { get; set; }
+
+        /// <summary>
+        /// The unique modifier of this manifest. must be unique within and across all assemblies for mods.
+        /// </summary>
+        string Name { get; }
     }
 }

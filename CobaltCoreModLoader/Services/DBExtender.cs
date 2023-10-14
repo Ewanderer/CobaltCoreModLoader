@@ -98,6 +98,7 @@ namespace CobaltCoreModLoader.Services
         private static void InsertNewDeckAndStatus()
         {
             DeckRegistry.PatchDeckData();
+            StatusRegistry.PatchStatusData();
         }
 
         private static void InsertNewLogicItems()
@@ -123,6 +124,7 @@ namespace CobaltCoreModLoader.Services
             CharacterRegistry.PatchCharacterLocalisation(locale, ref __result);
             GlossaryRegistry.PatchLocalisations(locale, ref __result);
             ArtifactRegistry.PatchLocalisations(locale, ref __result);
+            StatusRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<Action> MakeInitQueue_Postfix(Queue<Action> __result)
