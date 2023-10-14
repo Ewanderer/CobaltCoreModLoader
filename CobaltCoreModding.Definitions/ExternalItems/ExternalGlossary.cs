@@ -69,7 +69,7 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         public enum GlossayType
         {
             midrow,
-            status,
+       //     status,
             cardtrait,
             action,
             parttrait,
