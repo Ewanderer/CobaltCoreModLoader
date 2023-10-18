@@ -127,7 +127,7 @@ namespace CobaltCoreModLoader.Services
             }
             //patch cache for preload everything
             {
-                var preload_everything_method = sprite_loader_type.GetMethod("PreloadEverything", BindingFlags.Static | BindingFlags.Public) ?? throw new Exception("Cannot find preload_everything method in spriter loader");
+                var preload_everything_method = sprite_loader_type.GetMethod("Preload", BindingFlags.Static | BindingFlags.Public) ?? throw new Exception("Cannot find Preload method in spriter loader");
                 var preload_everything_postfix = typeof(SpriteExtender).GetMethod("PreloadEverythingPostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("Cannot find preload_everything_postfix method!");
 
                 harmony.Patch(preload_everything_method, postfix: new HarmonyMethod(preload_everything_postfix));

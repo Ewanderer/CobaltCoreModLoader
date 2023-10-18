@@ -48,8 +48,10 @@ namespace CobaltCoreModLoader.Services
             var make_init_queue_function = TypesAndEnums.DbType.GetMethod("MakeInitQueue") ?? throw new Exception("make init queue method not found");
 
             var make_init_queue_postfix = typeof(DBExtender).GetMethod("MakeInitQueue_Postfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
+            var make_init_queue_prefix = typeof(DBExtender).GetMethod("MakeInitQueue_Prefix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
 
             harmony.Patch(make_init_queue_function, postfix: new HarmonyMethod(make_init_queue_postfix));
+            harmony.Patch(make_init_queue_function, prefix: new HarmonyMethod(make_init_queue_prefix));
 
             //patch localisation loder
 
@@ -125,6 +127,10 @@ namespace CobaltCoreModLoader.Services
             GlossaryRegistry.PatchLocalisations(locale, ref __result);
             ArtifactRegistry.PatchLocalisations(locale, ref __result);
             StatusRegistry.PatchLocalisations(locale, ref __result);
+        }
+
+        private static void MakeInitQueue_Prefix(ref bool preloadSprites) {
+            preloadSprites = true;
         }
 
         private static Queue<ValueTuple<string, Action>> MakeInitQueue_Postfix(Queue<ValueTuple<string, Action>> __result)
