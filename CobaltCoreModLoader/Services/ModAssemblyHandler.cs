@@ -16,6 +16,7 @@ namespace CobaltCoreModLoader.Services
         private static List<ICardManifest> cardManifests = new();
         private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
         private static List<ICharacterManifest> characterManifests = new();
+        private static List<ICustomEventManifest> customEventManifests = new();
         private static List<IDBManifest> dBManifests = new();
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
@@ -36,6 +37,7 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
         public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
         public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
+        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
         public static IEnumerable<IDBManifest> DBManifests => dBManifests.ToArray();
         public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
         public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
@@ -137,6 +139,8 @@ namespace CobaltCoreModLoader.Services
                     artifactManifests.Add(artifact_manifest);
                 if (spanwed_manifest is IStatusManifest status_manifest)
                     statusManifests.Add(status_manifest);
+                if (spanwed_manifest is ICustomEventManifest event_manifest)
+                    customEventManifests.Add(event_manifest);
             }
         }
     }
