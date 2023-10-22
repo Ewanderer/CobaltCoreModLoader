@@ -16,6 +16,7 @@ namespace CobaltCoreModLoader.Services
         private static List<ICardManifest> cardManifests = new();
         private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
         private static List<ICharacterManifest> characterManifests = new();
+        private static List<ICustomEventManifest> customEventManifests = new();
         private static List<IDBManifest> dBManifests = new();
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
@@ -25,7 +26,6 @@ namespace CobaltCoreModLoader.Services
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStatusManifest> statusManifests = new();
-        private static List<ICustomEventManifest> customEventManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -37,6 +37,7 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
         public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
         public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
+        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
         public static IEnumerable<IDBManifest> DBManifests => dBManifests.ToArray();
         public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
         public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
@@ -44,7 +45,6 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
-        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
