@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DemoMod.Actions
+﻿namespace DemoMod.Actions
 {
     public class EWandererDemoAction : CardAction
     {
-
         internal static string glossary_item = "";
 
         public override void Begin(G g, State s, Combat c)
@@ -27,6 +20,5 @@ namespace DemoMod.Actions
 
             return tooltips;
         }
-
     }
 }

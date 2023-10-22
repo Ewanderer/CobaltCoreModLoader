@@ -1,36 +1,18 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 
 namespace CobaltCoreModLoader.Services
 {
     public class CustomEventHub : ICustomEventHub
     {
-
-        private static ILogger<CustomEventHub>? logger;
-
+        private const int CLEANUP_AFTER = 100;
         private static readonly Dictionary<string, Tuple<Type, List<WeakReference<object>>>> customEventLookup = new Dictionary<string, Tuple<Type, List<WeakReference<object>>>>();
-
-        const int CLEANUP_AFTER = 100;
-
+        private static ILogger<CustomEventHub>? logger;
         private int cleanup_countdown = CLEANUP_AFTER;
 
         public CustomEventHub(ILogger<CustomEventHub> logger)
         {
             CustomEventHub.logger = logger;
-        }
-
-        public void LoadManifest()
-        {
-            foreach (var manifest in ModAssemblyHandler.CustomEventManifests)
-            {
-                manifest.LoadManifest(this);
-            }
         }
 
         public bool ConnectToEvent<T>(string eventName, Action<T> handler)
@@ -70,6 +52,14 @@ namespace CobaltCoreModLoader.Services
                 entry.Item2.Add(new(handler));
             }
             return true;
+        }
+
+        public void LoadManifest()
+        {
+            foreach (var manifest in ModAssemblyHandler.CustomEventManifests)
+            {
+                manifest.LoadManifest(this);
+            }
         }
 
         public bool MakeEvent<T>(string eventName)
@@ -117,8 +107,6 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogCritical(err, "During custom event {0} exception was thrown in listener.", eventName);
                 }
             }
-
-
         }
     }
 }

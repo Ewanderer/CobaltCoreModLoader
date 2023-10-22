@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DemoMod.Artifacts
+﻿namespace DemoMod.Artifacts
 {
     [ArtifactMeta(owner = Deck.peri)]
     internal class PortableBlackHole : Artifact
     {
+        private int counter = 0;
+
+        public override string Description()
+        {
+            return "Creates black hole wherever you go.";
+        }
+
         public override Spr GetSprite()
         {
             return Spr.artifacts_AresCannon;
@@ -19,18 +20,11 @@ namespace DemoMod.Artifacts
             return "Portable Black Hole";
         }
 
-        public override string Description()
-        {
-            return "Creates black hole wherever you go.";
-        }
-
         public override void OnCombatStart(State state, Combat combat)
         {
             combat.bg = new BGBlackHole();
             counter = 0;
         }
-
-        int counter = 0;
 
         public override void OnTurnEnd(State state, Combat combat)
         {

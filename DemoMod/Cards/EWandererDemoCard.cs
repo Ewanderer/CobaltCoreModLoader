@@ -41,8 +41,6 @@ namespace DemoMod.Cards
             art = new Spr?(card_sprite),
         };
 
-
-
         public override string Name() => "EWDemoCard";
     }
 }
