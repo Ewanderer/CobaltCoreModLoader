@@ -25,6 +25,7 @@ namespace CobaltCoreModLoader.Services
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<ICustomEventManifest> customEventManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -43,6 +44,7 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
@@ -137,6 +139,8 @@ namespace CobaltCoreModLoader.Services
                     artifactManifests.Add(artifact_manifest);
                 if (spanwed_manifest is IStatusManifest status_manifest)
                     statusManifests.Add(status_manifest);
+                if (spanwed_manifest is ICustomEventManifest event_manifest)
+                    customEventManifests.Add(event_manifest);
             }
         }
     }
