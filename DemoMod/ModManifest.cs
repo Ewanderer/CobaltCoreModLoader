@@ -7,7 +7,7 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
     {
         internal static int x = 0;
         private ExternalSprite? card_art_sprite;
@@ -19,6 +19,8 @@ namespace DemoMod
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
         private ExternalSprite? demo_status_sprite;
+
+        internal static ICustomEventHub? EventHub;
 
         public static ExternalStatus? demo_status;
 
@@ -194,6 +196,14 @@ namespace DemoMod
             demo_status = new ExternalStatus("EWanderer.DemoMod.DoomStatus", false, System.Drawing.Color.Red, null, demo_status_sprite ?? throw new Exception("missing sprite"), false);
             statusRegistry.RegisterStatus(demo_status);
             demo_status.AddLocalisation("Radio", "We got a signal. Exciting!");
+        }
+
+        public void LoadManifest(ICustomEventHub eventHub)
+        {
+            // throw new NotImplementedException();
+            eventHub.MakeEvent<Combat>("EWanderer.DemoMod.TestEvent");
+            eventHub.ConnectToEvent<Combat>("EWanderer.DemoMod.TestEvent", (c) => { c.QueueImmediate(new ACardOffering() { amount = 10, battleType = BattleType.Elite, inCombat = true }); });
+            ModManifest.EventHub = eventHub;
         }
     }
 }

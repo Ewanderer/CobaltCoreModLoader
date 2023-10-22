@@ -32,6 +32,7 @@ public static class Program
             builder.Services.AddSingleton<GlossaryRegistry>();
             builder.Services.AddSingleton<ArtifactRegistry>();
             builder.Services.AddSingleton<StatusRegistry>();
+            builder.Services.AddSingleton<CustomEventHub>();
 
             host = builder.Build();
             host.Start();
@@ -65,6 +66,8 @@ public static class Program
             host.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
+            //load events
+            host.Services.GetRequiredService<CustomEventHub>().LoadManifest();
             //run remaining mod logic
             host.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
             mod_boot_timer.Stop();
