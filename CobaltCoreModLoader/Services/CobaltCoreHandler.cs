@@ -80,7 +80,6 @@ namespace CobaltCoreModLoader.Services
             //trip feature flag in assemly
             var is_modded_feature_flag_field = CobaltCoreAssembly.GetType("FeatureFlags")?.GetField("Modded", BindingFlags.Static | BindingFlags.Public);
             is_modded_feature_flag_field?.SetValue(null, true);
-
         }
 
         /// <summary>

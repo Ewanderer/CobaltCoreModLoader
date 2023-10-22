@@ -7,25 +7,23 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
     {
+        public static ExternalStatus? demo_status;
+        internal static ICustomEventHub? EventHub;
         internal static int x = 0;
         private ExternalSprite? card_art_sprite;
         private ExternalAnimation? default_animation;
+        private ExternalSprite? demo_status_sprite;
         private ExternalDeck? dracula_deck;
         private ExternalSprite? dracular_art;
         private ExternalSprite? dracular_border;
         private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
-        private ExternalSprite? demo_status_sprite;
-
-        public static ExternalStatus? demo_status;
-
         public IEnumerable<string> Dependencies => new string[0];
-        public string Name => "EWanderer.DemoMod";
-
         public DirectoryInfo? ModRootFolder { get; set; }
+        public string Name => "EWanderer.DemoMod";
 
         public void BootMod(IModLoaderContact contact)
         {
@@ -69,7 +67,6 @@ namespace DemoMod
                 demo_status_sprite = new ExternalSprite("EWanderer.DemoMod.demo_status.sprite", new FileInfo(path));
                 if (!artRegistry.RegisterArt(demo_status_sprite))
                     throw new Exception("Cannot register sprite.");
-
             }
         }
 
@@ -194,6 +191,14 @@ namespace DemoMod
             demo_status = new ExternalStatus("EWanderer.DemoMod.DoomStatus", false, System.Drawing.Color.Red, null, demo_status_sprite ?? throw new Exception("missing sprite"), false);
             statusRegistry.RegisterStatus(demo_status);
             demo_status.AddLocalisation("Radio", "We got a signal. Exciting!");
+        }
+
+        public void LoadManifest(ICustomEventHub eventHub)
+        {
+            // throw new NotImplementedException();
+            eventHub.MakeEvent<Combat>("EWanderer.DemoMod.TestEvent");
+            eventHub.ConnectToEvent<Combat>("EWanderer.DemoMod.TestEvent", (c) => { c.QueueImmediate(new ACardOffering() { amount = 10, battleType = BattleType.Elite, inCombat = true }); });
+            ModManifest.EventHub = eventHub;
         }
     }
 }
