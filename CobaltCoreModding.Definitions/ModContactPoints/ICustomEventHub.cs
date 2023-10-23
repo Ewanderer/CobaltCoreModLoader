@@ -12,5 +12,7 @@
         bool MakeEvent(string eventName, Type eventArgType);
 
         void SignalEvent<T>(string eventName, T eventArg);
+
+        void DisconnectFromEvent<T>(string eventName, Action<T> handler);
     }
 }
