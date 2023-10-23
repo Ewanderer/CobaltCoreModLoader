@@ -1,14 +1,22 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 
 namespace CobaltCoreModLoader.Services
 {
     public class CustomEventHub : ICustomEventHub
     {
-        private const int CLEANUP_AFTER = 100;
-        private static readonly Dictionary<string, Tuple<Type, List<WeakReference<object>>>> customEventLookup = new Dictionary<string, Tuple<Type, List<WeakReference<object>>>>();
+
+        /// <summary>
+        /// Since Cards/Artifacts etc. are not disposable, we cannot hold permanent rerference for fear of an memory leak. Thus we only store a week reference to the target instance of the action and the action itself.
+        /// </summary>
+        private static readonly Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>> volatileCustomEventLookup = new Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>>();
+        /// <summary>
+        /// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
+        /// </summary>
+        private static readonly Dictionary<string, Tuple<Type, HashSet<object>>> persistentCustomEventLookup = new();
         private static ILogger<CustomEventHub>? logger;
-        private int cleanup_countdown = CLEANUP_AFTER;
+
 
         public CustomEventHub(ILogger<CustomEventHub> logger)
         {
@@ -17,26 +25,8 @@ namespace CobaltCoreModLoader.Services
 
         public bool ConnectToEvent<T>(string eventName, Action<T> handler)
         {
-            cleanup_countdown--;
-            if (cleanup_countdown <= 0)
-            {
-                lock (customEventLookup)
-                {
-                    if (cleanup_countdown <= 0)
-                    {
-                        foreach (var list in customEventLookup.Values.Select(e => e.Item2))
-                        {
-                            lock (list)
-                            {
-                                list.RemoveAll(e => !e.TryGetTarget(out _));
-                            }
-                        }
-                        cleanup_countdown = CLEANUP_AFTER;
-                    }
-                }
-            }
 
-            if (!customEventLookup.TryGetValue(eventName, out var entry))
+            if (!volatileCustomEventLookup.TryGetValue(eventName, out var entry))
             {
                 logger?.LogWarning("Unkown Event {0}", eventName);
                 return false;
@@ -46,17 +36,30 @@ namespace CobaltCoreModLoader.Services
                 logger?.LogWarning("Event {0} expects Action<{1}> but was given Action<{2}>", eventName, entry.Item1.Name, typeof(T).Name);
                 return false;
             }
-            //Register weak reference to allow even actions/artifact sto listen to events without being hung up.
-            lock (entry.Item2)
+
+            if (handler.Target == null)
             {
-                entry.Item2.Add(new(handler));
+                logger?.LogWarning("Handler has no target. Anonymous functions not permitted!");
+                return false;
             }
+
+            //Register weak reference to allow even actions/artifact sto listen to events without being hung up.
+            try
+            {
+                entry.Item2.Add(handler.Target, handler);
+            }
+            catch (ArgumentException)
+            {
+                logger?.LogCritical("Event {0} attempted to reigster a handler with a target already existing in this event", eventName);
+                return false;
+            }
+
             return true;
         }
 
         public void DisconnectFromEvent<T>(string eventName, Action<T> handler)
         {
-            if (!customEventLookup.TryGetValue(eventName, out var entry))
+            if (!volatileCustomEventLookup.TryGetValue(eventName, out var entry))
             {
                 logger?.LogError("Unkown event {0}", eventName);
                 return;
@@ -66,13 +69,13 @@ namespace CobaltCoreModLoader.Services
                 logger?.LogError("Event {0} given type {1} doesn't match {2}", eventName, typeof(T).Name, entry.Item1.Name);
                 return;
             }
-            var reference = entry.Item2.FirstOrDefault(e => e.TryGetTarget(out var obj) && (obj as Action<T>) == handler);
-            if (reference == null)
+
+            if (handler.Target == null)
             {
-                logger?.LogError("Event {0} doesn't know listener.", eventName);
+                logger?.LogError("Event {0} doesn't accept anonymous methods", eventName);
                 return;
             }
-            entry.Item2.Remove(reference);
+            entry.Item2.Remove(handler.Target);
         }
 
         public void LoadManifest()
@@ -90,19 +93,19 @@ namespace CobaltCoreModLoader.Services
 
         public bool MakeEvent(string eventName, Type eventArgType)
         {
-            if (customEventLookup.ContainsKey(eventName))
+            if (volatileCustomEventLookup.ContainsKey(eventName))
             {
                 logger?.LogError("Event {0} already registered", eventName);
                 return false;
             }
 
-            customEventLookup.Add(eventName, new(eventArgType, new List<WeakReference<object>>()));
+            volatileCustomEventLookup.Add(eventName, new(eventArgType, new ConditionalWeakTable<object, object>()));
             return true;
         }
 
         public void SignalEvent<T>(string eventName, T eventArg)
         {
-            if (!customEventLookup.TryGetValue(eventName, out var entry))
+            if (!volatileCustomEventLookup.TryGetValue(eventName, out var entry))
             {
                 logger?.LogError("Unkown Event {0} signaled", eventName);
                 return;
@@ -113,11 +116,11 @@ namespace CobaltCoreModLoader.Services
                 throw new Exception($"Attempted to signal event {eventName} with wrong type {typeof(T).Name}");
             }
 
+
+
             foreach (var listener_reference in entry.Item2)
             {
-                if (!listener_reference.TryGetTarget(out var obj_listener))
-                    continue;
-                if (obj_listener is not Action<T> listener)
+                if (listener_reference.Value is not Action<T> listener)
                     continue;
                 try
                 {
