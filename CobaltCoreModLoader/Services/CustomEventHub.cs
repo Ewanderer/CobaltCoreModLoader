@@ -54,6 +54,27 @@ namespace CobaltCoreModLoader.Services
             return true;
         }
 
+        public void DisconnectFromEvent<T>(string eventName, Action<T> handler)
+        {
+            if (!customEventLookup.TryGetValue(eventName, out var entry))
+            {
+                logger?.LogError("Unkown event {0}", eventName);
+                return;
+            }
+            if (entry.Item1 != typeof(T))
+            {
+                logger?.LogError("Event {0} given type {1} doesn't match {2}", eventName, typeof(T).Name, entry.Item1.Name);
+                return;
+            }
+            var reference = entry.Item2.FirstOrDefault(e => e.TryGetTarget(out var obj) && (obj as Action<T>) == handler);
+            if (reference == null)
+            {
+                logger?.LogError("Event {0} doesn't know listener.", eventName);
+                return;
+            }
+            entry.Item2.Remove(reference);
+        }
+
         public void LoadManifest()
         {
             foreach (var manifest in ModAssemblyHandler.CustomEventManifests)
