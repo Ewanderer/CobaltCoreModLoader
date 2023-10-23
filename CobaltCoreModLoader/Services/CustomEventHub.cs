@@ -37,21 +37,27 @@ namespace CobaltCoreModLoader.Services
                 return false;
             }
 
-            if (handler.Target == null)
+            if (handler.Target == null || handler.Target is IDisposable)
             {
-                logger?.LogWarning("Handler has no target. Anonymous functions not permitted!");
-                return false;
+                logger?.LogWarning("Handler has no target or is disposable. Please make sure to disconnect this event handler manually!");
+                if (persistentCustomEventLookup.TryGetValue(eventName, out var persistent_entry))
+                {
+                    return persistent_entry.Item2.Add(handler);
+                }
             }
+            else
+            {
 
-            //Register weak reference to allow even actions/artifact sto listen to events without being hung up.
-            try
-            {
-                entry.Item2.Add(handler.Target, handler);
-            }
-            catch (ArgumentException)
-            {
-                logger?.LogCritical("Event {0} attempted to reigster a handler with a target already existing in this event", eventName);
-                return false;
+                //Register weak reference to allow even actions/artifact sto listen to events without being hung up.
+                try
+                {
+                    entry.Item2.Add(handler.Target, handler);
+                }
+                catch (ArgumentException)
+                {
+                    logger?.LogCritical("Event {0} attempted to reigster a handler with a target already existing in this event", eventName);
+                    return false;
+                }
             }
 
             return true;
@@ -70,12 +76,18 @@ namespace CobaltCoreModLoader.Services
                 return;
             }
 
-            if (handler.Target == null)
+            if (handler.Target == null || handler.Target is IDisposable)
             {
-                logger?.LogError("Event {0} doesn't accept anonymous methods", eventName);
-                return;
+                if (persistentCustomEventLookup.TryGetValue(eventName, out var persistent_entry))
+                {
+                    persistent_entry.Item2.Remove(handler);
+                }
             }
-            entry.Item2.Remove(handler.Target);
+            else
+            {
+                entry.Item2.Remove(handler.Target);
+            }
+
         }
 
         public void LoadManifest()
@@ -98,8 +110,8 @@ namespace CobaltCoreModLoader.Services
                 logger?.LogError("Event {0} already registered", eventName);
                 return false;
             }
-
             volatileCustomEventLookup.Add(eventName, new(eventArgType, new ConditionalWeakTable<object, object>()));
+            persistentCustomEventLookup.Add(eventName, new(eventArgType, new()));
             return true;
         }
 
@@ -116,8 +128,6 @@ namespace CobaltCoreModLoader.Services
                 throw new Exception($"Attempted to signal event {eventName} with wrong type {typeof(T).Name}");
             }
 
-
-
             foreach (var listener_reference in entry.Item2)
             {
                 if (listener_reference.Value is not Action<T> listener)
@@ -131,6 +141,24 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogCritical(err, "During custom event {0} exception was thrown in listener.", eventName);
                 }
             }
+
+            if (persistentCustomEventLookup.TryGetValue(eventName, out var persistent_entry))
+            {
+                foreach (var obj in persistent_entry.Item2)
+                {
+                    if (obj is not Action<T> listener)
+                        continue;
+                    try
+                    {
+                        listener.Invoke(eventArg);
+                    }
+                    catch (Exception err)
+                    {
+                        logger?.LogCritical(err, "During custom event {0} exception was thrown in listener.", eventName);
+                    }
+                }
+            }
+
         }
     }
 }
