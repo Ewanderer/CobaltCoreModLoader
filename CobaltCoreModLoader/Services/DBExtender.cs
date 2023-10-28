@@ -64,36 +64,6 @@ namespace CobaltCoreModLoader.Services
             LoadDbManifests();
         }
 
-        bool IDbRegistry.RegisterArtifact(ExternalArtifact artifact)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterEnemy(ExternalEnemy enemy)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterMidrowItem(ExternalMidrowItem midrowItem)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterModifier(ExternalModifier modifier)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterSpaceThing(ExternalSpaceThing spaceThing)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IDbRegistry.RegisterStatus(ExternalStatus status)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Decks and Statuses need to be patched into DB.
         /// </summary>
@@ -195,6 +165,8 @@ namespace CobaltCoreModLoader.Services
             GlossaryRegistry.PathIconSprites();
 
             ArtifactRegistry.PatchArtifactSprites();
+
+            PartRegistry.PatchPartSprites();
         }
 
         /// <summary>
