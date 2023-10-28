@@ -17,6 +17,8 @@ namespace CobaltCoreModding.Definitions.ExternalItems
 
         public ExternalSprite PartSprite { get; set; }
 
+        public string Key => "@mod_part:" + GlobalName;
+
         public ExternalPart(string globalName, object partObjectTemplate, ExternalSprite partSprite)
         {
             GlobalName = globalName;
