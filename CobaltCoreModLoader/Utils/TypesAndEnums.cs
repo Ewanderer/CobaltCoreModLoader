@@ -39,6 +39,29 @@ namespace CobaltCoreModLoader.Utils
         private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
 
+        private static Type? __mutil_type = null;
+        private static Type? __part_type = null;
+
+        public static Type PartType
+        {
+            get
+            {
+                if (__part_type != null)
+                    return __part_type;
+                return __part_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Part") ?? throw new Exception("Part type not found");
+            }
+        }
+
+        public static Type MutilType
+        {
+            get
+            {
+                if (__mutil_type != null)
+                    return __mutil_type;
+                return __mutil_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Mutil") ?? throw new Exception("Mutil type not found");
+            }
+        }
+
         public static Type ArtifactMetaType
         {
             get
