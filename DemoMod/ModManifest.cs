@@ -160,7 +160,7 @@ namespace DemoMod
 
         public void LoadManifest(ICharacterRegistry registry)
         {
-            var dracular_spr = ExternalSprite.GetRaw((int)Spr.characters_dracula_dracula_neutral_0);
+            var dracular_spr = ExternalSprite.GetRaw((int)Spr.panels_char_colorless);
 
             var start_cards = new Type[] { typeof(DraculaCard), typeof(DraculaCard) };
             var playable_dracular_character = new ExternalCharacter("EWanderer.DemoMod.DracularChar", dracula_deck ?? throw new NullReferenceException(), dracular_spr, start_cards, new Type[0], default_animation ?? throw new NullReferenceException(), mini_animation ?? throw new NullReferenceException());

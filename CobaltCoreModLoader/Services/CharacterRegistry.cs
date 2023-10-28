@@ -90,8 +90,8 @@ namespace CobaltCoreModLoader.Services
                 {
                     continue;
                 }
-
-                char_panels_dict.Add(character.GlobalName, spr_val);
+                char_panels_dict.Add(character.Deck.GlobalName, spr_val);
+        
             }
         }
 
