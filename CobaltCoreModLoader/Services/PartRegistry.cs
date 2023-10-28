@@ -46,7 +46,7 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogCritical("ExternalPart {0} Sprite {1} has no id value", externalPart.GlobalName, externalPart.PartSprite.GlobalName);
                     continue;
                 }
-                var key = externalPart.GlobalName + externalPart.PartSprite.Id.Value.ToString();
+                var key = externalPart.GlobalName;
                 if (part_dict.Contains(key))
                 {
                     logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
@@ -75,7 +75,7 @@ namespace CobaltCoreModLoader.Services
                 throw new Exception($"No ExternalPart with global name '{globalName}' exist.");
             var ext_part = registeredParts[globalName];
 
-            string skin_str = globalName + (ext_part.PartSprite.Id?.ToString() ?? throw new Exception("ExternalPart has Sprite with no Id. Something went very wrong!!!"));
+            string skin_str = globalName;
 
             var copy = CopyPart.Invoke(null, new object[] { ext_part.GetPartObject }) ?? throw new Exception("DeepCopy of Part failed.");
 
