@@ -136,9 +136,13 @@ namespace CobaltCoreModLoader.Services
             patched_result.Enqueue(__result.Dequeue());
             //we do our patches on that.
             patched_result.Enqueue(new("patch card and artifact metadata, event choice functions, story commands", () => { PatchMetasAndStoryFunctions(); }));
+            //at this point all things needed for raw ships is avaialbe and we load their manifests.
+            patched_result.Enqueue(new("load raw ship manifests", () => { ShipRegistry.LoadRawManifests(); }));
             //cobalt core does stuff not concering us.
             while (__result.Count > 0)
                 patched_result.Enqueue(__result.Dequeue());
+            //patch starting ship
+            patched_result.Enqueue(new("patch starter ships", () => { }));
             //return new action queue
             return patched_result;
         }
@@ -167,6 +171,8 @@ namespace CobaltCoreModLoader.Services
             ArtifactRegistry.PatchArtifactSprites();
 
             PartRegistry.PatchPartSprites();
+
+            ShipRegistry.PatchChassisArt();
         }
 
         /// <summary>

@@ -32,6 +32,11 @@ namespace CobaltCoreModLoader.Services
 
         private static Dictionary<string, ExternalSprite> sprite_lookup = new Dictionary<string, ExternalSprite>();
 
+        internal static bool ValidateSprValue(int spr)
+        {
+            return Enum.IsDefined(TypesAndEnums.SprType, spr) || sprite_registry.Values.Any(e => e.Id == spr);
+        }
+
         public void PatchSpriteSystem()
         {
             //load manifest

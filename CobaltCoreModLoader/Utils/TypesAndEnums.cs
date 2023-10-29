@@ -42,6 +42,19 @@ namespace CobaltCoreModLoader.Utils
         private static Type? __mutil_type = null;
         private static Type? __part_type = null;
 
+        private static Type? __ship_type = null;
+
+
+        public static Type ShipType
+        {
+            get
+            {
+                if (__ship_type != null)
+                    return __ship_type;
+                return __ship_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Ship") ?? throw new Exception("Ship type not found");
+            }
+        }
+
         public static Type PartType
         {
             get

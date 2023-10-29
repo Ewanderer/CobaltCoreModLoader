@@ -31,6 +31,11 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
+        internal bool ValidatePart(ExternalPart part)
+        {
+            return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
+        }
+
         public PartRegistry(ILogger<PartRegistry> logger)
         {
             PartRegistry.logger = logger;
@@ -39,6 +44,8 @@ namespace CobaltCoreModLoader.Services
         public static void PatchPartSprites()
         {
             var part_dict = TypesAndEnums.DbType.GetField("parts")?.GetValue(null) as IDictionary ?? throw new Exception("Cannot get DB.parts dictionary.");
+            var partOff_dict = TypesAndEnums.DbType.GetField("partsOff")?.GetValue(null) as IDictionary ?? throw new Exception("Cannot get DB.partsOff dictionary.");
+            //patch external parts
             foreach (var externalPart in registeredParts.Values)
             {
                 if (externalPart.PartSprite.Id == null)
@@ -52,9 +59,50 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
                     continue;
                 }
+
+
                 var spr = TypesAndEnums.IntToSpr(externalPart.PartSprite.Id);
                 part_dict.Add(key, spr);
+
+                //put off part sprite into dictionary.
+                if (externalPart.PartOffSprite == null)
+                    continue;
+                spr = TypesAndEnums.IntToSpr(externalPart.PartOffSprite.Id);
+                if (partOff_dict.Contains(key))
+                {
+                    logger?.LogCritical("Couldn't register {0} to PartOff Sprite Lookup because already there somehow, what did you do?", key);
+                    continue;
+                }
+                partOff_dict.Add(key, spr);
             }
+            //patch raw part sprites
+
+            foreach (var entry in raw_parts)
+            {
+                var key = "@mod_extra_part:" + entry.Key;
+
+                if (part_dict.Contains(key))
+                {
+                    logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
+                }
+                else {
+                    var spr = TypesAndEnums.IntToSpr(entry.Value.Item1);
+                    part_dict.Add(key, spr);
+                }
+
+                if (entry.Value.Item2 != null) {
+                    if (partOff_dict.Contains(key))
+                    {
+                        logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
+                    }
+                    else
+                    {
+                        var spr = TypesAndEnums.IntToSpr(entry.Value.Item2);
+                        partOff_dict.Add(key, spr);
+                    }
+                }
+            }
+
         }
 
         private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
@@ -77,7 +125,7 @@ namespace CobaltCoreModLoader.Services
 
             string skin_str = ext_part.Key;
 
-            var copy = CopyPart.Invoke(null, new object[] { ext_part.GetPartObject }) ?? throw new Exception("DeepCopy of Part failed.");
+            var copy = CopyPart.Invoke(null, new object[] { ext_part.GetPartObject() }) ?? throw new Exception("DeepCopy of Part failed.");
 
             SkinField.SetValue(copy, skin_str);
 
@@ -99,11 +147,17 @@ namespace CobaltCoreModLoader.Services
 
             if (externalPart.PartSprite.Id == null)
             {
-                logger?.LogWarning("ExternalPart {0} Sprite {1} has no id.", externalPart.GlobalName, externalPart.PartSprite.GlobalName);
+                logger?.LogWarning("ExternalPart {0} Active Sprite {1} has no id.", externalPart.GlobalName, externalPart.PartSprite.GlobalName);
                 return false;
             }
 
-            if (!externalPart.GetPartObject.GetType().IsAssignableTo(TypesAndEnums.PartType))
+            if (externalPart.PartOffSprite != null && externalPart.PartOffSprite.Id == null)
+            {
+                logger?.LogWarning("ExternalPart {0} Inactive Sprite {1} has no id.", externalPart.GlobalName, externalPart.PartOffSprite.GlobalName);
+                return false;
+            }
+
+            if (!externalPart.GetPartObject().GetType().IsAssignableTo(TypesAndEnums.PartType))
             {
                 logger?.LogWarning("ExternalPart {0} GetPartObject doesn't return an object of type CobaltCore.Part or a child type.", externalPart.GlobalName);
                 return false;
@@ -120,5 +174,34 @@ namespace CobaltCoreModLoader.Services
             return true;
         }
 
+        private static Dictionary<string, Tuple<int, int?>> raw_parts = new Dictionary<string, Tuple<int, int?>>();
+
+        public bool RegisterRawPart(string global_name, int spr_value, int? off_spr_value = null)
+        {
+            if (string.IsNullOrWhiteSpace(global_name))
+            {
+                logger?.LogCritical("Attempted to register raw part with no global name");
+                return false;
+            }
+
+            if (!SpriteExtender.ValidateSprValue(spr_value))
+            {
+                logger?.LogCritical("RawPart {0} attempted to register unkown spr value:" + spr_value, global_name);
+                return false;
+            }
+
+            if (off_spr_value != null && !SpriteExtender.ValidateSprValue(off_spr_value.Value))
+            {
+                logger?.LogCritical("RawPart {0} attempted to register unkown spr value:" + spr_value, global_name);
+                return false;
+            }
+
+            if (!raw_parts.TryAdd(global_name, new(spr_value, off_spr_value)))
+            {
+                logger?.LogCritical("RawPart with global name {0} already exits. skipping...", global_name);
+                return false;
+            }
+            return true;
+        }
     }
 }

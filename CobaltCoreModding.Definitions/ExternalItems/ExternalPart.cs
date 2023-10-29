@@ -13,17 +13,20 @@ namespace CobaltCoreModding.Definitions.ExternalItems
 
         private object? PartObjectTemplate { get; init; }
 
-        public virtual object GetPartObject => PartObjectTemplate ?? throw new NotImplementedException("GetPartObject returned null.");
+        public virtual object GetPartObject() => PartObjectTemplate ?? throw new NotImplementedException("GetPartObject returned null.");
 
-        public ExternalSprite PartSprite { get; set; }
+        public ExternalSprite PartSprite { get; init; }
+
+        public ExternalSprite? PartOffSprite { get; init; }
 
         public string Key => "@mod_part:" + GlobalName;
 
-        public ExternalPart(string globalName, object partObjectTemplate, ExternalSprite partSprite)
+        public ExternalPart(string globalName, object partObjectTemplate, ExternalSprite partSprite, ExternalSprite? partOffSprite = null)
         {
             GlobalName = globalName;
             PartObjectTemplate = partObjectTemplate;
             PartSprite = partSprite;
+            PartOffSprite = partOffSprite;
         }
 
         protected ExternalPart(string globalName, ExternalSprite partSprite)
