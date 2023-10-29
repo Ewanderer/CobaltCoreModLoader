@@ -2,14 +2,8 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -25,16 +19,97 @@ namespace CobaltCoreModLoader.Services
         /// </summary>
         private static readonly Dictionary<string, object> registeredShips = new Dictionary<string, object>();
 
+        private static MethodInfo CopyShip = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.ShipType }) ?? throw new Exception("Mutil.DeepCopy<Ship> couldn't be created!");
+        private static ShipRegistry? instance;
         private static ILogger<ShipRegistry>? logger;
 
+        private static FieldInfo part_skin_field = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found");
+        private static FieldInfo parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Ship.parts field not found");
+        private static FieldInfo ship_chassisOver_field = TypesAndEnums.ShipType.GetField("chassisOver") ?? throw new Exception("Ship.chassisOver field not found");
+        private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
         private readonly PartRegistry partRegistry;
-
 
         public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry)
         {
             ShipRegistry.logger = logger;
             this.partRegistry = partRegistry;
             ShipRegistry.instance = this;
+        }
+
+        /// <summary>
+        /// Creates copy of a ship object registered under a global name.
+        /// </summary>
+        /// <param name="global_name">globalName of the ship</param>
+        /// <returns></returns>
+        public static object ActualizeShip(string global_name)
+        {
+            if (!registeredShips.TryGetValue(global_name, out var ship_entry))
+            {
+                throw new Exception($"No Ship under global name {global_name} registered!");
+            }
+            if (ship_entry is ExternalShip externalShip)
+            {
+                return ActualizeExternalShip(externalShip);
+            }
+            return CopyShip.Invoke(null, new object[] { ship_entry }) ?? throw new Exception($"Copy of raw ship {global_name} failed.");
+        }
+
+        public static void LoadRawManifests()
+        {
+            if (instance == null)
+            {
+                logger?.LogCritical("Instance is null. Cannot load raw ships.");
+                return;
+            }
+            foreach (var manifest in ModAssemblyHandler.RawShipManifests)
+            {
+                manifest.LoadManifest(instance);
+            }
+        }
+
+        /// <summary>
+        /// Put the chassis in the db.
+        /// </summary>
+        public static void PatchChassisArt()
+        {
+            var part_dict = TypesAndEnums.DbType.GetField("parts")?.GetValue(null) as IDictionary ?? throw new Exception("Cannot get DB.parts dictionary.");
+            foreach (var obj in registeredShips.Values)
+            {
+                if (obj is not ExternalShip ship)
+                    continue;
+                if (ship.ChassisUnderSprite != null)
+                {
+                    var spr = TypesAndEnums.IntToSpr(ship.ChassisUnderSprite.Id);
+                    if (part_dict.Contains(ship.underChassisKey))
+                    {
+                        logger?.LogCritical("DB.Parts already contains key {0} somehow. what did you do?", ship.underChassisKey);
+                    }
+                    else
+                    {
+                        part_dict.Add(ship.underChassisKey, spr);
+                    }
+                }
+                if (ship.ChassisOverSprite != null)
+                {
+                    var spr = TypesAndEnums.IntToSpr(ship.ChassisOverSprite.Id);
+                    if (part_dict.Contains(ship.overChassisKey))
+                    {
+                        logger?.LogCritical("DB.Parts already contains key {0} somehow. what did you do?", ship.overChassisKey);
+                    }
+                    else
+                    {
+                        part_dict.Add(ship.overChassisKey, spr);
+                    }
+                }
+            }
+        }
+
+        public void LoadManifests()
+        {
+            foreach (var manifest in ModAssemblyHandler.ShipManifests)
+            {
+                manifest.LoadManifest(this);
+            }
         }
 
         public bool RegisterShip(ExternalShip ship)
@@ -98,11 +173,6 @@ namespace CobaltCoreModLoader.Services
 
             return true;
         }
-
-        private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
-        private static FieldInfo ship_chassisOver_field = TypesAndEnums.ShipType.GetField("chassisOver") ?? throw new Exception("Ship.chassisOver field not found");
-        private static FieldInfo parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Ship.parts field not found");
-        private static FieldInfo part_skin_field = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found");
 
         /// <summary>
         /// Used to register a raw ship.
@@ -171,26 +241,6 @@ namespace CobaltCoreModLoader.Services
             return true;
         }
 
-        private static MethodInfo CopyShip = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.ShipType }) ?? throw new Exception("Mutil.DeepCopy<Ship> couldn't be created!");
-
-        /// <summary>
-        /// Creates copy of a ship object registered under a global name.
-        /// </summary>
-        /// <param name="global_name">globalName of the ship</param>
-        /// <returns></returns>
-        public static object ActualizeShip(string global_name)
-        {
-            if (!registeredShips.TryGetValue(global_name, out var ship_entry))
-            {
-                throw new Exception($"No Ship under global name {global_name} registered!");
-            }
-            if (ship_entry is ExternalShip externalShip)
-            {
-                return ActualizeExternalShip(externalShip);
-            }
-            return CopyShip.Invoke(null, new object[] { ship_entry }) ?? throw new Exception($"Copy of raw ship {global_name} failed.");
-        }
-
         private static object ActualizeExternalShip(ExternalShip ship)
         {
             var result = CopyShip.Invoke(null, new object[] { ship.GetShipObject() }) ?? throw new Exception($"Copy of external ship {ship.GlobalName} template failed.");
@@ -212,67 +262,5 @@ namespace CobaltCoreModLoader.Services
             parts_field.SetValue(result, part_list);
             return result;
         }
-
-        /// <summary>
-        /// Put the chassis in the db.
-        /// </summary>
-        public static void PatchChassisArt()
-        {
-            var part_dict = TypesAndEnums.DbType.GetField("parts")?.GetValue(null) as IDictionary ?? throw new Exception("Cannot get DB.parts dictionary.");
-            foreach (var obj in registeredShips.Values)
-            {
-                if (obj is not ExternalShip ship)
-                    continue;
-                if (ship.ChassisUnderSprite != null)
-                {
-                    var spr = TypesAndEnums.IntToSpr(ship.ChassisUnderSprite.Id);
-                    if (part_dict.Contains(ship.underChassisKey))
-                    {
-                        logger?.LogCritical("DB.Parts already contains key {0} somehow. what did you do?", ship.underChassisKey);
-                    }
-                    else
-                    {
-                        part_dict.Add(ship.underChassisKey, spr);
-                    }
-                }
-                if (ship.ChassisOverSprite != null)
-                {
-                    var spr = TypesAndEnums.IntToSpr(ship.ChassisOverSprite.Id);
-                    if (part_dict.Contains(ship.overChassisKey))
-                    {
-                        logger?.LogCritical("DB.Parts already contains key {0} somehow. what did you do?", ship.overChassisKey);
-                    }
-                    else
-                    {
-                        part_dict.Add(ship.overChassisKey, spr);
-                    }
-                }
-            }
-        }
-
-        public void LoadManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.ShipManifests)
-            {
-                manifest.LoadManifest(this);
-            }
-        }
-
-        private static ShipRegistry? instance;
-
-        public static void LoadRawManifests()
-        {
-            if (instance == null)
-            {
-                logger?.LogCritical("Instance is null. Cannot load raw ships.");
-                return;
-            }
-            foreach (var manifest in ModAssemblyHandler.RawShipManifests)
-            {
-                manifest.LoadManifest(instance);
-            }
-        }
-
-    
     }
 }

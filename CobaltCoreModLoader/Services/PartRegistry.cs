@@ -2,14 +2,8 @@
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModLoader.Utils;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -18,27 +12,42 @@ namespace CobaltCoreModLoader.Services
     /// </summary>
     public class PartRegistry : IShipPartRegistry
     {
-
-        private static ILogger<PartRegistry>? logger;
-
         private static readonly Dictionary<string, ExternalPart> registeredParts = new();
+        private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
+        private static ILogger<PartRegistry>? logger;
+        private static Dictionary<string, Tuple<int, int?>> raw_parts = new Dictionary<string, Tuple<int, int?>>();
 
-        public void LoadManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.ShipPartsManifests)
-            {
-                manifest.LoadManifest(this);
-            }
-        }
-
-        internal bool ValidatePart(ExternalPart part)
-        {
-            return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
-        }
+        private static FieldInfo SkinField = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found.");
 
         public PartRegistry(ILogger<PartRegistry> logger)
         {
             PartRegistry.logger = logger;
+        }
+
+        /// <summary>
+        /// Creates a copy of a part template in ExternalPart and fixes its skin value.
+        /// </summary>
+        /// <param name="globalName"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static object ActualizePart(string globalName)
+        {
+            if (!registeredParts.ContainsKey(globalName))
+                throw new Exception($"No ExternalPart with global name '{globalName}' exist.");
+            var ext_part = registeredParts[globalName];
+
+            string skin_str = ext_part.Key;
+
+            var copy = CopyPart.Invoke(null, new object[] { ext_part.GetPartObject() }) ?? throw new Exception("DeepCopy of Part failed.");
+
+            SkinField.SetValue(copy, skin_str);
+
+            return copy;
+        }
+
+        public static object ActualizePart(ExternalPart part)
+        {
+            return ActualizePart(part.GlobalName);
         }
 
         public static void PatchPartSprites()
@@ -59,7 +68,6 @@ namespace CobaltCoreModLoader.Services
                     logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
                     continue;
                 }
-
 
                 var spr = TypesAndEnums.IntToSpr(externalPart.PartSprite.Id);
                 part_dict.Add(key, spr);
@@ -85,12 +93,14 @@ namespace CobaltCoreModLoader.Services
                 {
                     logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
                 }
-                else {
+                else
+                {
                     var spr = TypesAndEnums.IntToSpr(entry.Value.Item1);
                     part_dict.Add(key, spr);
                 }
 
-                if (entry.Value.Item2 != null) {
+                if (entry.Value.Item2 != null)
+                {
                     if (partOff_dict.Contains(key))
                     {
                         logger?.LogCritical("Couldn't register {0} to Part Sprite Lookup because already there somehow, what did you do?", key);
@@ -102,40 +112,14 @@ namespace CobaltCoreModLoader.Services
                     }
                 }
             }
-
         }
 
-        private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
-
-        private static FieldInfo SkinField = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found.");
-
-
-
-        /// <summary>
-        /// Creates a copy of a part template in ExternalPart and fixes its skin value.
-        /// </summary>
-        /// <param name="globalName"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static object ActualizePart(string globalName)
+        public void LoadManifests()
         {
-            if (!registeredParts.ContainsKey(globalName))
-                throw new Exception($"No ExternalPart with global name '{globalName}' exist.");
-            var ext_part = registeredParts[globalName];
-
-            string skin_str = ext_part.Key;
-
-            var copy = CopyPart.Invoke(null, new object[] { ext_part.GetPartObject() }) ?? throw new Exception("DeepCopy of Part failed.");
-
-            SkinField.SetValue(copy, skin_str);
-
-            return copy;
-
-        }
-
-        public static object ActualizePart(ExternalPart part)
-        {
-            return ActualizePart(part.GlobalName);
+            foreach (var manifest in ModAssemblyHandler.ShipPartsManifests)
+            {
+                manifest.LoadManifest(this);
+            }
         }
 
         public bool RegisterPart(ExternalPart externalPart)
@@ -174,8 +158,6 @@ namespace CobaltCoreModLoader.Services
             return true;
         }
 
-        private static Dictionary<string, Tuple<int, int?>> raw_parts = new Dictionary<string, Tuple<int, int?>>();
-
         public bool RegisterRawPart(string global_name, int spr_value, int? off_spr_value = null)
         {
             if (string.IsNullOrWhiteSpace(global_name))
@@ -202,6 +184,11 @@ namespace CobaltCoreModLoader.Services
                 return false;
             }
             return true;
+        }
+
+        internal bool ValidatePart(ExternalPart part)
+        {
+            return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
         }
     }
 }

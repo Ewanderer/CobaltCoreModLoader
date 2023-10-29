@@ -15,11 +15,6 @@ namespace CobaltCoreModLoader.Services
 
         private static ILogger<IArtifactRegistry>? Logger;
 
-        internal bool ValidateArtifact(ExternalArtifact artifact)
-        {
-            return registered_artifacts.TryGetValue(artifact.GlobalName, out var reg_artifact) && reg_artifact == artifact;
-        }
-
         /// <summary>
         /// global name artifact lookup.
         /// </summary>
@@ -186,6 +181,11 @@ namespace CobaltCoreModLoader.Services
             {
                 manifest.LoadManifest(this);
             }
+        }
+
+        internal bool ValidateArtifact(ExternalArtifact artifact)
+        {
+            return registered_artifacts.TryGetValue(artifact.GlobalName, out var reg_artifact) && reg_artifact == artifact;
         }
     }
 }
