@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace CobaltCoreModLoader.Services
 {
-    internal class ArtifactRegistry : IArtifactRegistry
+    public class ArtifactRegistry : IArtifactRegistry
     {
         /// <summary>
         /// Under what name artifacts are registered.
@@ -14,6 +14,11 @@ namespace CobaltCoreModLoader.Services
         private static Dictionary<string, Tuple<ExternalArtifact, bool>> artifact_targets = new();
 
         private static ILogger<IArtifactRegistry>? Logger;
+
+        internal bool ValidateArtifact(ExternalArtifact artifact)
+        {
+            return registered_artifacts.TryGetValue(artifact.GlobalName, out var reg_artifact) && reg_artifact == artifact;
+        }
 
         /// <summary>
         /// global name artifact lookup.

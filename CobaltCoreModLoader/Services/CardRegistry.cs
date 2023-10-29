@@ -19,6 +19,11 @@ namespace CobaltCoreModLoader.Services
             Logger = logger;
         }
 
+        internal bool ValidateCard(ExternalCard card)
+        {
+            return registered_cards.TryGetValue(card.GlobalName, out var reg_card) && reg_card == card;
+        }
+
         public void LoadManifests()
         {
             foreach (var card in ModAssemblyHandler.CardManifests)
