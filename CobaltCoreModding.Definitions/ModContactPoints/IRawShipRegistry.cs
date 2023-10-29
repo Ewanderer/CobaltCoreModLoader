@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CobaltCoreModding.Definitions.ModContactPoints
+﻿namespace CobaltCoreModding.Definitions.ModContactPoints
 {
     /// <summary>
     /// Allows for raw ships to be registered.
@@ -22,7 +16,5 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="overwrite_starter_deck">check to supress starter cards from being assigned player. not working right now.</param>
         /// <returns></returns>
         bool RegisterShip(object ship, string global_name);
-
-      
     }
 }

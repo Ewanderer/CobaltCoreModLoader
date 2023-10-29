@@ -91,7 +91,6 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 }
                 char_panels_dict.Add(character.Deck.GlobalName, spr_val);
-        
             }
         }
 
