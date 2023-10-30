@@ -92,6 +92,9 @@ namespace DemoMod
                 return;
             var starter = new ExternalStarterShip("EWanderer.Demomod.DemoShip.StarterShip",
                 demoship.GlobalName, new ExternalCard[0],new ExternalArtifact[0], new Type[0], new Type[0]);
+
+            starter.AddLocalisation("Hyrbid", "A crystal-tech hybrid ship. Demoship using existing assets by EWanderer");
+
             registry.RegisterStartership(starter);
         }
     }

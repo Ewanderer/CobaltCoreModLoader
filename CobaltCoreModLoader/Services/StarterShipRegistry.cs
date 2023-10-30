@@ -142,6 +142,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
+
         public bool RegisterStartership(ExternalStarterShip starterShip)
         {
             if (string.IsNullOrWhiteSpace(starterShip.GlobalName))
@@ -201,6 +202,37 @@ namespace CobaltCoreModLoader.Services
             }
 
             return true;
+        }
+
+        internal static void PatchLocalisations(string locale, ref Dictionary<string, string> result)
+        {
+            foreach (var ship in registeredStarterShips.Values)
+            {
+
+                ship.GetLocalisations(locale, out var name, out var desc);
+                if (name != null)
+                {
+                    var key = $"ship.{ship.GlobalName}.name";
+                    if (!result.TryAdd(key, name)) {
+                        logger?.LogWarning("StarterShip {0} cannot add localisation of name because key already taken.", ship.GlobalName);
+                    }
+                }
+                else
+                {
+                    logger?.LogWarning("StarterShip {0} is missing localisation of name in {1}", ship.GlobalName, locale);
+                }
+                if (desc != null)
+                {
+                    var key = $"ship.{ship.GlobalName}.desc";
+                    if (!result.TryAdd(key, desc)) {
+                        logger?.LogWarning("StarterShip {0} cannot add localisation of description because key already taken.", ship.GlobalName);
+                    }
+                }
+                else
+                {
+                    logger?.LogWarning("StarterShip {0} is missing localisation of description in {1}", ship.GlobalName, locale);
+                }
+            }
         }
     }
 }
