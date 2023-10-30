@@ -142,7 +142,7 @@ namespace CobaltCoreModLoader.Services
             while (__result.Count > 0)
                 patched_result.Enqueue(__result.Dequeue());
             //patch starting ship
-            patched_result.Enqueue(new("patch starter ships", () => { }));
+            patched_result.Enqueue(new("patch starter ships", () => { StarterShipRegistry.PatchStarterShips(); }));
             //return new action queue
             return patched_result;
         }
