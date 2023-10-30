@@ -28,8 +28,8 @@ namespace CobaltCoreModLoader.Services
         private static List<IShipManifest> shipManifests = new();
         private static List<IShipPartManifest> shippartsManifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
-        private static List<IStatusManifest> statusManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
+        private static List<IStatusManifest> statusManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -51,8 +51,8 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
         public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
-        public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
+        public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
