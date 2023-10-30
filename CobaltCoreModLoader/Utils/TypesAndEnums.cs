@@ -42,6 +42,19 @@ namespace CobaltCoreModLoader.Utils
         private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
 
+        private static Type? __startership_type = null;
+
+
+        public static Type StarterShipType
+        {
+            get
+            {
+                if (__startership_type != null)
+                    return __startership_type;
+                return __startership_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterShip") ?? throw new Exception("StarterShip type not found");
+            }
+        }
+
         public static Type ArtifactMetaType
         {
             get
