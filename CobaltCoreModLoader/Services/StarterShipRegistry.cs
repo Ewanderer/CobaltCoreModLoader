@@ -196,7 +196,7 @@ namespace CobaltCoreModLoader.Services
             // put into registry.
             if (!registeredStarterShips.TryAdd(starterShip.GlobalName, starterShip))
             {
-
+                logger?.LogWarning("StarterShip with global name {0} already exist. skipping further entries", starterShip.GlobalName);
                 return false;
             }
 

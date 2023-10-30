@@ -151,7 +151,11 @@ namespace CobaltCoreModLoader.Services
                     customEventManifests.Add(event_manifest);
                 if (spanwed_manifest is IShipPartManifest ship_part_manifest)
                     shippartsManifests.Add(ship_part_manifest);
-                if(spanwed_manifest is IStartershipManifest startership_manifest)
+                if (spanwed_manifest is IShipManifest shipManifest)
+                    shipManifests.Add(shipManifest);
+                if (spanwed_manifest is IRawShipManifest rawShipManifest)
+                    rawShipManifests.Add(rawShipManifest);
+                if (spanwed_manifest is IStartershipManifest startership_manifest)
                     startershipManifests.Add(startership_manifest);
             }
         }

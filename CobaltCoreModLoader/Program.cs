@@ -34,6 +34,8 @@ public static class Program
             builder.Services.AddSingleton<StatusRegistry>();
             builder.Services.AddSingleton<CustomEventHub>();
             builder.Services.AddSingleton<PartRegistry>();
+            builder.Services.AddSingleton<ShipRegistry>();
+            builder.Services.AddSingleton<StarterShipRegistry>();
 
             host = builder.Build();
             host.Start();
