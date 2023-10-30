@@ -54,6 +54,11 @@ namespace CobaltCoreModLoader.Services
             return CopyShip.Invoke(null, new object[] { ship_entry }) ?? throw new Exception($"Copy of raw ship {global_name} failed.");
         }
 
+        internal static bool CheckShip(string global_name)
+        {
+            return registeredShips.ContainsKey(global_name);
+        }
+
         public static void LoadRawManifests()
         {
             if (instance == null)
@@ -148,22 +153,7 @@ namespace CobaltCoreModLoader.Services
                 logger?.LogWarning("ExternalShip {0} has not registered external parts: {1}", ship.GlobalName, string.Join(", ", invalid_parts.Select(p => p.GlobalName)));
                 return false;
             }
-            /*
-            //validate cards
-            var invalid_cards = ship.ExtraCards.Where(c => !cardRegistry.ValidateCard(c));
-            if (invalid_cards.Any())
-            {
-                logger.LogWarning("ExternalShip {0} has not registered external cards: {1}", ship.GlobalName, string.Join(", ", invalid_cards.Select(p => p.GlobalName)));
-                return false;
-            }
-            //validate artifacts
-            var invalid_artifacts = ship.ExtraArtifacts.Where(a => !artifactRegistry.ValidateArtifact(a));
-            if (invalid_artifacts.Any())
-            {
-                logger.LogWarning("ExternalShip {0} has not registered external artifacts: {1}", ship.GlobalName, string.Join(", ", invalid_artifacts.Select(p => p.GlobalName)));
-                return false;
-            }
-            */
+
             //attempt to register
             if (!registeredShips.TryAdd(ship.GlobalName, ship))
             {
