@@ -6,17 +6,17 @@ namespace CobaltCoreModLoader.Services
 {
     public class CustomEventHub : ICustomEventHub
     {
+        /// <summary>
+        /// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
+        /// </summary>
+        private static readonly Dictionary<string, Tuple<Type, HashSet<object>>> persistentCustomEventLookup = new();
 
         /// <summary>
         /// Since Cards/Artifacts etc. are not disposable, we cannot hold permanent rerference for fear of an memory leak. Thus we only store a week reference to the target instance of the action and the action itself.
         /// </summary>
         private static readonly Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>> volatileCustomEventLookup = new Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>>();
-        /// <summary>
-        /// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
-        /// </summary>
-        private static readonly Dictionary<string, Tuple<Type, HashSet<object>>> persistentCustomEventLookup = new();
-        private static ILogger<CustomEventHub>? logger;
 
+        private static ILogger<CustomEventHub>? logger;
 
         public CustomEventHub(ILogger<CustomEventHub> logger)
         {
@@ -25,7 +25,6 @@ namespace CobaltCoreModLoader.Services
 
         public bool ConnectToEvent<T>(string eventName, Action<T> handler)
         {
-
             if (!volatileCustomEventLookup.TryGetValue(eventName, out var entry))
             {
                 logger?.LogWarning("Unkown Event {0}", eventName);
@@ -47,7 +46,6 @@ namespace CobaltCoreModLoader.Services
             }
             else
             {
-
                 //Register weak reference to allow even actions/artifact sto listen to events without being hung up.
                 try
                 {
@@ -87,7 +85,6 @@ namespace CobaltCoreModLoader.Services
             {
                 entry.Item2.Remove(handler.Target);
             }
-
         }
 
         public void LoadManifest()
@@ -158,7 +155,6 @@ namespace CobaltCoreModLoader.Services
                     }
                 }
             }
-
         }
     }
 }

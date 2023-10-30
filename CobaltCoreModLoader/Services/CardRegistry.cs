@@ -227,5 +227,10 @@ namespace CobaltCoreModLoader.Services
                 card_art_dictionary[overwrite.Key] = spr_val;
             }
         }
+
+        internal bool ValidateCard(ExternalCard card)
+        {
+            return registered_cards.TryGetValue(card.GlobalName, out var reg_card) && reg_card == card;
+        }
     }
 }

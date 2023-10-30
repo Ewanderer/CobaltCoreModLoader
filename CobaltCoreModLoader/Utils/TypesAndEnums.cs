@@ -23,10 +23,13 @@ namespace CobaltCoreModLoader.Utils
 
         private static Type? __enum_extensions_type = null;
 
+        private static Type? __mutil_type = null;
         private static Type? __new_run_options_type = null;
 
+        private static Type? __part_type = null;
         private static Type? __rarity_type = null;
 
+        private static Type? __ship_type = null;
         private static Type? __spr_type = null;
 
         private static Type? __sprite_path_type = null;
@@ -38,6 +41,19 @@ namespace CobaltCoreModLoader.Utils
 
         private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
+
+        private static Type? __startership_type = null;
+
+
+        public static Type StarterShipType
+        {
+            get
+            {
+                if (__startership_type != null)
+                    return __startership_type;
+                return __startership_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterShip") ?? throw new Exception("StarterShip type not found");
+            }
+        }
 
         public static Type ArtifactMetaType
         {
@@ -129,6 +145,16 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        public static Type MutilType
+        {
+            get
+            {
+                if (__mutil_type != null)
+                    return __mutil_type;
+                return __mutil_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Mutil") ?? throw new Exception("Mutil type not found");
+            }
+        }
+
         public static Type NewRunOptionsType
         {
             get
@@ -139,6 +165,16 @@ namespace CobaltCoreModLoader.Utils
             }
         }
 
+        public static Type PartType
+        {
+            get
+            {
+                if (__part_type != null)
+                    return __part_type;
+                return __part_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Part") ?? throw new Exception("Part type not found");
+            }
+        }
+
         public static Type RarityType
         {
             get
@@ -146,6 +182,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__rarity_type != null)
                     return __rarity_type;
                 return __rarity_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Rarity") ?? throw new Exception("Rarity type not found");
+            }
+        }
+
+        public static Type ShipType
+        {
+            get
+            {
+                if (__ship_type != null)
+                    return __ship_type;
+                return __ship_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Ship") ?? throw new Exception("Ship type not found");
             }
         }
 
