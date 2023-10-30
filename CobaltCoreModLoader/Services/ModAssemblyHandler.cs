@@ -23,9 +23,13 @@ namespace CobaltCoreModLoader.Services
 
         private static HashSet<Assembly> modAssemblies = new();
         private static List<IModManifest> modManifests = new();
+        private static List<IRawShipManifest> rawShipManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
+        private static List<IShipManifest> shipManifests = new();
+        private static List<IShipPartManifest> shippartsManifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<IStartershipManifest> startershipManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -43,8 +47,12 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
         public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
+        public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
+        public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
+        public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+        public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
@@ -141,6 +149,14 @@ namespace CobaltCoreModLoader.Services
                     statusManifests.Add(status_manifest);
                 if (spanwed_manifest is ICustomEventManifest event_manifest)
                     customEventManifests.Add(event_manifest);
+                if (spanwed_manifest is IShipPartManifest ship_part_manifest)
+                    shippartsManifests.Add(ship_part_manifest);
+                if (spanwed_manifest is IShipManifest shipManifest)
+                    shipManifests.Add(shipManifest);
+                if (spanwed_manifest is IRawShipManifest rawShipManifest)
+                    rawShipManifests.Add(rawShipManifest);
+                if (spanwed_manifest is IStartershipManifest startership_manifest)
+                    startershipManifests.Add(startership_manifest);
             }
         }
     }

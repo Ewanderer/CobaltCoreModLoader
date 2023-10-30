@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace CobaltCoreModLoader.Services
 {
-    internal class ArtifactRegistry : IArtifactRegistry
+    public class ArtifactRegistry : IArtifactRegistry
     {
         /// <summary>
         /// Under what name artifacts are registered.
@@ -181,6 +181,11 @@ namespace CobaltCoreModLoader.Services
             {
                 manifest.LoadManifest(this);
             }
+        }
+
+        internal bool ValidateArtifact(ExternalArtifact artifact)
+        {
+            return registered_artifacts.TryGetValue(artifact.GlobalName, out var reg_artifact) && reg_artifact == artifact;
         }
     }
 }

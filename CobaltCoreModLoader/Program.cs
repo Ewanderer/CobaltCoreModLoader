@@ -33,6 +33,9 @@ public static class Program
             builder.Services.AddSingleton<ArtifactRegistry>();
             builder.Services.AddSingleton<StatusRegistry>();
             builder.Services.AddSingleton<CustomEventHub>();
+            builder.Services.AddSingleton<PartRegistry>();
+            builder.Services.AddSingleton<ShipRegistry>();
+            builder.Services.AddSingleton<StarterShipRegistry>();
 
             host = builder.Build();
             host.Start();
@@ -64,6 +67,12 @@ public static class Program
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch characters
             host.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
+            //patch ship parts
+            host.Services.GetRequiredService<PartRegistry>().LoadManifests();
+            //load ship manifests.
+            host.Services.GetRequiredService<ShipRegistry>().LoadManifests();
+            //load starter ship manifests
+            host.Services.GetRequiredService<StarterShipRegistry>().RunLogic();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
             //load events
