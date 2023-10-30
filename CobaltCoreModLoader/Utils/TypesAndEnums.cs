@@ -35,25 +35,13 @@ namespace CobaltCoreModLoader.Utils
         private static Type? __sprite_path_type = null;
         private static Type? __starter_Deck_type = null;
 
+        private static Type? __startership_type = null;
         private static Type? __status_def_type = null;
         private static Type? __status_type = null;
         private static Type? __story_vars_type = null;
 
         private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
-
-        private static Type? __startership_type = null;
-
-
-        public static Type StarterShipType
-        {
-            get
-            {
-                if (__startership_type != null)
-                    return __startership_type;
-                return __startership_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterShip") ?? throw new Exception("StarterShip type not found");
-            }
-        }
 
         public static Type ArtifactMetaType
         {
@@ -222,6 +210,16 @@ namespace CobaltCoreModLoader.Utils
                 if (__starter_Deck_type != null)
                     return __starter_Deck_type;
                 return __starter_Deck_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterDeck") ?? throw new Exception("StarterDeck type not found");
+            }
+        }
+
+        public static Type StarterShipType
+        {
+            get
+            {
+                if (__startership_type != null)
+                    return __startership_type;
+                return __startership_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterShip") ?? throw new Exception("StarterShip type not found");
             }
         }
 

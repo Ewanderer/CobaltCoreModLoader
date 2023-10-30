@@ -1,7 +1,4 @@
-﻿
-
-
-using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Definitions.ExternalItems;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
 {

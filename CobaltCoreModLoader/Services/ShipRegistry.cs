@@ -54,11 +54,6 @@ namespace CobaltCoreModLoader.Services
             return CopyShip.Invoke(null, new object[] { ship_entry }) ?? throw new Exception($"Copy of raw ship {global_name} failed.");
         }
 
-        internal static bool CheckShip(string global_name)
-        {
-            return registeredShips.ContainsKey(global_name);
-        }
-
         public static void LoadRawManifests()
         {
             if (instance == null)
@@ -229,6 +224,11 @@ namespace CobaltCoreModLoader.Services
                 return false;
             }
             return true;
+        }
+
+        internal static bool CheckShip(string global_name)
+        {
+            return registeredShips.ContainsKey(global_name);
         }
 
         private static object ActualizeExternalShip(ExternalShip ship)
