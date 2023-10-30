@@ -69,6 +69,8 @@ public static class Program
             host.Services.GetRequiredService<PartRegistry>().LoadManifests();
             //load ship manifests.
             host.Services.GetRequiredService<ShipRegistry>().LoadManifests();
+            //load starter ship manifests
+            host.Services.GetRequiredService<StarterShipRegistry>().RunLogic();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
             //load events
