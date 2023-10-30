@@ -97,6 +97,7 @@ namespace CobaltCoreModLoader.Services
             GlossaryRegistry.PatchLocalisations(locale, ref __result);
             ArtifactRegistry.PatchLocalisations(locale, ref __result);
             StatusRegistry.PatchLocalisations(locale, ref __result);
+            StarterShipRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<ValueTuple<string, Action>> MakeInitQueue_Postfix(Queue<ValueTuple<string, Action>> __result)

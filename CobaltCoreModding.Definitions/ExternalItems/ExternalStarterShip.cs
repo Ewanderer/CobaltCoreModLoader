@@ -41,5 +41,38 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         {
 
         }
+
+        private readonly Dictionary<string, string> NameLocalisations = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> DescriptionLocalisations = new Dictionary<string, string>();
+
+        public void GetLocalisations(string locale, out string? name, out string? description)
+        {
+            if (!NameLocalisations.TryGetValue(locale, out name))
+                NameLocalisations.TryGetValue("en", out name);
+            if (!DescriptionLocalisations.TryGetValue(locale, out description))
+                DescriptionLocalisations.TryGetValue("en", out description);
+        }
+
+        public void AddLocalisation(string name, string description, string locale = "en")
+        {
+            if (NameLocalisations.ContainsKey(locale))
+            {
+                NameLocalisations[locale] = name;
+            }
+            else
+            {
+                NameLocalisations.Add(locale, name);
+            }
+
+            if (DescriptionLocalisations.ContainsKey(locale))
+            {
+                DescriptionLocalisations[locale] = description;
+            }
+            else
+            {
+                DescriptionLocalisations.Add(locale, description);
+            }
+        }
+
     }
 }
