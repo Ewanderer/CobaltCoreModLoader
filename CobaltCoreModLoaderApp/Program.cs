@@ -12,7 +12,7 @@ namespace CobaltCoreModLoaderApp
     public static class Program
     {
         [STAThread]
-        private async static Task<int> Main(string[] args)
+        private static int Main(string[] args)
         {
             //build cobalt core
             var modded_cobalt_core_builder = new HostApplicationBuilder();
@@ -45,18 +45,13 @@ namespace CobaltCoreModLoaderApp
             loader_app_builder.Services.AddSingleton(svc => new HeartService(modded_cobalt_core_app, modded_cobalt_core_app.Services.GetRequiredService<IHostApplicationLifetime>()));
             var loader_app = loader_app_builder.Build();
             //boot modded cobalt core app to make services available. 
-            _ = modded_cobalt_core_app.RunAsync();
+            var mod_task = modded_cobalt_core_app.RunAsync();
             //boot loader app for the user to interact.
             _ = loader_app.RunAsync();
             // wait for both the loader and the modded cobalt core to shutdown
-            try
-            {
-                modded_cobalt_core_app.WaitForShutdown();
-            }
-            catch
-            {
 
-            }
+            mod_task.Wait();
+
             return 0;
         }
     }
