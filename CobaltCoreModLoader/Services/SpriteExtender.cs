@@ -22,7 +22,7 @@ namespace CobaltCoreModLoader.Services
             SpriteExtender.logger = logger;
         }
 
-        private const int sprite_id_counter_start = 100000;
+        private const int sprite_id_counter_start = 10000000;
         private static int sprite_id_counter = sprite_id_counter_start;
 
         /// <summary>

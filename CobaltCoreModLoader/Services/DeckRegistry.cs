@@ -9,7 +9,7 @@ namespace CobaltCoreModLoader.Services
 {
     public class DeckRegistry : IDeckRegistry
     {
-        private const int deck_counter_start = 10000;
+        private const int deck_counter_start = 1000000;
         private static int deck_counter = deck_counter_start;
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
         private static ILogger<IDeckRegistry>? Logger;

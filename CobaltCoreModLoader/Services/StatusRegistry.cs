@@ -11,7 +11,7 @@ namespace CobaltCoreModLoader.Services
 {
     public class StatusRegistry : IStatusRegistry
     {
-        private const int status_id_counter_start = 100000;
+        private const int status_id_counter_start = 1000000;
         private static readonly Dictionary<int, object> icon_lookup = new Dictionary<int, object>();
         private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
         private static Type? buildiconandtext_return_type;
