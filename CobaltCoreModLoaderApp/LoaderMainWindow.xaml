@@ -8,7 +8,7 @@
         Title="Cobalt Core Mod Loader" Height="550" Width="1000" WindowStartupLocation="CenterScreen" Closing="MainWindow_Closing">
     <TabControl x:Name="TabPanelControl">
         <TabItem x:Name="MainPanel" Header="Mod Loader">
-            <Grid Background="#FFE5E5E5" ShowGridLines="True">
+            <Grid Background="#FFE5E5E5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="*"/>
@@ -26,13 +26,13 @@
 
                 <Label Content="Cobalt Core Game Path" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Center"/>
                 <TextBox x:Name="CobaltCoreGamePathTextField" TextWrapping="Wrap" VerticalAlignment="Stretch"  Grid.Row="0" Grid.Column="1" Grid.RowSpan="1" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" />
-                <Button x:Name="WarmupButton" Content="Warmup" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="BtnWarmup_Click" Grid.Row="1" Grid.ColumnSpan="3"/>
+                <Button x:Name="WarmupButton" Content="Warmup and Load Settings" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="BtnWarmup_Click" Grid.Row="1" Grid.ColumnSpan="3" FontSize="16" Background="LightYellow" FontWeight="Bold"/>
                 <Label Content="Mod List" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Stretch" Grid.Row="2" Grid.ColumnSpan="3"/>
                 <ListBox x:Name="ModListBox" d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3"/>
-                <Button x:Name="BtnLoadSingleModFolder" Content="Load Single" Grid.Row="4"/>
-                <Button x:Name="BtnLoadCollection" Content="Load Collection" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-                <Button x:Name="BtnCloseRun" Content="Close and Run" Click="BtnCloseRun_Click" Grid.Row="5" Grid.ColumnSpan="2"/>
-                <Button x:Name="BtnRunView" Content="Run and View" Click="BtnRunView_Click" Grid.Row="5" Grid.Column="2"/>
+                <Button x:Name="BtnLoadSingleModFolder" Content="Load Single" Grid.Row="4" FontSize="22" Background="LightSkyBlue"/>
+                <Button x:Name="BtnLoadCollection" Content="Load Collection" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="22" Background="LightYellow"/>
+                <Button x:Name="BtnCloseRun" Content="Close and Run" Click="BtnCloseRun_Click" Grid.Row="5" Grid.ColumnSpan="2" FontSize="22" Background="LimeGreen"/>
+                <Button x:Name="BtnRunView" Content="Run and View" Click="BtnRunView_Click" Grid.Row="5" Grid.Column="2" FontSize="22" Background="LightSkyBlue"/>
             </Grid>
         </TabItem>
         <TabItem x:Name="LogTab" HorizontalAlignment="Center" Height="20" Header="Logging" VerticalAlignment="Center" Width="54">
