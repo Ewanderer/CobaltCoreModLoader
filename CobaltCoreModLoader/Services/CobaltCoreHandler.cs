@@ -1,4 +1,5 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
 using System.Reflection;
@@ -13,10 +14,12 @@ namespace CobaltCoreModLoader.Services
     {
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
         private ILogger<CobaltCoreHandler> logger;
+        private IHostApplicationLifetime appLifetime;
 
-        public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger)
+        public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger, IHostApplicationLifetime appLifetime)
         {
             this.logger = logger;
+            this.appLifetime = appLifetime;
         }
 
         public static Assembly? CobaltCoreAssembly { get; private set; }
@@ -100,6 +103,7 @@ namespace CobaltCoreModLoader.Services
             finally
             {
                 Directory.SetCurrentDirectory(current_dir);
+                appLifetime.StopApplication();
             }
         }
     }
