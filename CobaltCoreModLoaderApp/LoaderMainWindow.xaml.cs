@@ -119,5 +119,15 @@ namespace CobaltCoreModLoaderApp
             _ = Task.Run(() => svc.RunCobaltCore(new string[] { "--debug" }));
             LaunchedCobaltCore = true;
         }
+
+        private void BtnLoadSingleModFolder_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void BtnLoadCollection_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
