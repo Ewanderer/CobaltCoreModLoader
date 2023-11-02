@@ -29,8 +29,8 @@
                 <Button x:Name="WarmupButton" Content="Warmup and Load Settings" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="BtnWarmup_Click" Grid.Row="1" Grid.ColumnSpan="3" FontSize="16" Background="LightYellow" FontWeight="Bold"/>
                 <Label Content="Mod List" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalAlignment="Stretch" Grid.Row="2" Grid.ColumnSpan="3"/>
                 <ListBox x:Name="ModListBox" d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3"/>
-                <Button x:Name="BtnLoadSingleModFolder" Content="Load Single" Grid.Row="4" FontSize="22" Background="LightSkyBlue"/>
-                <Button x:Name="BtnLoadCollection" Content="Load Collection" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="22" Background="LightYellow"/>
+                <Button x:Name="BtnLoadSingleModFolder" Content="Load Single" Grid.Row="4" FontSize="22" Background="LightSkyBlue" Click="BtnLoadSingleModFolder_Click"/>
+                <Button x:Name="BtnLoadCollection" Content="Load Collection" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="22" Background="LightYellow" Click="BtnLoadCollection_Click"/>
                 <Button x:Name="BtnCloseRun" Content="Close and Run" Click="BtnCloseRun_Click" Grid.Row="5" Grid.ColumnSpan="2" FontSize="22" Background="LimeGreen"/>
                 <Button x:Name="BtnRunView" Content="Run and View" Click="BtnRunView_Click" Grid.Row="5" Grid.Column="2" FontSize="22" Background="LightSkyBlue"/>
             </Grid>
