@@ -12,6 +12,8 @@ namespace CobaltCoreModLoader.Services
     {
         private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
         private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
+        private static readonly Dictionary<string, Dictionary<string, (string, string)>> rawLocalizations = new Dictionary<string, Dictionary<string, (string, string)>>();
+                
         private static FieldInfo artifacts_field = TypesAndEnums.StarterShipType.GetField("artifacts") ?? throw new Exception("Cannot find StarterShip.artifacts fieldinfo");
         private static FieldInfo cards_field = TypesAndEnums.StarterShipType.GetField("cards") ?? throw new Exception("Cannot find StarterShip.cards fieldinfo");
         private static StarterShipRegistry? instance;
@@ -188,6 +190,26 @@ namespace CobaltCoreModLoader.Services
             
             return true;
         }
+
+        public void AddRawLocalization(string global_name, string name, string description, string locale = "en")
+        {
+            if (!registeredRawStarterShips.ContainsKey(global_name))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation because ship is not registered.", global_name);
+                return;
+            }
+
+            if (!rawLocalizations.TryGetValue(locale, out var localeDict))
+            {
+                localeDict = new Dictionary<string, (string, string)>();
+                rawLocalizations[locale] = localeDict;
+            }
+
+            if (!localeDict.TryAdd(global_name, (name, description)))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
+            }
+        }
         
         public void RunLogic()
         {
@@ -230,6 +252,29 @@ namespace CobaltCoreModLoader.Services
                 else
                 {
                     logger?.LogWarning("StarterShip {0} is missing localisation of description in {1}", ship.GlobalName, locale);
+                }
+            }
+
+            if (!rawLocalizations.TryGetValue(locale, out var rawLocaleDict))
+            {
+                return;
+            }
+
+            foreach (var (global_name, (name, desc)) in rawLocaleDict)
+            {
+                {
+                    var key = $"ship.{global_name}.name";
+                    if (!result.TryAdd(key, name))
+                    {
+                        logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
+                    }
+                }
+                {
+                    var key = $"ship.{global_name}.desc";
+                    if (!result.TryAdd(key, desc))
+                    {
+                        logger?.LogWarning("Raw StarterShip {0} cannot add localisation of description because key already taken.", global_name);
+                    }
                 }
             }
         }
