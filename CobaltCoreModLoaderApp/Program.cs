@@ -2,21 +2,16 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModLoaderApp
 {
     public static class Program
     {
-       // [STAThread]
+        // [STAThread]
         private static void Main(string[] args)
         {
             //build cobalt core
             var modded_cobalt_core_builder = new HostApplicationBuilder();
-
 
             modded_cobalt_core_builder.Services.AddSingleton<SettingService>();
             modded_cobalt_core_builder.Services.AddSingleton<CobaltCoreHandler>();
@@ -36,12 +31,10 @@ namespace CobaltCoreModLoaderApp
             modded_cobalt_core_builder.Services.AddSingleton<ShipRegistry>();
             modded_cobalt_core_builder.Services.AddSingleton<StarterShipRegistry>();
 
-
             //actualize cobalt core modded app.
             var modded_cobalt_core_app = modded_cobalt_core_builder.Build() ?? throw new Exception();
 
             var loader_ui = new LauncherUI(modded_cobalt_core_app);
-
 
             var mcca = modded_cobalt_core_app.RunAsync();
 
@@ -49,8 +42,6 @@ namespace CobaltCoreModLoaderApp
 
             loader_ui.WaitTillClosed().Wait();
             mcca.Wait();
-
-
         }
     }
 }
