@@ -1,5 +1,4 @@
 ﻿using CobaltCoreModLoader.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -7,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -19,6 +17,7 @@ namespace CobaltCoreModLoaderApp
 
         public Settings settings = new Settings();
 
+        private Gtk.CheckButton? close_launcher_on_start_checkbox;
         private bool cobalt_core_launched;
 
         private Gtk.Entry? CobaltCorePathEntry;
@@ -206,10 +205,8 @@ namespace CobaltCoreModLoaderApp
                     dg.Run();
                     dg.Destroy();
                 }
-
             }
             fcd.Destroy();
-
         }
 
         private void AddPanel(string tab_name, Gtk.Box box)
@@ -226,8 +223,6 @@ namespace CobaltCoreModLoaderApp
             btn.Show();
             box.Show();
         }
-
-        private Gtk.CheckButton? close_launcher_on_start_checkbox;
 
         private void CreateMainPanel()
         {
@@ -297,8 +292,6 @@ namespace CobaltCoreModLoaderApp
 
                 //pack buttons into the box
 
-
-
                 var load_mod_buttons = new Gtk.Button();
                 load_mod_buttons.Label = "Preload Mods";
                 load_mod_buttons.Pressed += (sender, evt) => { LoadMods(); load_mod_buttons.Sensitive = false; };
@@ -310,7 +303,6 @@ namespace CobaltCoreModLoaderApp
                 LoadModBox.PackStart(close_launcher_on_start_checkbox, true, true, 5);
 
                 LoadModBox.ShowAll();
-
             }
 
             {
@@ -406,7 +398,8 @@ namespace CobaltCoreModLoaderApp
 
             var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreHandler>();
 
-            if (close_launcher_on_start_checkbox != null) {
+            if (close_launcher_on_start_checkbox != null)
+            {
                 settings.CloseLauncherAfterLaunch = close_launcher_on_start_checkbox.Active;
             }
 
@@ -481,7 +474,6 @@ namespace CobaltCoreModLoaderApp
             var text = lbl.Text;
             settings.ModAssemblyPaths.Remove(text);
             mod_list_box.Remove(row);
-
         }
 
         private void Scan_folder_for_mod_btn_Pressed(object? sender, EventArgs e)
@@ -496,7 +488,7 @@ namespace CobaltCoreModLoaderApp
 
             if (response == Gtk.ResponseType.Ok)
             {
-                //check all directories in directoy.              
+                //check all directories in directoy.
 
                 if (!Directory.Exists(fcd.Filename))
                 {
@@ -528,12 +520,8 @@ namespace CobaltCoreModLoaderApp
                                 dg.Destroy();
                             }
                         }
-
                     }
                 }
-
-
-
             }
             fcd.Destroy();
         }
