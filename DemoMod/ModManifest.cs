@@ -23,6 +23,7 @@ namespace DemoMod
         private ExternalSprite? pinker_per_border_over_sprite;
         public IEnumerable<string> Dependencies => new string[0];
         public DirectoryInfo? ModRootFolder { get; set; }
+        public DirectoryInfo? GameRootFolder { get; set; }
         public string Name => "EWanderer.DemoMod";
 
         public void BootMod(IModLoaderContact contact)

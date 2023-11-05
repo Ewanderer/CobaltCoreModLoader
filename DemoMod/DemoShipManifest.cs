@@ -12,6 +12,7 @@ namespace DemoMod
     public class DemoShipManifest : IShipPartManifest, IShipManifest, IStartershipManifest
     {
         public DirectoryInfo? ModRootFolder { get; set; }
+        public DirectoryInfo? GameRootFolder { get; set; }
 
         public string Name => "EWanderer.Demomod.DemoShipManifest";
 
