@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
     <ProjectReference Include="..\CobaltCoreModLoader\CobaltCoreModLoader.csproj" />
+    <ProjectReference Include="..\SingleFileExtractor\src\SingleFileExtractor.Core\SingleFileExtractor.Core.csproj" />
   </ItemGroup>
 
 </Project>
