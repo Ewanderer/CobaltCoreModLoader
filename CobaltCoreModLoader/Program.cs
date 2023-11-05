@@ -112,7 +112,8 @@ public static class Program
         if (!directory.Exists)
             return;
 
-        var gameDirectory = setting_service.CobaltCoreGamePath;
+        // If gameDirectory isn't set, there will be an earlier exception
+        var gameDirectory = setting_service.CobaltCoreGamePath!;
         
         foreach (var folder in directory.EnumerateDirectories())
         {
