@@ -8,11 +8,15 @@ using System.Reflection;
 
 namespace CobaltCoreModLoader.Services
 {
-    public class StarterShipRegistry : IStartershipRegistry
+    public class StarterShipRegistry : IStartershipRegistry, IRawStartershipRegistry
     {
         private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
+        private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
+        private static readonly Dictionary<string, Dictionary<string, (string, string)>> rawLocalizations = new Dictionary<string, Dictionary<string, (string, string)>>();
+                
         private static FieldInfo artifacts_field = TypesAndEnums.StarterShipType.GetField("artifacts") ?? throw new Exception("Cannot find StarterShip.artifacts fieldinfo");
         private static FieldInfo cards_field = TypesAndEnums.StarterShipType.GetField("cards") ?? throw new Exception("Cannot find StarterShip.cards fieldinfo");
+        private static StarterShipRegistry? instance;
         private static ILogger<StarterShipRegistry>? logger;
 
         private static FieldInfo ship_field = TypesAndEnums.StarterShipType.GetField("ship") ?? throw new Exception("Cannot find Startership.ship fieldinfo");
@@ -26,6 +30,7 @@ namespace CobaltCoreModLoader.Services
             this.cardRegistry = cardRegistry;
             this.artifactRegistry = artifactRegistry;
             StarterShipRegistry.logger = logger;
+            instance = this;
         }
 
         public static void PatchStarterShips()
@@ -45,6 +50,29 @@ namespace CobaltCoreModLoader.Services
                 }
                 var actual_starter = ActualizeStarterShip(starter.GlobalName);
                 lookup.Add(starter.GlobalName, actual_starter);
+            }
+            
+            foreach (var (globalName, starterShip) in registeredRawStarterShips)
+            {
+                if (lookup.Contains(globalName))
+                {
+                    logger?.LogError("StartShip with global name {0} already in StarterShip.ships by key", globalName);
+                    continue;
+                }
+
+                var ship = ship_field.GetValue(starterShip);
+                var shipKey = ship_key_field.GetValue(ship) as string;
+
+                if (shipKey == null)
+                {
+                    logger?.LogError("StarterShip {0} has no key in key field! Skipping...", globalName);
+                }
+                else if (!ShipRegistry.CheckShip(shipKey))
+                {
+                    logger?.LogError("StarterShip {0} references ship {1} which is not available! Skipping...", globalName, shipKey);
+                    continue;
+                }
+                lookup.Add(globalName, starterShip);
             }
         }
 
@@ -107,6 +135,82 @@ namespace CobaltCoreModLoader.Services
             return true;
         }
 
+        public bool RegisterStartership(object starterShip, string global_name)
+        {
+            // check global name
+            if (string.IsNullOrWhiteSpace(global_name))
+            {
+                return false;
+            }
+            
+            // validate startership object
+            if (!starterShip.GetType().IsAssignableTo(TypesAndEnums.StarterShipType))
+            {
+                logger?.LogCritical("Attempted to register a raw ship under global name {0} that isn't a CobaltCore.Ship object.", global_name);
+                return false;
+            }
+            
+            var artifacts = artifacts_field.GetValue(starterShip) as IEnumerable;
+            if (artifacts == null)
+            {
+                logger?.LogWarning("Raw startership {0} couldn't retrieve artifact list", global_name);
+                return false;
+            }
+            
+            var cards = cards_field.GetValue(starterShip) as IEnumerable;
+            if (cards == null)
+            {
+                logger?.LogWarning("Raw startership {0} couldn't retrieve card list", global_name);
+                return false;
+            }
+
+            foreach (var artifact in artifacts)
+            {
+                if (!artifact.GetType().IsAssignableTo(TypesAndEnums.ArtifactType))
+                {
+                    logger?.LogWarning("Raw startership {0} has null artifact", global_name);
+                    return false;
+                }
+            }
+            
+            foreach (var card in cards)
+            {
+                if (!card.GetType().IsAssignableTo(TypesAndEnums.CardType))
+                {
+                    logger?.LogWarning("Raw startership {0} has null card", global_name);
+                    return false;
+                }
+            }
+            
+            if (!registeredRawStarterShips.TryAdd(global_name, starterShip))
+            {
+                logger?.LogWarning("StarterShip with global name {0} already exist. skipping further entries", global_name);
+                return false;
+            }
+            
+            return true;
+        }
+
+        public void AddRawLocalization(string global_name, string name, string description, string locale = "en")
+        {
+            if (!registeredRawStarterShips.ContainsKey(global_name))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation because ship is not registered.", global_name);
+                return;
+            }
+
+            if (!rawLocalizations.TryGetValue(locale, out var localeDict))
+            {
+                localeDict = new Dictionary<string, (string, string)>();
+                rawLocalizations[locale] = localeDict;
+            }
+
+            if (!localeDict.TryAdd(global_name, (name, description)))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
+            }
+        }
+        
         public void RunLogic()
         {
             LoadManifests();
@@ -148,6 +252,29 @@ namespace CobaltCoreModLoader.Services
                 else
                 {
                     logger?.LogWarning("StarterShip {0} is missing localisation of description in {1}", ship.GlobalName, locale);
+                }
+            }
+
+            if (!rawLocalizations.TryGetValue(locale, out var rawLocaleDict))
+            {
+                return;
+            }
+
+            foreach (var (global_name, (name, desc)) in rawLocaleDict)
+            {
+                {
+                    var key = $"ship.{global_name}.name";
+                    if (!result.TryAdd(key, name))
+                    {
+                        logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
+                    }
+                }
+                {
+                    var key = $"ship.{global_name}.desc";
+                    if (!result.TryAdd(key, desc))
+                    {
+                        logger?.LogWarning("Raw StarterShip {0} cannot add localisation of description because key already taken.", global_name);
+                    }
                 }
             }
         }
@@ -212,6 +339,8 @@ namespace CobaltCoreModLoader.Services
         {
             foreach (var key in registeredStarterShips.Keys)
                 __result.Add(key);
+            foreach (var key in registeredRawStarterShips.Keys)
+                __result.Add(key);
         }
 
         private void LoadManifests()
@@ -219,6 +348,19 @@ namespace CobaltCoreModLoader.Services
             foreach (var manifest in ModAssemblyHandler.StartershipManifests)
             {
                 manifest.LoadManifest(this);
+            }
+        }
+        
+        public static void LoadRawManifests()
+        {
+            if (instance == null)
+            {
+                logger?.LogCritical("Instance is null. Cannot load raw starterships.");
+                return;
+            }
+            foreach (var manifest in ModAssemblyHandler.RawStartershipManifests)
+            {
+                manifest.LoadManifest(instance);
             }
         }
     }

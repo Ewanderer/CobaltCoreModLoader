@@ -142,6 +142,8 @@ namespace CobaltCoreModLoader.Services
             //cobalt core does stuff not concering us.
             while (__result.Count > 0)
                 patched_result.Enqueue(__result.Dequeue());
+            //load raw starting ship
+            patched_result.Enqueue(new("load raw starter ships", () => { StarterShipRegistry.LoadRawManifests(); }));
             //patch starting ship
             patched_result.Enqueue(new("patch starter ships", () => { StarterShipRegistry.PatchStarterShips(); }));
             //return new action queue
