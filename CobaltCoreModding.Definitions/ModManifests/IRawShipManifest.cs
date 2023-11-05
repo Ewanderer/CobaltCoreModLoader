@@ -2,7 +2,7 @@
 
 namespace CobaltCoreModding.Definitions.ModManifests
 {
-    public interface IRawShipManifest
+    public interface IRawShipManifest : IManifest
     {
         public void LoadManifest(IRawShipRegistry shipRegistry);
     }
