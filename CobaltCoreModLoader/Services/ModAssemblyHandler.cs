@@ -65,14 +65,18 @@ namespace CobaltCoreModLoader.Services
             return manifest;
         }
 
-        public void LoadModAssembly(FileInfo mod_file)
+        public void LoadModAssembly(FileInfo mod_file, DirectoryInfo game_folder)
         {
             try
             {
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
-                    ExtractManifestFromAssembly(assembly, mod_file.Directory ?? throw new Exception("Mod file has no parent directory!"));
+                    ExtractManifestFromAssembly(
+                        assembly,
+                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!"),
+                        game_folder
+                    );
             }
             catch (Exception err)
             {
@@ -80,10 +84,10 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
+        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory, DirectoryInfo game_directory)
         {
             if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly, working_directory);
+                ExtractManifestFromAssembly(assembly, working_directory, game_directory);
 
             return true;
         }
@@ -99,7 +103,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
+        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory, DirectoryInfo game_directory)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
 
@@ -120,6 +124,8 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 //set working directoy
                 spawned_manifest.ModRootFolder = working_directory;
+                spawned_manifest.GameRootFolder = game_directory;
+
 
                 //sort manifest into the various manifest lists.
                 if (!registered_manifests.TryAdd(spawned_manifest.Name, spawned_manifest))

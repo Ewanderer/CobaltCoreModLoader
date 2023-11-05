@@ -20,7 +20,8 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// </summary>
         /// <param name="assembly"></param>
         /// <param name="working_directory">The directory which serves as the mod loader path. to ensure it can find physcial resources.</param>
+        /// <param name="game_directory">The directory containing the game's exe.</param>
         /// <returns></returns>
-        public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory);
+        public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory, DirectoryInfo game_directory);
     }
 }
