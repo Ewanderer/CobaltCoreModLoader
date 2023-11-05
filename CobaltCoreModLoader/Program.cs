@@ -111,6 +111,9 @@ public static class Program
         var directory = setting_service.CobaltCoreModLibPath ?? throw new Exception("missing path");
         if (!directory.Exists)
             return;
+
+        var gameDirectory = setting_service.CobaltCoreGamePath;
+        
         foreach (var folder in directory.EnumerateDirectories())
         {
             //check for a dll with the same name as the folder and load it.
@@ -118,7 +121,7 @@ public static class Program
             var mod_lib_file = folder.EnumerateFiles().FirstOrDefault(e => string.Compare(e.Extension, ".dll", true) == 0 && string.Compare(Path.GetFileNameWithoutExtension(e.Name), folder.Name, true) == 0);
             if (mod_lib_file != null)
             {
-                mod_loader.LoadModAssembly(mod_lib_file);
+                mod_loader.LoadModAssembly(mod_lib_file, gameDirectory);
             }
             else
             {
