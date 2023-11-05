@@ -24,6 +24,7 @@ namespace CobaltCoreModLoader.Services
         private static HashSet<Assembly> modAssemblies = new();
         private static List<IModManifest> modManifests = new();
         private static List<IRawShipManifest> rawShipManifests = new();
+        private static List<IRawStartershipManifest> rawStartershipManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<IShipManifest> shipManifests = new();
         private static List<IShipPartManifest> shippartsManifests = new();
@@ -51,6 +52,7 @@ namespace CobaltCoreModLoader.Services
         public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
         public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
         public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
+        public static IEnumerable<IRawStartershipManifest> RawStartershipManifests => rawStartershipManifests.ToArray();
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
@@ -157,6 +159,8 @@ namespace CobaltCoreModLoader.Services
                     rawShipManifests.Add(rawShipManifest);
                 if (spanwed_manifest is IStartershipManifest startership_manifest)
                     startershipManifests.Add(startership_manifest);
+                if (spanwed_manifest is IRawStartershipManifest rawStartership_manifest)
+                    rawStartershipManifests.Add(rawStartership_manifest);
             }
         }
     }
