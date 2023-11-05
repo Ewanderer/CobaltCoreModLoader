@@ -1,43 +1,70 @@
 ﻿using CobaltCoreModLoader.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CobaltCoreModLoaderApp
 {
     public class LauncherUI
     {
-        /// <summary>
-        /// The horizontal stakc in the main window. tabs are packed at bottom
-        /// top
-        /// </summary>
-        private Gtk.Box? window_content_panel;
+        public string launch_path = "";
+
+        public Settings settings = new Settings();
+
+        private bool cobalt_core_launched;
+
+        private Gtk.Entry? CobaltCorePathEntry;
+
+        private bool launched_once = false;
+
         /// <summary>
         /// The main panel
         /// </summary>
         private Gtk.Box? main_panel;
+
         /// <summary>
         /// The main window
         /// </summary>
         private Gtk.Window? main_window;
+
+        private Gtk.ListBox? mod_list_box;
+
+        private Gtk.Box? ModifyModListButtonsBox;
+
+        private bool mods_loaded = false;
+
+        private Gtk.Separator? separator;
+
         /// <summary>
         /// the lookup of tab buttons and tab containers.
         /// </summary>
         private Dictionary<Gtk.Button, Gtk.Box> Tabs = new();
+
         /// <summary>
         /// The container for buttons to store
         /// </summary>
         private Gtk.Box? TabSelection;
+
         /// <summary>
         /// The task which holds the app.
         /// </summary>
         private Task? uiTask;
 
-        private Gtk.Separator? separator;
+        private bool warmup_done = false;
 
+        /// <summary>
+        /// The horizontal stakc in the main window. tabs are packed at bottom
+        /// top
+        /// </summary>
+        private Gtk.Box? window_content_panel;
 
         public LauncherUI(IHost moddedCobaltCoreApp)
         {
@@ -50,6 +77,27 @@ namespace CobaltCoreModLoaderApp
         {
             if (uiTask != null)
                 return;
+
+            launch_path = Directory.GetCurrentDirectory();
+
+            //load settings
+            try
+            {
+                var settings_path = Path.Combine(launch_path, "LauncherSettings.json");
+                if (File.Exists(settings_path))
+                {
+                    using (var file = File.OpenRead(settings_path))
+                    {
+                        settings = JsonSerializer.Deserialize<Settings>(file) ?? new Settings();
+                        //remove all mod files no longer existing
+                        settings.ModAssemblyPaths.RemoveAll(modpath => !File.Exists(modpath));
+                    }
+                }
+            }
+            catch
+            {
+                //Ignore we already have setting.
+            }
 
             uiTask = new Task(() =>
             {
@@ -72,6 +120,98 @@ namespace CobaltCoreModLoaderApp
             await uiTask;
         }
 
+        public bool Warmup()
+        {
+            if (CobaltCorePathEntry == null)
+                return false;
+            if (warmup_done)
+                return true;
+            string cc_exe_path = "";
+            if (!File.Exists(CobaltCorePathEntry.Text))
+            {
+                if (!Directory.Exists(CobaltCorePathEntry.Text))
+                {
+                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "No Game path give!");
+                    dg.Run();
+                    dg.Destroy();
+
+                    return false;
+                }
+                cc_exe_path = System.IO.Path.Combine(CobaltCorePathEntry.Text, System.IO.Path.GetFileName("CobaltCore.exe"));
+                if (!File.Exists(cc_exe_path))
+                {
+                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "Game directory doesn't contain cobalt core.exe");
+                    dg.Run();
+                    dg.Destroy();
+                    return false;
+                }
+            }
+            else
+            {
+                if (string.Compare("CobaltCore.exe", new FileInfo(CobaltCorePathEntry.Text).Name) != 0)
+                {
+                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "File given is not CobaltCore.exe");
+                    dg.Run();
+                    dg.Destroy();
+                    return false;
+                }
+                cc_exe_path = CobaltCorePathEntry.Text;
+            }
+
+            //load cobalt core exe, which is required.
+            try
+            {
+                var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreModLoader.Services.CobaltCoreHandler>();
+
+                svc.LoadupCobaltCore(new System.IO.FileInfo(cc_exe_path));
+
+                //copy over other dlls, because gtk messed
+                HotfixMissingDll(cc_exe_path);
+                settings.CobaltCorePath = cc_exe_path;
+                warmup_done = true;
+            }
+            catch (Exception err)
+            {
+                var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
+                dg.Run();
+                dg.Destroy();
+            }
+            return warmup_done;
+        }
+
+        private void Add_Assembly_btn_Pressed(object? sender, EventArgs e)
+        {
+            if (main_window == null || mod_list_box == null)
+                return;
+            var fcd = new Gtk.FileChooserDialog("Pick Mod Assembly File", main_window, Gtk.FileChooserAction.Open, Gtk.FileChooserAction.Open);
+            fcd.AddButton(Gtk.Stock.Cancel, Gtk.ResponseType.Cancel);
+            fcd.AddButton(Gtk.Stock.Open, Gtk.ResponseType.Ok);
+            fcd.SetCurrentFolder(launch_path);
+            var response = (Gtk.ResponseType)fcd.Run();
+
+            if (response == Gtk.ResponseType.Ok)
+            {
+                try
+                {
+                    var assembly_name = AssemblyName.GetAssemblyName(fcd.Filename);
+                    if (!settings.ModAssemblyPaths.Contains(fcd.Filename))
+                    {
+                        settings.ModAssemblyPaths.Add(fcd.Filename);
+                        MakeModRow(fcd.Filename);
+                    }
+                }
+                catch (Exception err)
+                {
+                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
+                    dg.Run();
+                    dg.Destroy();
+                }
+
+            }
+            fcd.Destroy();
+
+        }
+
         private void AddPanel(string tab_name, Gtk.Box box)
         {
             if (window_content_panel == null || TabSelection == null)
@@ -87,9 +227,7 @@ namespace CobaltCoreModLoaderApp
             box.Show();
         }
 
-        private Gtk.Entry? CobaltCorePathEntry;
-
-
+        private Gtk.CheckButton? close_launcher_on_start_checkbox;
 
         private void CreateMainPanel()
         {
@@ -108,22 +246,71 @@ namespace CobaltCoreModLoaderApp
 
                 CobaltCorePathEntry = new Gtk.Entry();
                 CobaltCorePathEntry.Expand = true;
-                root_path_box.PackStart(CobaltCorePathEntry, true, true, 5);
-
+                root_path_box.PackStart(CobaltCorePathEntry, false, false, 5);
+                CobaltCorePathEntry.Text = settings.CobaltCorePath ?? "";
 
                 root_path_box.ShowAll();
             }
             {
                 // display list of mods.
-                var mod_list = new Gtk.ListBox();
+                mod_list_box = new Gtk.ListBox();
+                mod_list_box.SelectionMode = Gtk.SelectionMode.Single;
+                foreach (var p in settings.ModAssemblyPaths)
+                {
+                    MakeModRow(p);
+                }
+                main_panel.PackStart(mod_list_box, true, true, 5);
+
+                mod_list_box.ShowAll();
             }
 
             {
                 //buttons row for new mod loading
+                ModifyModListButtonsBox = new Gtk.Box(Gtk.Orientation.Horizontal, 5);
+                main_panel.PackStart(ModifyModListButtonsBox, false, true, 5);
+
+                //pack buttons into the box
+
+                var Add_assembly_btn = new Gtk.Button();
+                Add_assembly_btn.Label = "Add Assembly";
+                Add_assembly_btn.Pressed += Add_Assembly_btn_Pressed;
+                ModifyModListButtonsBox.PackStart(Add_assembly_btn, false, false, 5);
+
+                var scan_folder_for_mod_btn = new Gtk.Button();
+                scan_folder_for_mod_btn.Label = "Scan Folder for Mods";
+                scan_folder_for_mod_btn.Pressed += Scan_folder_for_mod_btn_Pressed;
+                ModifyModListButtonsBox.PackStart(scan_folder_for_mod_btn, true, true, 5);
+
+                var remove_assembly_btn = new Gtk.Button();
+                remove_assembly_btn.Label = "Remove Assembly";
+                remove_assembly_btn.Pressed += Remove_assembly_btn_Pressed;
+
+                ModifyModListButtonsBox.PackStart(remove_assembly_btn, false, false, 5);
+                ModifyModListButtonsBox.ShowAll();
             }
 
             {
                 //prewarm and close on launch checkmark
+
+                var LoadModBox = new Gtk.Box(Gtk.Orientation.Horizontal, 5);
+                main_panel.PackStart(LoadModBox, false, true, 5);
+
+                //pack buttons into the box
+
+
+
+                var load_mod_buttons = new Gtk.Button();
+                load_mod_buttons.Label = "Preload Mods";
+                load_mod_buttons.Pressed += (sender, evt) => { LoadMods(); load_mod_buttons.Sensitive = false; };
+                LoadModBox.PackStart(load_mod_buttons, true, true, 5);
+
+                close_launcher_on_start_checkbox = new Gtk.CheckButton();
+                close_launcher_on_start_checkbox.Label = "Close Launcher after Start";
+
+                LoadModBox.PackStart(close_launcher_on_start_checkbox, true, true, 5);
+
+                LoadModBox.ShowAll();
+
             }
 
             {
@@ -139,27 +326,43 @@ namespace CobaltCoreModLoaderApp
             AddPanel("Main", main_panel);
         }
 
-        bool mods_loaded = false;
-
-        private bool LoadMods()
+        private void FinishSetup()
         {
+            if (main_panel == null || TabSelection == null)
+                throw new Exception();
 
-            if (mods_loaded)
-                return true;
-            //feed all listed manifest to assembly handler
-            var svc = ModdedCobaltCoreApp.Services.GetRequiredService<ModAssemblyHandler>();
+            main_window?.ShowAll();
 
+            //hide tabs if only one tab there.
 
+            if (Tabs.Count == 1)
+            {
+                TabSelection.Hide();
+                separator?.Hide();
+            }
 
-            //launch preload manifests
-
-            //launch modify loader ui manifests
-
-            mods_loaded = true;
-            return true;
+            foreach (var tab in Tabs.Values)
+            {
+                if (tab != main_panel)
+                    tab.Hide();
+            }
         }
 
-        bool launched_once = false;
+        /// <summary>
+        /// Until someone figures out a better solution, this is a hotpatch to avoid dll missing despite working directory being adjusted to cc path.
+        /// </summary>
+        /// <param name="cobalt_exe_path"></param>
+        /// <exception cref="Exception"></exception>
+        private void HotfixMissingDll(string cobalt_exe_path)
+        {
+            var directory = new FileInfo(cobalt_exe_path)?.Directory ?? throw new Exception("Broken get directory.");
+
+            foreach (var lib_file in directory.GetFiles("*.dll", SearchOption.TopDirectoryOnly))
+            {
+                var path = Path.Combine(Directory.GetCurrentDirectory(), lib_file.Name);
+                lib_file.CopyTo(path, true);
+            }
+        }
 
         private void LaunchBtn_Clicked(object? sender, EventArgs evt)
         {
@@ -201,113 +404,139 @@ namespace CobaltCoreModLoaderApp
             //run remaining mod logic
             ModdedCobaltCoreApp.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
 
-
             var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreHandler>();
+
+            if (close_launcher_on_start_checkbox != null) {
+                settings.CloseLauncherAfterLaunch = close_launcher_on_start_checkbox.Active;
+            }
+
+            //write all settings
+            try
+            {
+                var settings_path = Path.Combine(launch_path, "LauncherSettings.json");
+                using (var file = File.Create(settings_path))
+                {
+                    JsonSerializer.Serialize<Settings>(file, settings);
+                }
+            }
+            catch
+            {
+            }
+            //launch game
             var task = new Task(() =>
              {
                  svc.RunCobaltCore(new string[] { "--debug" }, false);
              }, TaskCreationOptions.LongRunning);
             task.Start();
             cobalt_core_launched = true;
-            // Close();
+            if (settings.CloseLauncherAfterLaunch)
+                main_window?.Close();
         }
 
-        bool warmup_done = false;
-
-        public bool Warmup()
+        private bool LoadMods()
         {
-            if (CobaltCorePathEntry == null)
-                return false;
-            if (warmup_done)
+            if (mods_loaded)
                 return true;
-            string cc_exe_path = "";
-            if (!File.Exists(CobaltCorePathEntry.Text))
-            {
+            //feed all listed manifest to assembly handler
+            var svc = ModdedCobaltCoreApp.Services.GetRequiredService<ModAssemblyHandler>();
 
-                if (!Directory.Exists(CobaltCorePathEntry.Text))
-                {
-                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "No Game path give!");
-                    dg.Show();
-                    return false;
-                }
-                cc_exe_path = System.IO.Path.Combine(CobaltCorePathEntry.Text, System.IO.Path.GetFileName("CobaltCore.exe"));
-                if (!File.Exists(cc_exe_path))
-                {
-                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "Game directory doesn't contain cobalt core.exe");
-                    dg.Show();
-                    return false;
-                }
-            }
-            else
+            foreach (var assembly_file in settings.ModAssemblyPaths)
             {
-                if (string.Compare("CobaltCore.exe", new FileInfo(CobaltCorePathEntry.Text).Name) != 0)
-                {
-                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "File given is not CobaltCore.exe");
-                    dg.Show();
-                    return false;
-                }
-                cc_exe_path = CobaltCorePathEntry.Text;
+                svc.LoadModAssembly(new FileInfo(assembly_file));
             }
 
-            //load cobalt core exe, which is required.
-            try
-            {
-                var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreModLoader.Services.CobaltCoreHandler>();
+            if (ModifyModListButtonsBox != null)
+                ModifyModListButtonsBox.Sensitive = false;
 
-                svc.LoadupCobaltCore(new System.IO.FileInfo(cc_exe_path));
+            //launch preload manifests
+#warning todo
 
-                //copy over other dlls, because gtk messed
-                HotfixMissingDll(cc_exe_path);
-                warmup_done = true;
-            }
-            catch (Exception err)
-            {
-                var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
-                dg.Show();
-            }
-            return warmup_done;
+            //launch modify loader ui manifests
+#warning todo
+            mods_loaded = true;
+            return true;
         }
 
-        private void HotfixMissingDll(string cobalt_exe_path)
+        private void MakeModRow(string file_name)
         {
-
-            var directory = new FileInfo(cobalt_exe_path)?.Directory??throw new Exception("Broken get directory.");
-
-            foreach (var lib_file in directory.GetFiles("*.dll", SearchOption.TopDirectoryOnly))
-            {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), lib_file.Name);
-                lib_file.CopyTo(path, true);
-            }
-
+            if (mod_list_box == null)
+                return;
+            var row = new Gtk.ListBoxRow();
+            var label = new Gtk.Label();
+            label.Text = file_name;
+            row.Add(label);
+            row.ShowAll();
+            mod_list_box.Add(row);
         }
 
-        private void FinishSetup()
+        private void Remove_assembly_btn_Pressed(object? sender, EventArgs e)
         {
-            if (main_panel == null || TabSelection == null)
-                throw new Exception();
-
-            main_window?.ShowAll();
-
-            //hide tabs if only one tab there.
-
-            if (Tabs.Count == 1)
-            {
-                TabSelection.Hide();
-                separator?.Hide();
-
-            }
-
-            foreach (var tab in Tabs.Values)
-            {
-                if (tab != main_panel)
-                    tab.Hide();
-            }
-
-
+            if (mod_list_box == null)
+                return;
+            var row = mod_list_box.SelectedRow;
+            if (row == null)
+                return;
+            if (row.Child is not Gtk.Label lbl)
+                return;
+            var text = lbl.Text;
+            settings.ModAssemblyPaths.Remove(text);
+            mod_list_box.Remove(row);
 
         }
 
-        bool cobalt_core_launched;
+        private void Scan_folder_for_mod_btn_Pressed(object? sender, EventArgs e)
+        {
+            if (main_window == null || mod_list_box == null)
+                return;
+            var fcd = new Gtk.FileChooserDialog("Pick Mod Library Folder", main_window, Gtk.FileChooserAction.SelectFolder, Gtk.FileChooserAction.SelectFolder);
+            fcd.AddButton(Gtk.Stock.Cancel, Gtk.ResponseType.Cancel);
+            fcd.AddButton(Gtk.Stock.Open, Gtk.ResponseType.Ok);
+            fcd.SetCurrentFolder(launch_path);
+            var response = (Gtk.ResponseType)fcd.Run();
+
+            if (response == Gtk.ResponseType.Ok)
+            {
+                //check all directories in directoy.              
+
+                if (!Directory.Exists(fcd.Filename))
+                {
+                    var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, "Directory not existing!");
+                    dg.Run();
+                    dg.Destroy();
+                }
+                else
+                {
+                    foreach (var dir in Directory.GetDirectories(fcd.Filename))
+                    {
+                        var directory = new DirectoryInfo(dir);
+                        var manifest_file = directory.GetFiles().FirstOrDefault(f => string.Compare(f.Name, directory.Name + ".dll", true) == 0);
+                        if (manifest_file != null)
+                        {
+                            try
+                            {
+                                var assembly_name = AssemblyName.GetAssemblyName(manifest_file.FullName);
+                                if (!settings.ModAssemblyPaths.Contains(manifest_file.FullName))
+                                {
+                                    settings.ModAssemblyPaths.Add(manifest_file.FullName);
+                                    MakeModRow(manifest_file.FullName);
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
+                                dg.Run();
+                                dg.Destroy();
+                            }
+                        }
+
+                    }
+                }
+
+
+
+            }
+            fcd.Destroy();
+        }
 
         private void Setup()
         {
@@ -322,7 +551,6 @@ namespace CobaltCoreModLoaderApp
             };
             window_content_panel = new Gtk.Box(Gtk.Orientation.Vertical, 5);
             main_window.Add(window_content_panel);
-
 
             TabSelection = new Gtk.Box(Gtk.Orientation.Horizontal, 10);
 
