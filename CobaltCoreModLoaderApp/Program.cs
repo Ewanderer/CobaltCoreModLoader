@@ -1,18 +1,18 @@
 ﻿using CobaltCoreModLoader.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace CobaltCoreModLoaderApp
 {
     public static class Program
     {
-        [STAThread]
-        private static int Main(string[] args)
+       // [STAThread]
+        private static void Main(string[] args)
         {
             //build cobalt core
             var modded_cobalt_core_builder = new HostApplicationBuilder();
@@ -37,22 +37,20 @@ namespace CobaltCoreModLoaderApp
             modded_cobalt_core_builder.Services.AddSingleton<StarterShipRegistry>();
 
 
-            //actualize
+            //actualize cobalt core modded app.
             var modded_cobalt_core_app = modded_cobalt_core_builder.Build() ?? throw new Exception();
 
-            var loader_app_builder = WpfApplication<LoaderApp, LoaderMainWindow>.CreateBuilder(args);
-            //cross reference the mooded cobalt core app in the loader.
-            loader_app_builder.Services.AddSingleton(svc => new HeartService(modded_cobalt_core_app, modded_cobalt_core_app.Services.GetRequiredService<IHostApplicationLifetime>()));
-            var loader_app = loader_app_builder.Build();
-            //boot modded cobalt core app to make services available. 
-            var mod_task = modded_cobalt_core_app.RunAsync();
-            //boot loader app for the user to interact.
-            _ = loader_app.RunAsync();
-            // wait for both the loader and the modded cobalt core to shutdown
+            var loader_ui = new LauncherUI(modded_cobalt_core_app);
 
-            mod_task.Wait();
 
-            return 0;
+            var mcca = modded_cobalt_core_app.RunAsync();
+
+            loader_ui.Launch();
+
+            loader_ui.WaitTillClosed().Wait();
+            mcca.Wait();
+
+
         }
     }
 }
