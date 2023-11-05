@@ -44,7 +44,7 @@ namespace DemoMod
              damageModifier = PDamMod.weak,
              type = PType.cannon,
          },
-         ExternalSprite.GetRaw((int)Spr.parts_cannon_freezeB));
+         ExternalSprite.GetRaw((int)Spr.)parts_cannon_freezeB);
 
         private ExternalPart Launcher = new ExternalPart(
          "EWanderer.Demomod.DemoShip.Launcher",
