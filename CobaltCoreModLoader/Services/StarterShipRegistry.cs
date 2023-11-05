@@ -192,7 +192,6 @@ namespace CobaltCoreModLoader.Services
         public void RunLogic()
         {
             LoadManifests();
-            LoadRawManifests();
             //patch StoryVars.GetUnlockedShips() to spill all extra ships.
             var harmony = new Harmony("modloader.startershipregistry.general");
 
