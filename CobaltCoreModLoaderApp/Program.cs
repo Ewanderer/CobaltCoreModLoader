@@ -34,14 +34,18 @@ namespace CobaltCoreModLoaderApp
             //actualize cobalt core modded app.
             var modded_cobalt_core_app = modded_cobalt_core_builder.Build() ?? throw new Exception();
 
+            _ = modded_cobalt_core_app.RunAsync();
             var loader_ui = new LauncherUI(modded_cobalt_core_app);
-
-            var mcca = modded_cobalt_core_app.RunAsync();
 
             loader_ui.Launch();
 
+
+
             loader_ui.WaitTillClosed().Wait();
-            mcca.Wait();
+
+
+            loader_ui.CobaltCoreGameTask?.Wait();
+
         }
     }
 }

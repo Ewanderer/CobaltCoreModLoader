@@ -64,6 +64,7 @@ namespace CobaltCoreModLoaderApp
         /// top
         /// </summary>
         private Gtk.Box? window_content_panel;
+        private Gtk.Button? load_mod_button;
 
         public LauncherUI(IHost moddedCobaltCoreApp)
         {
@@ -263,7 +264,7 @@ namespace CobaltCoreModLoaderApp
                 scroll_container.Add(mod_list_box);
 
                 main_panel.PackStart(scroll_container, true, true, 5);
-            
+
 
                 scroll_container.ShowAll();
             }
@@ -301,13 +302,14 @@ namespace CobaltCoreModLoaderApp
 
                 //pack buttons into the box
 
-                var load_mod_buttons = new Gtk.Button();
-                load_mod_buttons.Label = "Preload Mods";
-                load_mod_buttons.Pressed += (sender, evt) => { LoadMods(); load_mod_buttons.Sensitive = false; };
-                LoadModBox.PackStart(load_mod_buttons, true, true, 5);
+                load_mod_button = new Gtk.Button();
+                load_mod_button.Label = "Preload Mods";
+                load_mod_button.Pressed += (sender, evt) => { LoadMods(); load_mod_button.Sensitive = false; };
+                LoadModBox.PackStart(load_mod_button, true, true, 5);
 
                 close_launcher_on_start_checkbox = new Gtk.CheckButton();
                 close_launcher_on_start_checkbox.Label = "Close Launcher after Start";
+                close_launcher_on_start_checkbox.Active = settings.CloseLauncherAfterLaunch;
 
                 LoadModBox.PackStart(close_launcher_on_start_checkbox, true, true, 5);
 
@@ -364,6 +366,8 @@ namespace CobaltCoreModLoaderApp
                 lib_file.CopyTo(path, true);
             }
         }
+
+        public Task? CobaltCoreGameTask { get; private set; }
 
         private void LaunchBtn_Clicked(object? sender, EventArgs evt)
         {
@@ -425,11 +429,11 @@ namespace CobaltCoreModLoaderApp
             {
             }
             //launch game
-            var task = new Task(() =>
+            CobaltCoreGameTask = new Task(() =>
              {
-                 svc.RunCobaltCore(new string[] { "--debug" }, false);
+                 svc.RunCobaltCore(new string[] { "--debug" });
              }, TaskCreationOptions.LongRunning);
-            task.Start();
+            CobaltCoreGameTask.Start();
             cobalt_core_launched = true;
             if (settings.CloseLauncherAfterLaunch)
                 main_window?.Close();
@@ -455,7 +459,11 @@ namespace CobaltCoreModLoaderApp
 
             //launch modify loader ui manifests
 #warning todo
+
+            if (load_mod_button != null)
+                load_mod_button.Sensitive = false;
             mods_loaded = true;
+
             return true;
         }
 
