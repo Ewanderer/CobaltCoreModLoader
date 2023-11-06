@@ -2,16 +2,22 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using Serilog;
+using System.IO;
 
 namespace CobaltCoreModLoaderApp
 {
     public static class Program
     {
-        // [STAThread]
+        [STAThread]
         private static void Main(string[] args)
         {
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.json");
+            Log.Logger = new LoggerConfiguration().WriteTo.File(path, rollOnFileSizeLimit: true, retainedFileCountLimit: 2).CreateLogger();
             //build cobalt core
             var modded_cobalt_core_builder = new HostApplicationBuilder();
+
+            modded_cobalt_core_builder.Services.AddSerilog();
 
             modded_cobalt_core_builder.Services.AddSingleton<SettingService>();
             modded_cobalt_core_builder.Services.AddSingleton<CobaltCoreHandler>();
@@ -38,8 +44,6 @@ namespace CobaltCoreModLoaderApp
             var loader_ui = new LauncherUI(modded_cobalt_core_app);
 
             loader_ui.Launch();
-
-
 
             loader_ui.WaitTillClosed().Wait();
 
