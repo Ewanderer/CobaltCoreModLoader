@@ -432,6 +432,7 @@ namespace CobaltCoreModLoaderApp
             CobaltCoreGameTask = new Task(() =>
              {
                  svc.RunCobaltCore(new string[] { "--debug" });
+                 Gtk.Application.Quit();
              }, TaskCreationOptions.LongRunning);
             CobaltCoreGameTask.Start();
             cobalt_core_launched = true;
