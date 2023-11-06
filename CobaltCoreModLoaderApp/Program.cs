@@ -12,7 +12,7 @@ namespace CobaltCoreModLoaderApp
         [STAThread]
         private static void Main(string[] args)
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.json");
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             Log.Logger = new LoggerConfiguration().WriteTo.File(path, rollOnFileSizeLimit: true, retainedFileCountLimit: 2).CreateLogger();
             //build cobalt core
             var modded_cobalt_core_builder = new HostApplicationBuilder();
