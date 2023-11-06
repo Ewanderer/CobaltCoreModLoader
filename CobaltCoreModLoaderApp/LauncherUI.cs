@@ -240,23 +240,32 @@ namespace CobaltCoreModLoaderApp
                 label.Expand = false;
 
                 CobaltCorePathEntry = new Gtk.Entry();
-                CobaltCorePathEntry.Expand = true;
-                root_path_box.PackStart(CobaltCorePathEntry, false, false, 5);
+
+                root_path_box.PackStart(CobaltCorePathEntry, true, true, 5);
                 CobaltCorePathEntry.Text = settings.CobaltCorePath ?? "";
 
                 root_path_box.ShowAll();
             }
             {
                 // display list of mods.
+                var scroll_container = new Gtk.ScrolledWindow();
+                scroll_container.SetPolicy(Gtk.PolicyType.Automatic, Gtk.PolicyType.Always);
                 mod_list_box = new Gtk.ListBox();
+                scroll_container.HScrollbar.WidthRequest = 25;
+                scroll_container.VScrollbar.WidthRequest = 25;
+
                 mod_list_box.SelectionMode = Gtk.SelectionMode.Single;
                 foreach (var p in settings.ModAssemblyPaths)
                 {
                     MakeModRow(p);
                 }
-                main_panel.PackStart(mod_list_box, true, true, 5);
 
-                mod_list_box.ShowAll();
+                scroll_container.Add(mod_list_box);
+
+                main_panel.PackStart(scroll_container, true, true, 5);
+            
+
+                scroll_container.ShowAll();
             }
 
             {
