@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
 using System.Reflection;
+using System.Threading;
 
 namespace CobaltCoreModLoader.Services
 {
@@ -15,6 +16,8 @@ namespace CobaltCoreModLoader.Services
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
         private ILogger<CobaltCoreHandler> logger;
         private IHostApplicationLifetime appLifetime;
+
+ 
 
         public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger, IHostApplicationLifetime appLifetime)
         {
@@ -118,7 +121,7 @@ namespace CobaltCoreModLoader.Services
         /// Startsup cobalt core game.
         /// </summary>
         /// <param name="args">arguments to be passed to cobalt core game for starting.</param>
-        public void RunCobaltCore(string[] args, bool shutdow = true)
+        public void RunCobaltCore(string[] args)
         {
             var entry_point = CobaltCoreAssembly?.EntryPoint ?? throw new Exception("No entry point in cobalt core dll!");
             if (CobaltCoreAppPath == null)
@@ -136,9 +139,8 @@ namespace CobaltCoreModLoader.Services
             }
             finally
             {
-              //  Directory.SetCurrentDirectory(current_dir);
-                if (shutdow)
-                    appLifetime.StopApplication();
+                 Directory.SetCurrentDirectory(current_dir);                    
+                appLifetime.StopApplication();
             }
         }
     }
