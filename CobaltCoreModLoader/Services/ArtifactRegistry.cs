@@ -175,7 +175,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        internal void LoadManifests()
+        public void LoadManifests()
         {
             foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
             {
