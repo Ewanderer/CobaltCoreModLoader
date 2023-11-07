@@ -112,9 +112,6 @@ public static class Program
         if (!directory.Exists)
             return;
 
-        // If gameDirectory isn't set, there will be an earlier exception
-        var gameDirectory = setting_service.CobaltCoreGamePath!;
-        
         foreach (var folder in directory.EnumerateDirectories())
         {
             //check for a dll with the same name as the folder and load it.
@@ -122,7 +119,7 @@ public static class Program
             var mod_lib_file = folder.EnumerateFiles().FirstOrDefault(e => string.Compare(e.Extension, ".dll", true) == 0 && string.Compare(Path.GetFileNameWithoutExtension(e.Name), folder.Name, true) == 0);
             if (mod_lib_file != null)
             {
-                mod_loader.LoadModAssembly(mod_lib_file, gameDirectory);
+                mod_loader.LoadModAssembly(mod_lib_file);
             }
             else
             {

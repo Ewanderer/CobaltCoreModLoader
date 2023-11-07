@@ -65,7 +65,7 @@ namespace CobaltCoreModLoader.Services
             return manifest;
         }
 
-        public void LoadModAssembly(FileInfo mod_file, DirectoryInfo game_folder)
+        public void LoadModAssembly(FileInfo mod_file)
         {
             try
             {
@@ -74,8 +74,7 @@ namespace CobaltCoreModLoader.Services
                 if (modAssemblies.Add(assembly))
                     ExtractManifestFromAssembly(
                         assembly,
-                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!"),
-                        game_folder
+                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!")
                     );
             }
             catch (Exception err)
@@ -84,10 +83,10 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory, DirectoryInfo game_directory)
+        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly, working_directory, game_directory);
+                ExtractManifestFromAssembly(assembly, working_directory);
 
             return true;
         }
@@ -103,7 +102,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory, DirectoryInfo game_directory)
+        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
 
@@ -124,7 +123,7 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 //set working directoy
                 spawned_manifest.ModRootFolder = working_directory;
-                spawned_manifest.GameRootFolder = game_directory;
+                spawned_manifest.GameRootFolder = CobaltCoreHandler.CobaltCoreAppPath;
 
 
                 //sort manifest into the various manifest lists.
