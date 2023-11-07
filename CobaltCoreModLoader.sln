@@ -4,17 +4,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModLoader", "CobaltCoreModLoader\CobaltCoreModLoader.csproj", "{6C8AE2F2-8172-492B-811E-EF52107B2E56}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09} = {9F1AD777-5427-457C-80E7-1D48A9B6BA09}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SingleFileExtractor.Core", "SingleFileExtractor\src\SingleFileExtractor.Core\SingleFileExtractor.Core.csproj", "{1465D284-FEF2-44F6-90F5-3F96A8CB029E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitions", "CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj", "{FF855EB2-EE7D-45F0-A683-D71D60148DF3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoMod", "DemoMod\DemoMod.csproj", "{9F1AD777-5427-457C-80E7-1D48A9B6BA09}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CobaltCoreModLoaderApp", "CobaltCoreModLoaderApp\CobaltCoreModLoaderApp.csproj", "{337C792F-56B0-4883-97B0-325225692110}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModLoaderApp", "CobaltCoreModLoaderApp\CobaltCoreModLoaderApp.csproj", "{337C792F-56B0-4883-97B0-325225692110}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,14 +43,6 @@ Global
 		{FF855EB2-EE7D-45F0-A683-D71D60148DF3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FF855EB2-EE7D-45F0-A683-D71D60148DF3}.Release|x64.ActiveCfg = Release|Any CPU
 		{FF855EB2-EE7D-45F0-A683-D71D60148DF3}.Release|x64.Build.0 = Release|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Debug|x64.Build.0 = Debug|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|x64.ActiveCfg = Release|Any CPU
-		{9F1AD777-5427-457C-80E7-1D48A9B6BA09}.Release|x64.Build.0 = Release|Any CPU
 		{337C792F-56B0-4883-97B0-325225692110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{337C792F-56B0-4883-97B0-325225692110}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{337C792F-56B0-4883-97B0-325225692110}.Debug|x64.ActiveCfg = Debug|Any CPU
