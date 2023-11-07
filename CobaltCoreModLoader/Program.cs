@@ -113,6 +113,7 @@ public static class Program
         var directory = setting_service.CobaltCoreModLibPath ?? throw new Exception("missing path");
         if (!directory.Exists)
             return;
+
         foreach (var folder in directory.EnumerateDirectories())
         {
             //check for a dll with the same name as the folder and load it.

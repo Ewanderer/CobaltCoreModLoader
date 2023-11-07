@@ -72,7 +72,10 @@ namespace CobaltCoreModLoader.Services
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
                 var assembly = Assembly.LoadFile(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
-                    ExtractManifestFromAssembly(assembly, mod_file.Directory ?? throw new Exception("Mod file has no parent directory!"));
+                    ExtractManifestFromAssembly(
+                        assembly,
+                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!")
+                    );
             }
             catch (Exception err)
             {
@@ -105,10 +108,10 @@ namespace CobaltCoreModLoader.Services
 
             foreach (var type in manifest_types)
             {
-                IManifest? spanwed_manifest = null;
+                IManifest? spawned_manifest = null;
                 try
                 {
-                    spanwed_manifest = Activator.CreateInstance(type) as IManifest;
+                    spawned_manifest = Activator.CreateInstance(type) as IManifest;
                 }
                 catch
                 {
@@ -116,50 +119,52 @@ namespace CobaltCoreModLoader.Services
                     continue;
                 }
                 //should not happen so we don't bother with logging
-                if (spanwed_manifest == null)
+                if (spawned_manifest == null)
                     continue;
                 //set working directoy
-                spanwed_manifest.ModRootFolder = working_directory;
+                spawned_manifest.ModRootFolder = working_directory;
+                spawned_manifest.GameRootFolder = CobaltCoreHandler.CobaltCoreAppPath;
+
 
                 //sort manifest into the various manifest lists.
-                if (!registered_manifests.TryAdd(spanwed_manifest.Name, spanwed_manifest))
+                if (!registered_manifests.TryAdd(spawned_manifest.Name, spawned_manifest))
                 {
-                    logger.LogCritical("Collision in manifest name {0}. skipping type {1} for {2}", spanwed_manifest.Name, type.Name, registered_manifests[spanwed_manifest.Name].GetType().Name);
+                    logger.LogCritical("Collision in manifest name {0}. skipping type {1} for {2}", spawned_manifest.Name, type.Name, registered_manifests[spawned_manifest.Name].GetType().Name);
                     continue;
                 }
-                if (spanwed_manifest is IModManifest mod_manifest)
+                if (spawned_manifest is IModManifest mod_manifest)
                     modManifests.Add(mod_manifest);
-                if (spanwed_manifest is ISpriteManifest sprite_manifest)
+                if (spawned_manifest is ISpriteManifest sprite_manifest)
                     spriteManifests.Add(sprite_manifest);
-                if (spanwed_manifest is IDBManifest db_manifest)
+                if (spawned_manifest is IDBManifest db_manifest)
                     dBManifests.Add(db_manifest);
-                if (spanwed_manifest is IAnimationManifest anim_manifest)
+                if (spawned_manifest is IAnimationManifest anim_manifest)
                     animationManifests.Add(anim_manifest);
-                if (spanwed_manifest is IDeckManifest deckManifest)
+                if (spawned_manifest is IDeckManifest deckManifest)
                     deckManifests.Add(deckManifest);
-                if (spanwed_manifest is ICardManifest card_manifest)
+                if (spawned_manifest is ICardManifest card_manifest)
                     cardManifests.Add(card_manifest);
-                if (spanwed_manifest is ICardOverwriteManifest card_overwrite_manifest)
+                if (spawned_manifest is ICardOverwriteManifest card_overwrite_manifest)
                     cardOverwriteManifests.Add(card_overwrite_manifest);
-                if (spanwed_manifest is ICharacterManifest character_manifest)
+                if (spawned_manifest is ICharacterManifest character_manifest)
                     characterManifests.Add(character_manifest);
-                if (spanwed_manifest is IGlossaryManifest glossary_manifest)
+                if (spawned_manifest is IGlossaryManifest glossary_manifest)
                     glossaryManifests.Add(glossary_manifest);
-                if (spanwed_manifest is IArtifactManifest artifact_manifest)
+                if (spawned_manifest is IArtifactManifest artifact_manifest)
                     artifactManifests.Add(artifact_manifest);
-                if (spanwed_manifest is IStatusManifest status_manifest)
+                if (spawned_manifest is IStatusManifest status_manifest)
                     statusManifests.Add(status_manifest);
-                if (spanwed_manifest is ICustomEventManifest event_manifest)
+                if (spawned_manifest is ICustomEventManifest event_manifest)
                     customEventManifests.Add(event_manifest);
-                if (spanwed_manifest is IShipPartManifest ship_part_manifest)
+                if (spawned_manifest is IShipPartManifest ship_part_manifest)
                     shippartsManifests.Add(ship_part_manifest);
-                if (spanwed_manifest is IShipManifest shipManifest)
+                if (spawned_manifest is IShipManifest shipManifest)
                     shipManifests.Add(shipManifest);
-                if (spanwed_manifest is IRawShipManifest rawShipManifest)
+                if (spawned_manifest is IRawShipManifest rawShipManifest)
                     rawShipManifests.Add(rawShipManifest);
-                if (spanwed_manifest is IStartershipManifest startership_manifest)
+                if (spawned_manifest is IStartershipManifest startership_manifest)
                     startershipManifests.Add(startership_manifest);
-                if (spanwed_manifest is IRawStartershipManifest rawStartership_manifest)
+                if (spawned_manifest is IRawStartershipManifest rawStartership_manifest)
                     rawStartershipManifests.Add(rawStartership_manifest);
             }
         }
