@@ -20,7 +20,7 @@ namespace CobaltCoreModLoader.Services
         }
 
         public static Assembly? CobaltCoreAssembly { get; private set; }
-        public DirectoryInfo? CobaltCoreAppPath { get; private set; }
+        public static DirectoryInfo? CobaltCoreAppPath { get; private set; }
 
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded!");
 
