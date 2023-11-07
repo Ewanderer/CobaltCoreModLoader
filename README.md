@@ -15,7 +15,7 @@ This repo features the following components:
 
 # Using the Modloader App
 
-![mod_loader_image](.\images\mod_loader_image.png)
+![LauncherUI](https://github.com/Ewanderer/CobaltCoreModLoader/blob/master/images/mod_loader_image.png)
 
 The loader is at its core extremely minimalistic. It only needs the Path to the Cobalt Core Executable (Directory or File are fine). And then a list of mod assembly files (*.dll). Either single files or a complete directory are permissible with the letter scanning all first level subdirectories for libraries of the same name within.
 
