@@ -44,6 +44,8 @@ public static class Program
             var setting_service = host.Services.GetRequiredService<SettingService>();
             //load cobalt core assembly
             var cobalt_core = host.Services.GetRequiredService<CobaltCoreHandler>();
+
+
             cobalt_core.LoadupCobaltCore(new FileInfo(Path.Combine(setting_service.CobaltCoreGamePath?.FullName ?? throw new Exception("Missing path"), Path.GetFileName("CobaltCore.exe"))));
             //load mods and their manifests.
             PickupModsFromLib();
