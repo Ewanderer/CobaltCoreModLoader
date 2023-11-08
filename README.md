@@ -31,6 +31,8 @@ If ModLibrary folder was scanned, the loader would add DemoMod.dll to the list. 
 
 Once all mods have been selected, they can either be preloaded or cobalt core can be launched immediately. Preloading is intended for mods that touch the Launcher UI itself, to run their code while the game is still out. This hasn't been implemented fully, but for the sake of future use it will be documented here.
 
+If you are worried about saves, don't be, as the loader will create a new set of save files within it's own directory. Should you wish to port your files over, you just have to copy them there. Otherwise try to not tinker to much with mods after getting a savefile up, as certain dynamic properties can end up in the save file and confuse the game on future launches, if mods have changed.
+
 # Writing Mods
 
 The process of making a mod is relatively simple:
