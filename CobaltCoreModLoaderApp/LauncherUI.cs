@@ -18,6 +18,7 @@ namespace CobaltCoreModLoaderApp
         public Settings settings = new Settings();
 
         private Gtk.CheckButton? close_launcher_on_start_checkbox;
+        private Gtk.CheckButton? start_dev_mode_checkbox;
         private bool cobalt_core_launched;
 
         private Gtk.Entry? CobaltCorePathEntry;
@@ -307,13 +308,30 @@ namespace CobaltCoreModLoaderApp
                 load_mod_button.Pressed += (sender, evt) => { LoadMods(); load_mod_button.Sensitive = false; };
                 LoadModBox.PackStart(load_mod_button, true, true, 5);
 
+
+
+                LoadModBox.ShowAll();
+            }
+            {
+                //launch settings.
+                var settings_panel_box = new Gtk.Box(Gtk.Orientation.Vertical, 5);
+                main_panel.PackStart(settings_panel_box, false, true, 5);
+
                 close_launcher_on_start_checkbox = new Gtk.CheckButton();
                 close_launcher_on_start_checkbox.Label = "Close Launcher after Start";
                 close_launcher_on_start_checkbox.Active = settings.CloseLauncherAfterLaunch;
 
-                LoadModBox.PackStart(close_launcher_on_start_checkbox, true, true, 5);
+                main_panel.PackStart(close_launcher_on_start_checkbox, true, true, 5);
 
-                LoadModBox.ShowAll();
+
+
+                start_dev_mode_checkbox = new Gtk.CheckButton();
+                start_dev_mode_checkbox.Label = "Lauch in Dev Mode";
+                start_dev_mode_checkbox.Active = settings.LaunchInDeveloperMode;
+
+                main_panel.PackStart(start_dev_mode_checkbox, true, true, 5);
+
+                settings_panel_box.ShowAll();
             }
 
             {
@@ -416,6 +434,11 @@ namespace CobaltCoreModLoaderApp
                 settings.CloseLauncherAfterLaunch = close_launcher_on_start_checkbox.Active;
             }
 
+            if (start_dev_mode_checkbox != null)
+            {
+                settings.LaunchInDeveloperMode = start_dev_mode_checkbox.Active;
+            }
+
             //write all settings
             try
             {
@@ -431,7 +454,14 @@ namespace CobaltCoreModLoaderApp
             //launch game
             CobaltCoreGameTask = new Task(() =>
              {
-                 svc.RunCobaltCore(new string[] { "--debug" });
+                 if (settings.LaunchInDeveloperMode)
+                 {
+                     svc.RunCobaltCore(new string[] { "--debug" });
+                 }
+                 else
+                 {
+                     svc.RunCobaltCore(new string[0]);
+                 }
                  Gtk.Application.Quit();
              }, TaskCreationOptions.LongRunning);
             CobaltCoreGameTask.Start();
