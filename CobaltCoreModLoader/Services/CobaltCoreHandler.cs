@@ -17,7 +17,7 @@ namespace CobaltCoreModLoader.Services
         private ILogger<CobaltCoreHandler> logger;
         private IHostApplicationLifetime appLifetime;
 
- 
+
 
         public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger, IHostApplicationLifetime appLifetime)
         {
@@ -88,10 +88,19 @@ namespace CobaltCoreModLoader.Services
                 return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(e => e.FullName == evt.Name);
             };
 
+
+
             //trip feature flag in assemly
             var is_modded_feature_flag_field = CobaltCoreAssembly.GetType("FeatureFlags")?.GetField("Modded", BindingFlags.Static | BindingFlags.Public);
             is_modded_feature_flag_field?.SetValue(null, true);
 
+            //set save path.
+            if (Environment.ProcessPath != null)
+            {
+                var save_path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(System.Environment.ProcessPath)) ?? "", "ModSaves");
+                var OverrideSaveLocation_field = CobaltCoreAssembly.GetType("FeatureFlags")?.GetField("OverrideSaveLocation", BindingFlags.Static | BindingFlags.Public);
+                OverrideSaveLocation_field?.SetValue(null, save_path);
+            }
             // LoadAssociatedLibraries();
 
         }
@@ -139,7 +148,7 @@ namespace CobaltCoreModLoader.Services
             }
             finally
             {
-                 Directory.SetCurrentDirectory(current_dir);                    
+                Directory.SetCurrentDirectory(current_dir);
                 appLifetime.StopApplication();
             }
         }
