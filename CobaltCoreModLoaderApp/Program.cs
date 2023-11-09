@@ -15,6 +15,7 @@ namespace CobaltCoreModLoaderApp
             Directory.CreateDirectory("Outputs");
             // var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
+            var path_fallback = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "Crash.txt");
             try
             {
                 Log.Logger = new LoggerConfiguration().WriteTo.File(path, rollOnFileSizeLimit: true, retainedFileCountLimit: 2).CreateLogger();
@@ -56,7 +57,7 @@ namespace CobaltCoreModLoaderApp
             }
             catch (Exception err)
             {         
-                File.WriteAllLines(path, new string[] { err.ToString(), err.StackTrace ?? "", err.InnerException?.Message ?? "", err.InnerException?.StackTrace ?? "" });
+                File.WriteAllLines(path_fallback, new string[] { err.ToString(), err.StackTrace ?? "", err.InnerException?.Message ?? "", err.InnerException?.StackTrace ?? "" });
             }
 
         }
