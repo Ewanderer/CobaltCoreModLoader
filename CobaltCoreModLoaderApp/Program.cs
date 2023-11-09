@@ -12,6 +12,8 @@ namespace CobaltCoreModLoaderApp
         [STAThread]
         private static void Main(string[] args)
         {
+            Directory.CreateDirectory("Outputs");
+            // var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             try
             {
@@ -53,7 +55,7 @@ namespace CobaltCoreModLoaderApp
                 loader_ui.CobaltCoreGameTask?.Wait();
             }
             catch (Exception err)
-            {
+            {         
                 File.WriteAllLines(path, new string[] { err.ToString(), err.StackTrace ?? "", err.InnerException?.Message ?? "", err.InnerException?.StackTrace ?? "" });
             }
 
