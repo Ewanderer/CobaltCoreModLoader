@@ -1,6 +1,7 @@
 ﻿using CobaltCoreModLoader.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -76,8 +77,10 @@ namespace CobaltCoreModLoaderApp
 
         public void Launch()
         {
+            var logger = ModdedCobaltCoreApp.Services.GetService<ILogger<LauncherUI>>();
             if (uiTask != null)
                 return;
+            logger?.LogInformation("booting ui...");
 
             launch_path = Directory.GetCurrentDirectory();
 
@@ -102,12 +105,20 @@ namespace CobaltCoreModLoaderApp
 
             uiTask = new Task(() =>
             {
-                Setup();
-                CreateMainPanel();
-                //insert modded tabs.
-                FinishSetup();
-                //Run
-                Gtk.Application.Run();
+                try
+                {
+                    logger?.LogInformation("Running launcher ui task...");
+                    Setup();
+                    CreateMainPanel();
+                    //insert modded tabs.
+                    FinishSetup();
+                    //Run
+                    Gtk.Application.Run();
+                }
+                catch (Exception err)
+                {
+                    logger?.LogError(err, "launcher had error");
+                }
             }, TaskCreationOptions.LongRunning);
             uiTask.Start();
         }
@@ -123,6 +134,7 @@ namespace CobaltCoreModLoaderApp
 
         public bool Warmup()
         {
+            var logger = ModdedCobaltCoreApp.Services.GetService<ILogger<LauncherUI>>();
             if (CobaltCorePathEntry == null)
                 return false;
             if (warmup_done)
@@ -158,7 +170,7 @@ namespace CobaltCoreModLoaderApp
                 }
                 cc_exe_path = CobaltCorePathEntry.Text;
             }
-
+            
             //load cobalt core exe, which is required.
             try
             {
@@ -170,9 +182,11 @@ namespace CobaltCoreModLoaderApp
                 HotfixMissingDll(cc_exe_path);
                 settings.CobaltCorePath = cc_exe_path;
                 warmup_done = true;
+                logger?.LogInformation("Warmup of cobalt core complete");
             }
             catch (Exception err)
             {
+                logger?.LogError(err,"error during loading cobalt core executable");
                 var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
                 dg.Run();
                 dg.Destroy();
@@ -393,6 +407,7 @@ namespace CobaltCoreModLoaderApp
                 return;
             if (!LoadMods())
                 return;
+            var logger = ModdedCobaltCoreApp.Services.GetService<ILogger<LauncherUI>>();
 
             //run all remaining services.
 
@@ -454,6 +469,7 @@ namespace CobaltCoreModLoaderApp
             //launch game
             CobaltCoreGameTask = new Task(() =>
              {
+                 logger?.LogInformation("launching cobalt core");
                  if (settings.LaunchInDeveloperMode)
                  {
                      svc.RunCobaltCore(new string[] { "--debug" });
@@ -476,7 +492,8 @@ namespace CobaltCoreModLoaderApp
                 return true;
             //feed all listed manifest to assembly handler
             var svc = ModdedCobaltCoreApp.Services.GetRequiredService<ModAssemblyHandler>();
-
+            var logger = ModdedCobaltCoreApp.Services.GetService<ILogger<LauncherUI>>();
+            logger?.LogInformation("loading mods...");
             foreach (var assembly_file in settings.ModAssemblyPaths)
             {
                 svc.LoadModAssembly(new FileInfo(assembly_file));
