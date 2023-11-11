@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using CobaltCoreModLoader.Utils;
 
 namespace CobaltCoreModLoaderApp
 {
@@ -258,7 +259,7 @@ namespace CobaltCoreModLoaderApp
                 CobaltCorePathEntry = new Gtk.Entry();
 
                 root_path_box.PackStart(CobaltCorePathEntry, true, true, 5);
-                CobaltCorePathEntry.Text = settings.CobaltCorePath ?? "";
+                CobaltCorePathEntry.Text = settings.CobaltCorePath ?? FindGameFolder.FindGamePath();
 
                 root_path_box.ShowAll();
             }
