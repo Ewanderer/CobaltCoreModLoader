@@ -23,6 +23,7 @@
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
     <PackageReference Include="System.Reflection.MetadataLoadContext" Version="7.0.0" />
     <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
+    <PackageReference Include="VdfConverter" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>
