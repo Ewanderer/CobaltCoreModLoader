@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Definitio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModLoaderApp", "CobaltCoreModLoaderApp\CobaltCoreModLoaderApp.csproj", "{337C792F-56B0-4883-97B0-325225692110}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CobaltCoreModLoaderClassic", "CobaltCoreModLoaderClassic\CobaltCoreModLoaderClassic.csproj", "{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,14 @@ Global
 		{337C792F-56B0-4883-97B0-325225692110}.Release|Any CPU.Build.0 = Release|Any CPU
 		{337C792F-56B0-4883-97B0-325225692110}.Release|x64.ActiveCfg = Release|Any CPU
 		{337C792F-56B0-4883-97B0-325225692110}.Release|x64.Build.0 = Release|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Debug|x64.Build.0 = Debug|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|x64.ActiveCfg = Release|Any CPU
+		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

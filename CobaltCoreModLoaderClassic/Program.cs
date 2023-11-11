@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using CobaltCoreModLoader.Services;
+﻿using CobaltCoreModLoader.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
