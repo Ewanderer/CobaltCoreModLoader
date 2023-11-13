@@ -164,6 +164,7 @@
             btnFindGame.TabIndex = 3;
             btnFindGame.Text = "Locate Game";
             btnFindGame.UseVisualStyleBackColor = true;
+            btnFindGame.Click += btnFindGame_Click;
             // 
             // btnWarmupMods
             // 

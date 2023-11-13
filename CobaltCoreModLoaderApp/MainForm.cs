@@ -223,7 +223,7 @@ namespace CobaltCoreModLoaderApp
                         return;
                     foreach (var folder in dir.GetDirectories())
                     {
-                        var mod_file = folder.GetFiles().FirstOrDefault(e => string.Compare(e.Name, folder.Name, true) == 0);
+                        var mod_file = folder.GetFiles().FirstOrDefault(e => string.Compare(Path.GetFileNameWithoutExtension(e.Name), folder.Name, true) == 0);
                         if (mod_file == null)
                             continue;
                         if (settings.ModEntries.Any(e => string.Compare(e.AssemblyPath, mod_file.FullName, true) == 0))
@@ -292,6 +292,29 @@ namespace CobaltCoreModLoaderApp
         private void clbModLibrary_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             settings.ModEntries[e.Index].Active = e.NewValue == CheckState.Checked;
+        }
+
+        private void btnFindGame_Click(object sender, EventArgs e)
+        {
+            //put code for autodetecting path.
+
+            //fallback on just opening cobalt core exe.
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Pick CobaltCore.exe";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    if (!dialog.CheckFileExists)
+                        return;
+                    var file_name = dialog.FileName;
+                    if (string.Compare("CobaltCore.exe", Path.GetFileName(file_name), true) != 0)
+                    {
+                        MessageBox.Show("Selected File is not CobaltCore.exe");
+                        return;
+                    }
+                    tbPath.Text = file_name;
+                }
+            }
         }
     }
 }
