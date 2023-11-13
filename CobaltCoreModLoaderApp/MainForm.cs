@@ -1,5 +1,4 @@
-﻿using Cairo;
-using CobaltCoreModLoader.Services;
+﻿using CobaltCoreModLoader.Services;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -206,7 +205,6 @@ namespace CobaltCoreModLoaderApp
                 {
                     svc.RunCobaltCore(new string[0]);
                 }
-                Gtk.Application.Quit();
             }, TaskCreationOptions.LongRunning);
             CobaltCoreGameTask.Start();
             cobalt_core_launched = true;
