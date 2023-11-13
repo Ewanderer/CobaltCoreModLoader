@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using Serilog;
 using System.IO;
+using System.Windows.Forms;
 
 namespace CobaltCoreModLoaderApp
 {
@@ -16,6 +17,7 @@ namespace CobaltCoreModLoaderApp
             // var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             var path = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "LastLog.txt");
             var path_fallback = Path.Combine(Directory.GetCurrentDirectory(), "Outputs", "Crash.txt");
+      
             try
             {
                 Log.Logger = new LoggerConfiguration().WriteTo.File(path, rollOnFileSizeLimit: true, retainedFileCountLimit: 2).CreateLogger();
@@ -41,22 +43,20 @@ namespace CobaltCoreModLoaderApp
                 modded_cobalt_core_builder.Services.AddSingleton<PartRegistry>();
                 modded_cobalt_core_builder.Services.AddSingleton<ShipRegistry>();
                 modded_cobalt_core_builder.Services.AddSingleton<StarterShipRegistry>();
-            
+
                 //actualize cobalt core modded app.
                 var modded_cobalt_core_app = modded_cobalt_core_builder.Build() ?? throw new Exception();
 
                 _ = modded_cobalt_core_app.RunAsync();
-                var loader_ui = new LauncherUI(modded_cobalt_core_app);
-
-                loader_ui.Launch();
-
-                loader_ui.WaitTillClosed().Wait();
-
-
-                loader_ui.CobaltCoreGameTask?.Wait();
+     
+                // Run Mod loader form
+                var form = new MainForm(modded_cobalt_core_app);
+                Application.Run(form);
+                // Wait for game to close
+                form.CobaltCoreGameTask?.Wait();
             }
             catch (Exception err)
-            {         
+            {
                 File.WriteAllLines(path_fallback, new string[] { err.ToString(), err.StackTrace ?? "", err.InnerException?.Message ?? "", err.InnerException?.StackTrace ?? "" });
             }
 

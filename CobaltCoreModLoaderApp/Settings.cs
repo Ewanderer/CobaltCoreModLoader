@@ -8,6 +8,12 @@ namespace CobaltCoreModLoaderApp
         public bool LaunchInDeveloperMode { get; set; }
         public string? CobaltCorePath { get; set; }
 
-        public List<string> ModAssemblyPaths { get; set; } = new List<string>();
+        public List<ModEntry> ModEntries { get; set; } = new();
+
+        public class ModEntry {
+            public string AssemblyPath { get; set; } = "";
+
+            public bool Active { get; set; }
+        }
     }
 }

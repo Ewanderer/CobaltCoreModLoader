@@ -94,7 +94,7 @@ namespace CobaltCoreModLoaderApp
                     {
                         settings = JsonSerializer.Deserialize<Settings>(file) ?? new Settings();
                         //remove all mod files no longer existing
-                        settings.ModAssemblyPaths.RemoveAll(modpath => !File.Exists(modpath));
+                        settings.ModEntries.RemoveAll(entry => !File.Exists(entry.AssemblyPath));
                     }
                 }
             }
@@ -170,7 +170,7 @@ namespace CobaltCoreModLoaderApp
                 }
                 cc_exe_path = CobaltCorePathEntry.Text;
             }
-            
+
             //load cobalt core exe, which is required.
             try
             {
@@ -186,7 +186,7 @@ namespace CobaltCoreModLoaderApp
             }
             catch (Exception err)
             {
-                logger?.LogError(err,"error during loading cobalt core executable");
+                logger?.LogError(err, "error during loading cobalt core executable");
                 var dg = new Gtk.MessageDialog(main_window, Gtk.DialogFlags.DestroyWithParent, Gtk.MessageType.Warning, Gtk.ButtonsType.Ok, err.Message);
                 dg.Run();
                 dg.Destroy();
