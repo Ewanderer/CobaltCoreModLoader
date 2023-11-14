@@ -269,7 +269,7 @@ namespace CobaltCoreModLoaderApp
             {
                 if (!entry.Active)
                     continue;
-                svc.LoadModAssembly(new FileInfo(entry.AssemblyPath));
+                svc.LoadModAssembly(ModdedCobaltCoreApp, new FileInfo(entry.AssemblyPath));
             }
 
             btnAddAssembly.Enabled = false;

@@ -1,4 +1,5 @@
 ﻿using CobaltCoreModding.Definitions.ModManifests;
+using Microsoft.Extensions.Hosting;
 using System.Reflection;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
@@ -21,6 +22,6 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="assembly"></param>
         /// <param name="working_directory">The directory which serves as the mod loader path. to ensure it can find physcial resources.</param>
         /// <returns></returns>
-        public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory);
+        public bool RegisterNewAssembly(IHost host_for_loggingAssembly, Assembly assembly, DirectoryInfo working_directory);
     }
 }

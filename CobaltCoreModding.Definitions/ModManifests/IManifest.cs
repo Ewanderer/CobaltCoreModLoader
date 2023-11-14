@@ -1,4 +1,6 @@
-﻿namespace CobaltCoreModding.Definitions.ModManifests
+﻿using Microsoft.Extensions.Logging;
+
+namespace CobaltCoreModding.Definitions.ModManifests
 {
     /// <summary>
     /// Mods contain manifests, which the mod loader uses to have their data setup.
@@ -15,7 +17,13 @@
         /// Will be set by the mod loader to help a manifest find the game's root folder
         /// </summary>
         public DirectoryInfo? GameRootFolder { get; set; }
-        
+     
+        /// <summary>
+        /// Logger for this manifest/mod. Will log into the modloader's host, under the manifest's classname.
+        /// </summary>
+        public ILogger? Logger { get; set; }
+
+
         /// <summary>
         /// The unique modifier of this manifest. must be unique within and across all assemblies for mods.
         /// </summary>

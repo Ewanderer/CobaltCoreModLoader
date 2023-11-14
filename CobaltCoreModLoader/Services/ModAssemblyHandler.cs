@@ -1,5 +1,7 @@
 ﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
@@ -65,7 +67,7 @@ namespace CobaltCoreModLoader.Services
             return manifest;
         }
 
-        public void LoadModAssembly(FileInfo mod_file)
+        public void LoadModAssembly(IHost host_for_logging, FileInfo mod_file)
         {
             try
             {
@@ -73,6 +75,7 @@ namespace CobaltCoreModLoader.Services
                 var assembly = Assembly.LoadFile(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
                     ExtractManifestFromAssembly(
+                        host_for_logging,
                         assembly,
                         mod_file.Directory ?? throw new Exception("Mod file has no parent directory!")
                     );
@@ -83,10 +86,10 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
+        bool IModLoaderContact.RegisterNewAssembly(IHost host_for_logging, Assembly assembly, DirectoryInfo working_directory)
         {
             if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly, working_directory);
+                ExtractManifestFromAssembly(host_for_logging, assembly, working_directory);
 
             return true;
         }
@@ -102,7 +105,7 @@ namespace CobaltCoreModLoader.Services
             }
         }
 
-        private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
+        private void ExtractManifestFromAssembly(IHost host_for_logging, Assembly assembly, DirectoryInfo working_directory)
         {
             var manifest_types = assembly.GetTypes().Where(e => e.IsClass && !e.IsAbstract && e.GetInterface("IManifest") != null);
 
@@ -124,6 +127,8 @@ namespace CobaltCoreModLoader.Services
                 //set working directoy
                 spawned_manifest.ModRootFolder = working_directory;
                 spawned_manifest.GameRootFolder = CobaltCoreHandler.CobaltCoreAppPath;
+                //spawn a generic logger and fill in the generic parameters at runtime
+                spawned_manifest.Logger = (ILogger)host_for_logging.Services.GetService(typeof(ILogger<>).MakeGenericType(type));
 
 
                 //sort manifest into the various manifest lists.
