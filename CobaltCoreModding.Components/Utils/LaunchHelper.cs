@@ -2,17 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModdding.Components.Utils
 {
     public static class LaunchHelper
     {
-
         public static HostApplicationBuilder CreateBuilder()
         {
             HostApplicationBuilder builder = new HostApplicationBuilder();
@@ -38,16 +32,8 @@ namespace CobaltCoreModdding.Components.Utils
             return builder;
         }
 
-
-        public static void WarmupMods(IHost host)
-        {
-           
-       
-        }
-
         public static void PreLaunch(IHost host)
         {
-
             //patch cobalt core and load various mod components in order of dependency.
 
             //patch art.
@@ -80,9 +66,10 @@ namespace CobaltCoreModdding.Components.Utils
             host.Services.GetRequiredService<CustomEventHub>().LoadManifest();
             //run remaining mod logic
             host.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
-
-
         }
 
+        public static void WarmupMods(IHost host)
+        {
+        }
     }
 }
