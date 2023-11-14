@@ -1,13 +1,13 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModLoader.Utils;
+using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     public class StatusRegistry : IStatusRegistry
     {

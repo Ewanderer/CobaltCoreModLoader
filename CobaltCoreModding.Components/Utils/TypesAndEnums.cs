@@ -1,6 +1,6 @@
-﻿using CobaltCoreModLoader.Services;
+﻿using CobaltCoreModding.Components.Services;
 
-namespace CobaltCoreModLoader.Utils
+namespace CobaltCoreModding.Components.Utils
 {
     /// <summary>
     /// Just have all the relevant types from cobalt core types and enum conveter setup here.

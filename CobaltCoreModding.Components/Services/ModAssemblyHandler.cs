@@ -3,7 +3,7 @@ using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     /// <summary>
     /// A singleton to help store any assembly and its manifest.
