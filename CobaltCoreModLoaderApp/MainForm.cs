@@ -1,5 +1,6 @@
 ﻿using CobaltCoreModdding.Components.Utils;
 using CobaltCoreModding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -262,6 +263,20 @@ namespace CobaltCoreModLoaderApp
         private void btnFindGame_Click(object sender, EventArgs e)
         {
             //put code for autodetecting path.
+            try
+            {
+                var path = FindGameFolder.FindGamePath();
+                if (!string.IsNullOrWhiteSpace(path))
+                {
+                    MessageBox.Show("Cobalt Core automatically located. Check text box if you suspect error.");
+                    tbPath.Text = path;
+                    return;
+                }
+            }
+            catch
+            {
+
+            }
 
             //fallback on just opening cobalt core exe.
             using (var dialog = new OpenFileDialog())
