@@ -95,7 +95,7 @@ namespace CobaltCoreModLoader.Services
 
             {
                 var asm = CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("Missing Cobalt Core Assembly");
-                var invalid_cards = starterShip.ExtraCardTypes.Where(ct => ct.IsAssignableTo(TypesAndEnums.CardType) || !asm.DefinedTypes.Contains(ct));
+                var invalid_cards = starterShip.ExtraCardTypes.Where(ct => !ct.IsAssignableTo(TypesAndEnums.CardType) || !asm.DefinedTypes.Contains(ct));
                 if (invalid_cards.Any())
                 {
                     logger?.LogWarning("StarterShip {0} has invalid or not cc native extra card types: {1}", starterShip.GlobalName, string.Join(", ", invalid_cards.Select(p => p.Name)));
@@ -115,7 +115,7 @@ namespace CobaltCoreModLoader.Services
 
             {
                 var asm = CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("Missing Cobalt Core Assembly");
-                var invalid_artifacts = starterShip.ExtraArtifactTypes.Where(ct => ct.IsAssignableTo(TypesAndEnums.ArtifactType) || !asm.DefinedTypes.Contains(ct));
+                var invalid_artifacts = starterShip.ExtraArtifactTypes.Where(ct => !ct.IsAssignableTo(TypesAndEnums.ArtifactType) || !asm.DefinedTypes.Contains(ct));
                 if (invalid_artifacts.Any())
                 {
                     logger?.LogWarning("StarterShip {0} has invalid or not cc native extra artifacts types: {1}", starterShip.GlobalName, string.Join(", ", invalid_artifacts.Select(p => p.Name)));
