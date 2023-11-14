@@ -1,12 +1,12 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.OverwriteItems;
-using CobaltCoreModLoader.Utils;
+using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     /// <summary>
     /// This serice can be used to run patches

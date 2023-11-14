@@ -1,13 +1,13 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModLoader.Utils;
+using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections;
 using System.Reflection;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     /// <summary>
     /// Sprites are handled for the most part by a SpriteMapper and Sprite loader and a Sprite Enum.

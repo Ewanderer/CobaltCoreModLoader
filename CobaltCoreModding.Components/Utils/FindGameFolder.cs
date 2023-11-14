@@ -2,7 +2,7 @@ using System.Runtime.Versioning;
 using Microsoft.Win32;
 using VdfParser;
 
-namespace CobaltCoreModLoader.Utils;
+namespace CobaltCoreModding.Components.Utils;
 
 public static class FindGameFolder
 {

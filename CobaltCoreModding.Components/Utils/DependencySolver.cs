@@ -1,4 +1,4 @@
-﻿namespace CobaltCoreModLoader.Utils
+﻿namespace CobaltCoreModding.Components.Utils
 {
     public static class DependencySolver
     {

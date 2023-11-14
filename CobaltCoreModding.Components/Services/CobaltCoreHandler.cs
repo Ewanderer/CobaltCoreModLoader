@@ -5,7 +5,7 @@ using SingleFileExtractor.Core;
 using System.Reflection;
 using System.Threading;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     /// <summary>
     /// This class contains the logic to parse a CoboltCore executable and start it up on demand.

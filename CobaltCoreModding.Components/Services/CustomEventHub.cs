@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     public class CustomEventHub : ICustomEventHub
     {

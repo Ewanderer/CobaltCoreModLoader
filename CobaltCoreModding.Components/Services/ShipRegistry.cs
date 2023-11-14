@@ -1,11 +1,11 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModLoader.Utils;
+using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
 
-namespace CobaltCoreModLoader.Services
+namespace CobaltCoreModding.Components.Services
 {
     /// <summary>
     /// Ship registry allows for ship templates to be registered.

@@ -1,4 +1,5 @@
-﻿using CobaltCoreModLoader.Services;
+﻿using CobaltCoreModdding.Components.Utils;
+using CobaltCoreModding.Components.Services;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -91,7 +92,7 @@ namespace CobaltCoreModLoaderApp
             //load cobalt core exe, which is required.
             try
             {
-                var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreModLoader.Services.CobaltCoreHandler>();
+                var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreModding.Components.Services.CobaltCoreHandler>();
 
                 svc.LoadupCobaltCore(new System.IO.FileInfo(cc_exe_path));
 
@@ -143,36 +144,7 @@ namespace CobaltCoreModLoaderApp
 
             //run all remaining services.
 
-            //patch art.
-            ModdedCobaltCoreApp.Services.GetRequiredService<SpriteExtender>().PatchSpriteSystem();
-            //patch glossary
-            ModdedCobaltCoreApp.Services.GetRequiredService<GlossaryRegistry>().LoadManifests();
-            //patch deck
-            ModdedCobaltCoreApp.Services.GetRequiredService<DeckRegistry>().LoadManifests();
-            //patch status
-            ModdedCobaltCoreApp.Services.GetRequiredService<StatusRegistry>().LoadManifests();
-            //patch cards
-            ModdedCobaltCoreApp.Services.GetRequiredService<CardRegistry>().LoadManifests();
-            //card overwrites
-            ModdedCobaltCoreApp.Services.GetRequiredService<CardOverwriteRegistry>().LoadManifests();
-            //patch artifacts
-            ModdedCobaltCoreApp.Services.GetRequiredService<ArtifactRegistry>().LoadManifests();
-            //patch animation
-            ModdedCobaltCoreApp.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
-            //patch characters
-            ModdedCobaltCoreApp.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
-            //patch ship parts
-            ModdedCobaltCoreApp.Services.GetRequiredService<PartRegistry>().LoadManifests();
-            //load ship manifests.
-            ModdedCobaltCoreApp.Services.GetRequiredService<ShipRegistry>().LoadManifests();
-            //load starter ship manifests
-            ModdedCobaltCoreApp.Services.GetRequiredService<StarterShipRegistry>().RunLogic();
-            //patch db
-            ModdedCobaltCoreApp.Services.GetRequiredService<DBExtender>().PatchDB();
-            //load events
-            ModdedCobaltCoreApp.Services.GetRequiredService<CustomEventHub>().LoadManifest();
-            //run remaining mod logic
-            ModdedCobaltCoreApp.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
+            LaunchHelper.PreLaunch(ModdedCobaltCoreApp);
 
             var svc = ModdedCobaltCoreApp.Services.GetRequiredService<CobaltCoreHandler>();
 
@@ -275,15 +247,8 @@ namespace CobaltCoreModLoaderApp
             btnAddAssembly.Enabled = false;
             btnRemoveMod.Enabled = false;
             btnLoadFolder.Enabled = false;
-
-            //launch preload manifests
-#warning todo
-
-            //launch modify loader ui manifests
-#warning todo
-
             btnWarmupMods.Enabled = false;
-
+            LaunchHelper.WarmupMods(ModdedCobaltCoreApp);
             mods_loaded = true;
 
             return true;
