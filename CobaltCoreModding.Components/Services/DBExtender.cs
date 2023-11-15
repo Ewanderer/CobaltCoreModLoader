@@ -61,7 +61,6 @@ namespace CobaltCoreModding.Components.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
 
-            LoadDbManifests();
         }
 
         /// <summary>
@@ -196,14 +195,7 @@ namespace CobaltCoreModding.Components.Services
         {
         }
 
-        private void LoadDbManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.DBManifests)
-            {
-                if (manifest == null) continue;
-                manifest.LoadManifest(this);
-            }
-        }
+   
 
         /*
         private static void LoadAllSubclasses(Dictionary<string, Type>? target, Type? lookup_type)

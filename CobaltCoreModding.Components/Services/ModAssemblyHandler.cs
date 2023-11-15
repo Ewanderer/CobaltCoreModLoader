@@ -17,12 +17,11 @@ namespace CobaltCoreModding.Components.Services
         private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
         private static List<ICharacterManifest> characterManifests = new();
         private static List<ICustomEventManifest> customEventManifests = new();
-        private static List<IDBManifest> dBManifests = new();
+        private static List<IPrelaunchManifest> prelaunchManifests = new();
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
 
         private static HashSet<Assembly> modAssemblies = new();
-        private static List<IModManifest> modManifests = new();
         private static List<IRawShipManifest> rawShipManifests = new();
         private static List<IRawStartershipManifest> rawStartershipManifests = new();
         private static Dictionary<string, IManifest> registered_manifests = new();
@@ -31,6 +30,8 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<IAddinManifest> addinManifests = new();
+        private static List<IModManifest> bootManifests = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -43,11 +44,10 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
         public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
         public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
-        public static IEnumerable<IDBManifest> DBManifests => dBManifests.ToArray();
+        public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
         public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
         public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
-        public static IEnumerable<IModManifest> ModManifests => modManifests.ToArray();
         public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
         public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
         public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
@@ -55,6 +55,8 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IRawStartershipManifest> RawStartershipManifests => rawStartershipManifests.ToArray();
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+        public static IEnumerable<IAddinManifest> AddinManifests => addinManifests.ToArray();
+        public static IEnumerable<IModManifest> BootManifests => BootManifests.ToArray();
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
         IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
         private ILogger<ModAssemblyHandler> logger { get; init; }
@@ -63,6 +65,31 @@ namespace CobaltCoreModding.Components.Services
         {
             registered_manifests.TryGetValue(name, out var manifest);
             return manifest;
+        }
+
+        public void WarumMods(object? ui_object)
+        {
+            foreach (var manifest in ModAssemblyHandler.bootManifests)
+            {
+                if (manifest == null) continue;
+                manifest.BootMod(this);
+            }
+
+            foreach (var manifest in ModAssemblyHandler.addinManifests)
+            {
+                if (manifest == null)
+                    continue;
+                manifest.ModifyLauncher(ui_object);
+            }
+        }
+
+        public void FinalizeModLoading()
+        {
+            foreach (var manifest in ModAssemblyHandler.prelaunchManifests)
+            {
+                if (manifest == null) continue;
+                manifest.FinalizePreperations();
+            }
         }
 
         public void LoadModAssembly(FileInfo mod_file)
@@ -91,16 +118,7 @@ namespace CobaltCoreModding.Components.Services
             return true;
         }
 
-        public void RunModLogics()
-        {
-            for (int i = 0; i < modManifests.Count; i++)
-            {
-                var manifest = modManifests[i];
-                if (manifest == null)
-                    continue;
-                manifest.BootMod(this);
-            }
-        }
+
 
         private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
@@ -132,12 +150,10 @@ namespace CobaltCoreModding.Components.Services
                     logger.LogCritical("Collision in manifest name {0}. skipping type {1} for {2}", spawned_manifest.Name, type.Name, registered_manifests[spawned_manifest.Name].GetType().Name);
                     continue;
                 }
-                if (spawned_manifest is IModManifest mod_manifest)
-                    modManifests.Add(mod_manifest);
+
                 if (spawned_manifest is ISpriteManifest sprite_manifest)
                     spriteManifests.Add(sprite_manifest);
-                if (spawned_manifest is IDBManifest db_manifest)
-                    dBManifests.Add(db_manifest);
+
                 if (spawned_manifest is IAnimationManifest anim_manifest)
                     animationManifests.Add(anim_manifest);
                 if (spawned_manifest is IDeckManifest deckManifest)
@@ -166,6 +182,12 @@ namespace CobaltCoreModding.Components.Services
                     startershipManifests.Add(startership_manifest);
                 if (spawned_manifest is IRawStartershipManifest rawStartership_manifest)
                     rawStartershipManifests.Add(rawStartership_manifest);
+                if (spawned_manifest is IModManifest boot_manifest)
+                    bootManifests.Add(boot_manifest);
+                if (spawned_manifest is IPrelaunchManifest prelaunchManifest)
+                    prelaunchManifests.Add(prelaunchManifest);
+                if (spawned_manifest is IAddinManifest addinManifest)
+                    addinManifests.Add(addinManifest);
             }
         }
     }

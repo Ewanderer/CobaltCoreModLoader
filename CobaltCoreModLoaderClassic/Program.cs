@@ -34,7 +34,7 @@ public static class Program
             //load mods and their manifests.
             PickupModsFromLib();
             //Standard logic for mods to boot and mod ui
-            LaunchHelper.WarmupMods(host);   
+            host.Services.GetRequiredService<ModAssemblyHandler>().WarumMods(null);
             //perform necessary loading operations in the correct order
             LaunchHelper.PreLaunch(host);
             mod_boot_timer.Stop();
