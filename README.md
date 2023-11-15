@@ -8,7 +8,7 @@ It provides a pipeline to add sprites, cards, ships, characters and much more. W
 This repo features the following components:
 
 * **CobaltCoreModding.Definitions** These are the interfaces/descriptions for a mod to advertise it's content to the loader. See "About Writing Mods" for more details.
-* **CobaltCoreModLoader** The original loader that used a simple command line interface to do its job. Now it mostly serves to hold the logic of the mod loader in the form of many services that are fed into a generic host.
+* **CobaltCoreModding.Components** The original loader that used a simple command line interface to do its job. Now it mostly serves to hold the logic of the mod loader in the form of many services that are fed into a generic host.
 * **CobaltCoreModLoaderApp** The UI of the mod loader written with GTK sharp of all things. *(because making an UI was that cursed)*
 * **DemoMod** This project is a demonstration of the mod loaders capabilities. It requires a copy of the cobaltcore.dll extracted from CobaltCore.exe, which is why it's not part of the default solution. But along with the comments in Definitions, it should help understanding the mod process.
 * **[SingleFileExtractor](https://github.com/Droppers/SingleFileExtractor)** A submodule by Joery Droppers used to extract assemblies from CobaltCore.exe during runtime.
