@@ -65,11 +65,11 @@ namespace CobaltCoreModdding.Components.Utils
             //load events
             host.Services.GetRequiredService<CustomEventHub>().LoadManifest();
             //run remaining mod logic
-            host.Services.GetRequiredService<ModAssemblyHandler>().RunModLogics();
+            host.Services.GetRequiredService<ModAssemblyHandler>().FinalizeModLoading();
+
+           
         }
 
-        public static void WarmupMods(IHost host)
-        {
-        }
+       
     }
 }

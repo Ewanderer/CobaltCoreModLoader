@@ -249,7 +249,7 @@ namespace CobaltCoreModLoaderApp
             btnRemoveMod.Enabled = false;
             btnLoadFolder.Enabled = false;
             btnWarmupMods.Enabled = false;
-            LaunchHelper.WarmupMods(ModdedCobaltCoreApp);
+            svc.WarumMods(this);
             mods_loaded = true;
 
             return true;
