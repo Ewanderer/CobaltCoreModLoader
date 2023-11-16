@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Definitions;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using System;
@@ -15,6 +16,8 @@ namespace DemoMod
         public DirectoryInfo? GameRootFolder { get; set; }
 
         public string Name => "EWanderer.Demomod.DemoShipManifest";
+
+        public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
 
         private ExternalPart CrystalStructure = new ExternalPart(
             "EWanderer.Demomod.DemoShip.CrystalStructure",
