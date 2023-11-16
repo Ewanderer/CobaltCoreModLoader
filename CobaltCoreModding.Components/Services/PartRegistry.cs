@@ -4,6 +4,7 @@ using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
+using System;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -12,6 +13,7 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class PartRegistry : IShipPartRegistry
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private static readonly Dictionary<string, ExternalPart> registeredParts = new();
         private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
         private static ILogger<PartRegistry>? logger;
@@ -19,9 +21,11 @@ namespace CobaltCoreModding.Components.Services
 
         private static FieldInfo SkinField = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found.");
 
-        public PartRegistry(ILogger<PartRegistry> logger)
+        public PartRegistry(ILogger<PartRegistry> logger, ModAssemblyHandler mah)
         {
             PartRegistry.logger = logger;
+            modAssemblyHandler = mah;
+
         }
 
         /// <summary>
@@ -116,7 +120,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ShipPartsManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipPartsManifests,logger))
             {
                 manifest.LoadManifest(this);
             }

@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -11,6 +12,74 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class ModAssemblyHandler : IModLoaderContact
     {
+
+        private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
+
+
+        public IEnumerable<T> LoadOrderly<T>(IEnumerable<T> manifests, ILogger? missing_logger) where T : IManifest
+        {
+            var remaining_manifests = manifests.ToList();
+            loadedManifests.Add(typeof(T), new List<IManifest>());
+            while (remaining_manifests.Count > 0)
+            {
+                bool hit = false;
+                //turn through all remaining manifests
+                for (int i = 0; i < remaining_manifests.Count; i++)
+                {
+                    var candidate = remaining_manifests[i];
+                    bool failed = false;
+                    //check each dependency
+                    foreach (var dependency in candidate.Dependencies)
+                    {
+                        //Skip dependecies not yet relevant.
+                        if (!loadedManifests.Any(e => dependency.DependencyType.IsAssignableTo(e.Key)))
+                            continue;
+                        var loaded_list = loadedManifests.First(e => dependency.DependencyType.IsAssignableTo(e.Key)).Value;
+                        //check if dependeny has been loaded.
+                        if (!loaded_list.Any(m => string.Compare(m.Name, dependency.DependencyName) == 0))
+                        {
+                            failed = true;
+                            break;
+                        }
+                    }
+                    //check if failed
+                    if (failed)
+                        continue;
+                    //store as loaded. if there are exceptions during loading that is not our concern here.
+                    loadedManifests[typeof(T)].Add(candidate);
+                    remaining_manifests.RemoveAt(i);
+                    i--;
+                    hit = true;
+                    //put out for operation
+                    yield return candidate;
+                }
+                //no more dependencies cannot be loaded.
+                if (!hit)
+                    break;
+            }
+            //any remaining entries are unresolvabe and need to be reported.
+            if (missing_logger != null)
+            {
+                //report all levtover mods as broken
+                foreach (var leftover in remaining_manifests)
+                {
+                    //Determine missing dependency names
+                    var missing_dependency_names = leftover.Dependencies.Where(d =>
+                    {
+                        if (!loadedManifests.Any(e => d.DependencyType.IsAssignableTo(e.Key)))
+                            return false;
+                        var loaded_list = loadedManifests.First(e => d.DependencyType.IsAssignableTo(e.Key)).Value;
+                        //check if dependeny has been loaded.
+                        return !loaded_list.Any(m => string.Compare(m.Name, d.DependencyName) == 0);
+
+                    }).Select(e => e.DependencyName);
+                    var mdn_list = string.Join("\n", missing_dependency_names);
+                    missing_logger.LogCritical("The Manifest '{0}' is missing the following dependencies and thus cannot be loaded:\n {1}", leftover.Name, mdn_list);
+                }
+            }
+        }
+
+
         private static List<IAnimationManifest> animationManifests = new();
         private static List<IArtifactManifest> artifactManifests = new();
         private static List<ICardManifest> cardManifests = new();
@@ -20,11 +89,8 @@ namespace CobaltCoreModding.Components.Services
         private static List<IPrelaunchManifest> prelaunchManifests = new();
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
-
-        private static HashSet<Assembly> modAssemblies = new();
         private static List<IRawShipManifest> rawShipManifests = new();
         private static List<IRawStartershipManifest> rawStartershipManifests = new();
-        private static Dictionary<string, IManifest> registered_manifests = new();
         private static List<IShipManifest> shipManifests = new();
         private static List<IShipPartManifest> shippartsManifests = new();
         private static List<ISpriteManifest> spriteManifests = new();
@@ -33,6 +99,8 @@ namespace CobaltCoreModding.Components.Services
         private static List<IAddinManifest> addinManifests = new();
         private static List<IModManifest> bootManifests = new();
 
+        private static HashSet<Assembly> modAssemblies = new();
+        private static Dictionary<string, IManifest> registered_manifests = new();
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
             this.logger = logger;
@@ -69,13 +137,13 @@ namespace CobaltCoreModding.Components.Services
 
         public void WarumMods(object? ui_object)
         {
-            foreach (var manifest in ModAssemblyHandler.bootManifests)
+            foreach (var manifest in LoadOrderly(ModAssemblyHandler.bootManifests, logger))
             {
                 if (manifest == null) continue;
                 manifest.BootMod(this);
             }
 
-            foreach (var manifest in ModAssemblyHandler.addinManifests)
+            foreach (var manifest in LoadOrderly(ModAssemblyHandler.addinManifests, logger))
             {
                 if (manifest == null)
                     continue;
@@ -85,7 +153,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void FinalizeModLoading()
         {
-            foreach (var manifest in ModAssemblyHandler.prelaunchManifests)
+            foreach (var manifest in LoadOrderly(ModAssemblyHandler.prelaunchManifests, logger))
             {
                 if (manifest == null) continue;
                 manifest.FinalizePreperations();

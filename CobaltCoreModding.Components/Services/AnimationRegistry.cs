@@ -12,14 +12,17 @@ namespace CobaltCoreModding.Components.Services
 
         private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
 
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public AnimationRegistry(ILogger<IAnimationRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.AnimationManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.AnimationManifests, Logger))
                 manifest.LoadManifest(this);
         }
 

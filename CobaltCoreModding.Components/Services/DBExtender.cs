@@ -193,6 +193,7 @@ namespace CobaltCoreModding.Components.Services
         /// </summary>
         private static void PatchStory()
         {
+
         }
 
    

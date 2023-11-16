@@ -10,6 +10,9 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CardOverwriteRegistry : ICardOverwriteRegistry
     {
+
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         /// <summary>
         /// GlobalName -> Card Meta
         /// </summary>
@@ -27,11 +30,12 @@ namespace CobaltCoreModding.Components.Services
         public CardOverwriteRegistry(ILogger<ICardOverwriteRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.CardOverwriteManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardOverwriteManifests,Logger))
                 manifest.LoadManifest(this);
         }
 

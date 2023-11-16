@@ -9,6 +9,8 @@ namespace CobaltCoreModding.Components.Services
 {
     public class DeckRegistry : IDeckRegistry
     {
+
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private const int deck_counter_start = 1000000;
         private static int deck_counter = deck_counter_start;
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
@@ -18,11 +20,13 @@ namespace CobaltCoreModding.Components.Services
         public DeckRegistry(ILogger<IDeckRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.DeckManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.DeckManifests, Logger))
                 manifest.LoadManifest(this);
             PatchEnumExtension();
         }

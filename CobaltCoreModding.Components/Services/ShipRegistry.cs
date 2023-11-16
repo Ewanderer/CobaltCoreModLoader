@@ -4,6 +4,7 @@ using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
+using System;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -14,6 +15,7 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class ShipRegistry : IShipRegistry, IRawShipRegistry
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         /// <summary>
         /// This dictionary holds both external ships and raw ship object
         /// </summary>
@@ -29,11 +31,13 @@ namespace CobaltCoreModding.Components.Services
         private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
         private readonly PartRegistry partRegistry;
 
-        public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry)
+        public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry, ModAssemblyHandler mah)
         {
             ShipRegistry.logger = logger;
             this.partRegistry = partRegistry;
             ShipRegistry.instance = this;
+            modAssemblyHandler = mah;
+
         }
 
         /// <summary>
@@ -106,7 +110,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ShipManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipManifests,logger))
             {
                 manifest.LoadManifest(this);
             }

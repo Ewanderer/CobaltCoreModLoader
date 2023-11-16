@@ -10,6 +10,9 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CharacterRegistry : ICharacterRegistry
     {
+
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         private static ILogger<ICharacterRegistry>? Logger;
 
         private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
@@ -17,11 +20,13 @@ namespace CobaltCoreModding.Components.Services
         public CharacterRegistry(ILogger<ICharacterRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.CharacterManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CharacterManifests,Logger))
             {
                 manifest.LoadManifest(this);
             }

@@ -5,11 +5,13 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
+using System;
 
 namespace CobaltCoreModding.Components.Services
 {
     public class StarterShipRegistry : IStartershipRegistry, IRawStartershipRegistry
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
         private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
         private static readonly Dictionary<string, Dictionary<string, (string, string)>> rawLocalizations = new Dictionary<string, Dictionary<string, (string, string)>>();
@@ -25,12 +27,14 @@ namespace CobaltCoreModding.Components.Services
         private readonly ArtifactRegistry artifactRegistry;
         private readonly CardRegistry cardRegistry;
 
-        public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger)
+        public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger, ModAssemblyHandler mah)
         {
             this.cardRegistry = cardRegistry;
             this.artifactRegistry = artifactRegistry;
             StarterShipRegistry.logger = logger;
             instance = this;
+            modAssemblyHandler = mah;
+
         }
 
         public static void PatchStarterShips()
@@ -345,7 +349,7 @@ namespace CobaltCoreModding.Components.Services
 
         private void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.StartershipManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StartershipManifests,logger))
             {
                 manifest.LoadManifest(this);
             }

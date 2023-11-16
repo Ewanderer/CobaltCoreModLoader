@@ -1,11 +1,16 @@
-﻿using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace CobaltCoreModding.Components.Services
 {
     public class CustomEventHub : ICustomEventHub
     {
+
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         /// <summary>
         /// Similiar to volatileCustomEventLookup but with the assumption that the user can call DisconnectFromEvent function.
         /// </summary>
@@ -18,9 +23,11 @@ namespace CobaltCoreModding.Components.Services
 
         private static ILogger<CustomEventHub>? logger;
 
-        public CustomEventHub(ILogger<CustomEventHub> logger)
+        public CustomEventHub(ILogger<CustomEventHub> logger, ModAssemblyHandler mah)
         {
             CustomEventHub.logger = logger;
+            modAssemblyHandler = mah;
+
         }
 
         public bool ConnectToEvent<T>(string eventName, Action<T> handler)
@@ -89,7 +96,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifest()
         {
-            foreach (var manifest in ModAssemblyHandler.CustomEventManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CustomEventManifests,logger))
             {
                 manifest.LoadManifest(this);
             }

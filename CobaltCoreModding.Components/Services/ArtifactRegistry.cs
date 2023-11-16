@@ -8,6 +8,9 @@ namespace CobaltCoreModding.Components.Services
 {
     public class ArtifactRegistry : IArtifactRegistry
     {
+
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         /// <summary>
         /// Under what name artifacts are registered.
         /// </summary>
@@ -23,6 +26,7 @@ namespace CobaltCoreModding.Components.Services
         public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
         }
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
@@ -177,7 +181,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ArtifactManifests,Logger))
             {
                 manifest.LoadManifest(this);
             }

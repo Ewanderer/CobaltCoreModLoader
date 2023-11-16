@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections;
 using System.Reflection;
+using System;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -15,11 +16,14 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class SpriteExtender : IArtRegistry
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private static ILogger<SpriteExtender>? logger;
 
         public SpriteExtender(ILogger<SpriteExtender> logger, CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler)
         {
             SpriteExtender.logger = logger;
+            this.modAssemblyHandler = modAssemblyHandler;
+
         }
 
         private const int sprite_id_counter_start = 10000000;
@@ -51,7 +55,7 @@ namespace CobaltCoreModding.Components.Services
         private void RunArtManifest()
         {
             var sprite_manifests = ModAssemblyHandler.SpriteManifests;
-            foreach (var manifest in sprite_manifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(sprite_manifests, logger))
             {
                 manifest?.LoadManifest(this);
             }

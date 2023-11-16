@@ -8,11 +8,13 @@ namespace CobaltCoreModding.Components.Services
 {
     public class GlossaryRegistry : IGlossaryRegisty
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private static readonly Dictionary<string, ExternalGlossary> registered_glossary = new Dictionary<string, ExternalGlossary>();
         private static ILogger<IGlossaryRegisty>? Logger;
 
         public GlossaryRegistry(ILogger<IGlossaryRegisty> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
+            modAssemblyHandler = mah;
             Logger = logger;
         }
 
@@ -96,7 +98,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.GlossaryManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.GlossaryManifests, Logger))
             {
                 manifest.LoadManifest(this);
             }

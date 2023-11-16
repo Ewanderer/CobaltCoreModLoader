@@ -6,11 +6,13 @@ using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System;
 
 namespace CobaltCoreModding.Components.Services
 {
     public class StatusRegistry : IStatusRegistry
     {
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private const int status_id_counter_start = 1000000;
         private static readonly Dictionary<int, object> icon_lookup = new Dictionary<int, object>();
         private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
@@ -19,9 +21,11 @@ namespace CobaltCoreModding.Components.Services
         private static int status_id_counter = status_id_counter_start;
         private static FieldInfo? tt_glossary_key_field;
 
-        public StatusRegistry(ILogger<StatusRegistry>? logger)
+        public StatusRegistry(ILogger<StatusRegistry>? logger, ModAssemblyHandler mah)
         {
             StatusRegistry.logger = logger;
+            modAssemblyHandler = mah;
+
         }
 
         public static void PatchStatusData()
@@ -60,7 +64,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.StatusManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StatusManifests,logger))
             {
                 manifest.LoadManifest(this);
             }
