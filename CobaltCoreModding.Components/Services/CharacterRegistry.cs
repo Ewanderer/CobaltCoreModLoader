@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -10,23 +10,19 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CharacterRegistry : ICharacterRegistry
     {
-
-        private readonly ModAssemblyHandler modAssemblyHandler;
-
         private static ILogger<ICharacterRegistry>? Logger;
-
         private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public CharacterRegistry(ILogger<ICharacterRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
             modAssemblyHandler = mah;
-
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CharacterManifests,Logger))
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CharacterManifests, Logger))
             {
                 manifest.LoadManifest(this);
             }

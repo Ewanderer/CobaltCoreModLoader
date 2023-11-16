@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 
@@ -8,9 +8,6 @@ namespace CobaltCoreModding.Components.Services
 {
     public class ArtifactRegistry : IArtifactRegistry
     {
-
-        private readonly ModAssemblyHandler modAssemblyHandler;
-
         /// <summary>
         /// Under what name artifacts are registered.
         /// </summary>
@@ -23,10 +20,20 @@ namespace CobaltCoreModding.Components.Services
         /// </summary>
         private static Dictionary<string, ExternalArtifact> registered_artifacts = new Dictionary<string, ExternalArtifact>();
 
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
             modAssemblyHandler = mah;
+        }
+
+        public void LoadManifests()
+        {
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ArtifactManifests, Logger))
+            {
+                manifest.LoadManifest(this);
+            }
         }
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
@@ -176,14 +183,6 @@ namespace CobaltCoreModding.Components.Services
                     loc_dictionary[name_key] = name;
                 if (loc_dictionary.TryAdd(desc_key, description))
                     loc_dictionary[desc_key] = description;
-            }
-        }
-
-        public void LoadManifests()
-        {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ArtifactManifests,Logger))
-            {
-                manifest.LoadManifest(this);
             }
         }
 

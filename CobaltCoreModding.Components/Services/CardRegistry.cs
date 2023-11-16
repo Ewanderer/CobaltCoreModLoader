@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -9,13 +9,10 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CardRegistry : ICardRegistry
     {
-
-        private readonly ModAssemblyHandler modAssemblyHandler;
-
         private static Dictionary<string, ExternalCard> card_overwrites = new Dictionary<string, ExternalCard>();
         private static ILogger<IDeckRegistry>? Logger;
-
         private static Dictionary<string, ExternalCard> registered_cards = new Dictionary<string, ExternalCard>();
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public CardRegistry(ILogger<IDeckRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
@@ -25,7 +22,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var card in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardManifests,Logger))
+            foreach (var card in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardManifests, Logger))
             {
                 card.LoadManifest(this);
             }

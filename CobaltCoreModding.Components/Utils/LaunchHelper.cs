@@ -66,10 +66,6 @@ namespace CobaltCoreModdding.Components.Utils
             host.Services.GetRequiredService<CustomEventHub>().LoadManifest();
             //run remaining mod logic
             host.Services.GetRequiredService<ModAssemblyHandler>().FinalizeModLoading();
-
-           
         }
-
-       
     }
 }

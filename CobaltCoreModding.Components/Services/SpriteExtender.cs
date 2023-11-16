@@ -1,12 +1,11 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections;
 using System.Reflection;
-using System;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -23,7 +22,6 @@ namespace CobaltCoreModding.Components.Services
         {
             SpriteExtender.logger = logger;
             this.modAssemblyHandler = modAssemblyHandler;
-
         }
 
         private const int sprite_id_counter_start = 10000000;

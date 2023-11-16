@@ -1,5 +1,4 @@
-﻿using CobaltCoreModding.Components.Utils;
-using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -12,9 +11,109 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class ModAssemblyHandler : IModLoaderContact
     {
-
+        private static List<IAddinManifest> addinManifests = new();
+        private static List<IAnimationManifest> animationManifests = new();
+        private static List<IArtifactManifest> artifactManifests = new();
+        private static List<IModManifest> bootManifests = new();
+        private static List<ICardManifest> cardManifests = new();
+        private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
+        private static List<ICharacterManifest> characterManifests = new();
+        private static List<ICustomEventManifest> customEventManifests = new();
+        private static List<IDeckManifest> deckManifests = new();
+        private static List<IGlossaryManifest> glossaryManifests = new();
+        private static HashSet<Assembly> modAssemblies = new();
+        private static List<IPrelaunchManifest> prelaunchManifests = new();
+        private static List<IRawShipManifest> rawShipManifests = new();
+        private static List<IRawStartershipManifest> rawStartershipManifests = new();
+        private static Dictionary<string, IManifest> registered_manifests = new();
+        private static List<IShipManifest> shipManifests = new();
+        private static List<IShipPartManifest> shippartsManifests = new();
+        private static List<ISpriteManifest> spriteManifests = new();
+        private static List<IStartershipManifest> startershipManifests = new();
+        private static List<IStatusManifest> statusManifests = new();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
 
+        public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
+        {
+            this.logger = logger;
+        }
+
+        public static IEnumerable<IAddinManifest> AddinManifests => addinManifests.ToArray();
+
+        public static IEnumerable<IAnimationManifest> AnimationManifests => animationManifests.ToArray();
+
+        public static IEnumerable<IArtifactManifest> ArtifactManifests => artifactManifests.ToArray();
+
+        public static IEnumerable<IModManifest> BootManifests => BootManifests.ToArray();
+
+        public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
+
+        public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
+
+        public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
+
+        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
+
+        public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
+
+        public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
+
+        public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
+
+        public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
+
+        public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
+
+        public static IEnumerable<IRawStartershipManifest> RawStartershipManifests => rawStartershipManifests.ToArray();
+
+        public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
+
+        public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
+
+        public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
+
+        public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
+
+        public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+
+        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
+
+        IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
+
+        private ILogger<ModAssemblyHandler> logger { get; init; }
+
+        public void FinalizeModLoading()
+        {
+            foreach (var manifest in LoadOrderly(ModAssemblyHandler.prelaunchManifests, logger))
+            {
+                if (manifest == null) continue;
+                manifest.FinalizePreperations();
+            }
+        }
+
+        IManifest? IModLoaderContact.GetManifest(string name)
+        {
+            registered_manifests.TryGetValue(name, out var manifest);
+            return manifest;
+        }
+
+        public void LoadModAssembly(FileInfo mod_file)
+        {
+            try
+            {
+                logger.LogInformation($"Loading mod from {mod_file.FullName}...");
+                var assembly = Assembly.LoadFile(mod_file.FullName);
+                if (modAssemblies.Add(assembly))
+                    ExtractManifestFromAssembly(
+                        assembly,
+                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!")
+                    );
+            }
+            catch (Exception err)
+            {
+                logger.LogCritical(err, $"Error while loading mod assembly from '{mod_file.FullName}':");
+            }
+        }
 
         public IEnumerable<T> LoadOrderly<T>(IEnumerable<T> manifests, ILogger? missing_logger) where T : IManifest
         {
@@ -71,7 +170,6 @@ namespace CobaltCoreModding.Components.Services
                         var loaded_list = loadedManifests.First(e => d.DependencyType.IsAssignableTo(e.Key)).Value;
                         //check if dependeny has been loaded.
                         return !loaded_list.Any(m => string.Compare(m.Name, d.DependencyName) == 0);
-
                     }).Select(e => e.DependencyName);
                     var mdn_list = string.Join("\n", missing_dependency_names);
                     missing_logger.LogCritical("The Manifest '{0}' is missing the following dependencies and thus cannot be loaded:\n {1}", leftover.Name, mdn_list);
@@ -79,60 +177,12 @@ namespace CobaltCoreModding.Components.Services
             }
         }
 
-
-        private static List<IAnimationManifest> animationManifests = new();
-        private static List<IArtifactManifest> artifactManifests = new();
-        private static List<ICardManifest> cardManifests = new();
-        private static List<ICardOverwriteManifest> cardOverwriteManifests = new();
-        private static List<ICharacterManifest> characterManifests = new();
-        private static List<ICustomEventManifest> customEventManifests = new();
-        private static List<IPrelaunchManifest> prelaunchManifests = new();
-        private static List<IDeckManifest> deckManifests = new();
-        private static List<IGlossaryManifest> glossaryManifests = new();
-        private static List<IRawShipManifest> rawShipManifests = new();
-        private static List<IRawStartershipManifest> rawStartershipManifests = new();
-        private static List<IShipManifest> shipManifests = new();
-        private static List<IShipPartManifest> shippartsManifests = new();
-        private static List<ISpriteManifest> spriteManifests = new();
-        private static List<IStartershipManifest> startershipManifests = new();
-        private static List<IStatusManifest> statusManifests = new();
-        private static List<IAddinManifest> addinManifests = new();
-        private static List<IModManifest> bootManifests = new();
-
-        private static HashSet<Assembly> modAssemblies = new();
-        private static Dictionary<string, IManifest> registered_manifests = new();
-        public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
+        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
-            this.logger = logger;
-        }
+            if (modAssemblies.Add(assembly))
+                ExtractManifestFromAssembly(assembly, working_directory);
 
-        public static IEnumerable<IAnimationManifest> AnimationManifests => animationManifests.ToArray();
-        public static IEnumerable<IArtifactManifest> ArtifactManifests => artifactManifests.ToArray();
-        public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
-        public static IEnumerable<ICardOverwriteManifest> CardOverwriteManifests => cardOverwriteManifests.ToArray();
-        public static IEnumerable<ICharacterManifest> CharacterManifests => characterManifests.ToArray();
-        public static IEnumerable<ICustomEventManifest> CustomEventManifests => customEventManifests.ToArray();
-        public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
-        public static IEnumerable<IDeckManifest> DeckManifests => deckManifests.ToArray();
-        public static IEnumerable<IGlossaryManifest> GlossaryManifests => glossaryManifests.ToArray();
-        public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
-        public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
-        public static IEnumerable<IShipManifest> ShipManifests => shipManifests.ToArray();
-        public static IEnumerable<IShipPartManifest> ShipPartsManifests => shippartsManifests.ToArray();
-        public static IEnumerable<ISpriteManifest> SpriteManifests => spriteManifests.ToArray();
-        public static IEnumerable<IRawStartershipManifest> RawStartershipManifests => rawStartershipManifests.ToArray();
-        public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
-        public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
-        public static IEnumerable<IAddinManifest> AddinManifests => addinManifests.ToArray();
-        public static IEnumerable<IModManifest> BootManifests => BootManifests.ToArray();
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
-        IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
-        private ILogger<ModAssemblyHandler> logger { get; init; }
-
-        IManifest? IModLoaderContact.GetManifest(string name)
-        {
-            registered_manifests.TryGetValue(name, out var manifest);
-            return manifest;
+            return true;
         }
 
         public void WarumMods(object? ui_object)
@@ -150,43 +200,6 @@ namespace CobaltCoreModding.Components.Services
                 manifest.ModifyLauncher(ui_object);
             }
         }
-
-        public void FinalizeModLoading()
-        {
-            foreach (var manifest in LoadOrderly(ModAssemblyHandler.prelaunchManifests, logger))
-            {
-                if (manifest == null) continue;
-                manifest.FinalizePreperations();
-            }
-        }
-
-        public void LoadModAssembly(FileInfo mod_file)
-        {
-            try
-            {
-                logger.LogInformation($"Loading mod from {mod_file.FullName}...");
-                var assembly = Assembly.LoadFile(mod_file.FullName);
-                if (modAssemblies.Add(assembly))
-                    ExtractManifestFromAssembly(
-                        assembly,
-                        mod_file.Directory ?? throw new Exception("Mod file has no parent directory!")
-                    );
-            }
-            catch (Exception err)
-            {
-                logger.LogCritical(err, $"Error while loading mod assembly from '{mod_file.FullName}':");
-            }
-        }
-
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
-        {
-            if (modAssemblies.Add(assembly))
-                ExtractManifestFromAssembly(assembly, working_directory);
-
-            return true;
-        }
-
-
 
         private void ExtractManifestFromAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
@@ -210,7 +223,6 @@ namespace CobaltCoreModding.Components.Services
                 //set working directoy
                 spawned_manifest.ModRootFolder = working_directory;
                 spawned_manifest.GameRootFolder = CobaltCoreHandler.CobaltCoreAppPath;
-
 
                 //sort manifest into the various manifest lists.
                 if (!registered_manifests.TryAdd(spawned_manifest.Name, spawned_manifest))

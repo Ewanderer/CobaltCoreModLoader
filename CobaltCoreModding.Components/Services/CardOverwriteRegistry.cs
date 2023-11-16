@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.OverwriteItems;
-using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -10,9 +10,6 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CardOverwriteRegistry : ICardOverwriteRegistry
     {
-
-        private readonly ModAssemblyHandler modAssemblyHandler;
-
         /// <summary>
         /// GlobalName -> Card Meta
         /// </summary>
@@ -26,6 +23,7 @@ namespace CobaltCoreModding.Components.Services
         private static Dictionary<string, CardStatOverwrite> card_stat_lookup = new Dictionary<string, CardStatOverwrite>();
         private static Dictionary<Type, HashSet<CardStatOverwrite>> card_stat_overwrites = new Dictionary<Type, HashSet<CardStatOverwrite>>();
         private static ILogger? Logger;
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public CardOverwriteRegistry(ILogger<ICardOverwriteRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
@@ -35,7 +33,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardOverwriteManifests,Logger))
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardOverwriteManifests, Logger))
                 manifest.LoadManifest(this);
         }
 

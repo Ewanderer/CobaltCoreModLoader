@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
 using System.Reflection;
-using System.Threading;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -13,11 +12,9 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class CobaltCoreHandler : ICobaltCoreContact
     {
+        private IHostApplicationLifetime appLifetime;
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
         private ILogger<CobaltCoreHandler> logger;
-        private IHostApplicationLifetime appLifetime;
-
-
 
         public CobaltCoreHandler(ILogger<CobaltCoreHandler> logger, IHostApplicationLifetime appLifetime)
         {
@@ -25,9 +22,8 @@ namespace CobaltCoreModding.Components.Services
             this.appLifetime = appLifetime;
         }
 
-        public static Assembly? CobaltCoreAssembly { get; private set; }
         public static DirectoryInfo? CobaltCoreAppPath { get; private set; }
-
+        public static Assembly? CobaltCoreAssembly { get; private set; }
         Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded!");
 
         public void LoadupCobaltCore(FileInfo cobaltCoreExecutable)
@@ -88,8 +84,6 @@ namespace CobaltCoreModding.Components.Services
                 return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(e => e.FullName == evt.Name);
             };
 
-
-
             //trip feature flag in assemly
             var is_modded_feature_flag_field = CobaltCoreAssembly.GetType("FeatureFlags")?.GetField("Modded", BindingFlags.Static | BindingFlags.Public);
             is_modded_feature_flag_field?.SetValue(null, true);
@@ -102,28 +96,6 @@ namespace CobaltCoreModding.Components.Services
                 OverrideSaveLocation_field?.SetValue(null, save_path);
             }
             // LoadAssociatedLibraries();
-
-        }
-
-        private void LoadAssociatedLibraries()
-        {
-            if (CobaltCoreAppPath == null)
-                return;
-            //find all dlls
-
-            foreach (var assembly in CobaltCoreAppPath.GetFiles("*.dll", SearchOption.TopDirectoryOnly))
-            {
-                try
-                {
-                    var bytes = File.ReadAllBytes(assembly.FullName);
-                    Assembly.Load(bytes);
-                }
-                catch (Exception err)
-                {
-                    logger?.LogError(err, "Error while loading associated library {0}", assembly.FullName);
-                }
-            }
-
         }
 
         /// <summary>
@@ -144,12 +116,31 @@ namespace CobaltCoreModding.Components.Services
             catch (Exception err)
             {
                 logger.LogError(err, "CobaltCoreThrewException");
-
             }
             finally
             {
                 Directory.SetCurrentDirectory(current_dir);
                 appLifetime.StopApplication();
+            }
+        }
+
+        private void LoadAssociatedLibraries()
+        {
+            if (CobaltCoreAppPath == null)
+                return;
+            //find all dlls
+
+            foreach (var assembly in CobaltCoreAppPath.GetFiles("*.dll", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    var bytes = File.ReadAllBytes(assembly.FullName);
+                    Assembly.Load(bytes);
+                }
+                catch (Exception err)
+                {
+                    logger?.LogError(err, "Error while loading associated library {0}", assembly.FullName);
+                }
             }
         }
     }

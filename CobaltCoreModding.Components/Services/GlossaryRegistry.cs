@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 
@@ -8,14 +8,22 @@ namespace CobaltCoreModding.Components.Services
 {
     public class GlossaryRegistry : IGlossaryRegisty
     {
-        private readonly ModAssemblyHandler modAssemblyHandler;
         private static readonly Dictionary<string, ExternalGlossary> registered_glossary = new Dictionary<string, ExternalGlossary>();
         private static ILogger<IGlossaryRegisty>? Logger;
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public GlossaryRegistry(ILogger<IGlossaryRegisty> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             modAssemblyHandler = mah;
             Logger = logger;
+        }
+
+        public void LoadManifests()
+        {
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.GlossaryManifests, Logger))
+            {
+                manifest.LoadManifest(this);
+            }
         }
 
         bool IGlossaryRegisty.RegisterGlossary(ExternalGlossary glossary)
@@ -93,14 +101,6 @@ namespace CobaltCoreModding.Components.Services
                         icon_dict.Add(glossary.ItemName, sprite);
                     }
                 }
-            }
-        }
-
-        public void LoadManifests()
-        {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.GlossaryManifests, Logger))
-            {
-                manifest.LoadManifest(this);
             }
         }
     }

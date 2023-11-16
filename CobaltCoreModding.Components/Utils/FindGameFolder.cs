@@ -1,16 +1,16 @@
-using System.Runtime.Versioning;
 using Microsoft.Win32;
+using System.Runtime.Versioning;
 using VdfParser;
 
 namespace CobaltCoreModding.Components.Utils;
 
 public static class FindGameFolder
 {
-    private const string SteamInstallSubKey64 = @"SOFTWARE\WOW6432Node\Valve\Steam";
-    private const string SteamInstallSubKey32 = @"SOFTWARE\Valve\Steam";
-    private const string SteamInstallKeyName = "InstallPath";
-    private const string SteamGameName = "Cobalt Core";
     private const string SteamGameExe = "CobaltCore.exe";
+    private const string SteamGameName = "Cobalt Core";
+    private const string SteamInstallKeyName = "InstallPath";
+    private const string SteamInstallSubKey32 = @"SOFTWARE\Valve\Steam";
+    private const string SteamInstallSubKey64 = @"SOFTWARE\WOW6432Node\Valve\Steam";
 
     public static string FindGamePath()
     {

@@ -1,6 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -9,19 +9,17 @@ namespace CobaltCoreModding.Components.Services
 {
     public class DeckRegistry : IDeckRegistry
     {
-
-        private readonly ModAssemblyHandler modAssemblyHandler;
         private const int deck_counter_start = 1000000;
         private static int deck_counter = deck_counter_start;
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
         private static ILogger<IDeckRegistry>? Logger;
         private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public DeckRegistry(ILogger<IDeckRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
             modAssemblyHandler = mah;
-
         }
 
         public void LoadManifests()
