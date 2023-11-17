@@ -1,7 +1,4 @@
 ﻿using CobaltCoreModding.Components.Utils;
-using CobaltCoreModding.Definitions.ExternalItems;
-using CobaltCoreModding.Definitions.ItemLookups;
-using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
@@ -26,8 +23,6 @@ namespace CobaltCoreModding.Components.Services
         }
 
         private Type card_type { get; init; }
-
-  
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.

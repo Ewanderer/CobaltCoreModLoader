@@ -11,7 +11,6 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CardRegistry : ICardRegistry
     {
-        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private static Dictionary<string, ExternalCard> card_overwrites = new Dictionary<string, ExternalCard>();
         private static ILogger<IDeckRegistry>? Logger;
         private static Dictionary<string, ExternalCard> registered_cards = new Dictionary<string, ExternalCard>();
@@ -23,12 +22,41 @@ namespace CobaltCoreModding.Components.Services
             Logger = logger;
         }
 
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalCard? LookupCard(string globalName)
+        {
+            if (registered_cards.TryGetValue(globalName, out var card))
+                Logger?.LogWarning("ExternalCard {0} not found", globalName);
+            return card;
+        }
+
         public void LoadManifests()
         {
             foreach (var card in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardManifests, Logger))
             {
                 card.LoadManifest(this);
             }
+        }
+
+        ExternalCard ICardLookup.LookupCard(string globalName)
+        {
+            return LookupCard(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalDeck LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         bool ICardRegistry.RegisterCard(ExternalCard card, string? overwrite)
@@ -235,34 +263,6 @@ namespace CobaltCoreModding.Components.Services
         internal bool ValidateCard(ExternalCard card)
         {
             return registered_cards.TryGetValue(card.GlobalName, out var reg_card) && reg_card == card;
-        }
-
-
-        public static ExternalCard? LookupCard(string globalName)
-        {
-            if (registered_cards.TryGetValue(globalName, out var card))
-                Logger?.LogWarning("ExternalCard {0} not found", globalName);
-            return card;
-        }
-
-        ExternalCard ICardLookup.LookupCard(string globalName)
-        {
-            return LookupCard(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        public ExternalDeck LookupDeck(string globalName)
-        {
-            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        public ExternalSprite LookupSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        public IManifest LookupManifest(string globalName)
-        {
-            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

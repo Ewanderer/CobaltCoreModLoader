@@ -270,7 +270,6 @@ namespace CobaltCoreModding.Components.Services
 
         private static IDictionary? CachedTextures;
 
-
 #pragma warning disable IDE0051 // Remove unused private members
 
         private static bool GetSprPrefix(object id, ref Texture2D? __result)
@@ -403,7 +402,7 @@ namespace CobaltCoreModding.Components.Services
         public IManifest LookupManifest(string globalName)
         {
             var item = ModAssemblyHandler.LookupManifest(globalName);
-            if ( item== null)
+            if (item == null)
                 throw new KeyNotFoundException();
             return item;
         }

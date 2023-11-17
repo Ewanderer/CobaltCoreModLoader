@@ -10,7 +10,7 @@ namespace CobaltCoreModding.Definitions.ItemLookups
     public interface IShipLookup : ISpriteLookup, IPartLookup, ICobaltCoreLookup, IManifestLookup
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="globalName"></param>
         /// <returns>An externalship or raw ship object</returns>

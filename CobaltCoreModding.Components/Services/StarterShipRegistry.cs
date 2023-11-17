@@ -12,7 +12,6 @@ namespace CobaltCoreModding.Components.Services
 {
     public class StarterShipRegistry : IStartershipRegistry, IRawStartershipRegistry
     {
-        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private static readonly Dictionary<string, Dictionary<string, (string, string)>> rawLocalizations = new Dictionary<string, Dictionary<string, (string, string)>>();
         private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
         private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
@@ -36,6 +35,8 @@ namespace CobaltCoreModding.Components.Services
             modAssemblyHandler = mah;
         }
 
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
         public static void LoadRawManifests()
         {
             if (instance == null)
@@ -47,6 +48,24 @@ namespace CobaltCoreModding.Components.Services
             {
                 manifest.LoadManifest(instance);
             }
+        }
+
+        public static object? LookupStarterShip(string globalName)
+        {
+            object? result = null;
+            if (registeredStarterShips.TryGetValue(globalName, out var ship))
+            {
+                result = ship;
+            }
+            else if (registeredRawStarterShips.TryGetValue(globalName, out var rawShip))
+            {
+                result = rawShip;
+            }
+            else
+            {
+                logger?.LogWarning("Startership {0} has not been found", globalName);
+            }
+            return result;
         }
 
         public static void PatchStarterShips()
@@ -110,6 +129,41 @@ namespace CobaltCoreModding.Components.Services
             {
                 logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
             }
+        }
+
+        ExternalArtifact IArtifactLookup.LookupArtifact(string globalName)
+        {
+            return ArtifactRegistry.LookupArtifact(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalCard ICardLookup.LookupCard(string globalName)
+        {
+            return CardRegistry.LookupCard(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
+        {
+            return GlossaryRegistry.LookupGlossary(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        object IStartershipLookup.LookupStarterShip(string globalName)
+        {
+            return LookupStarterShip(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterStartership(ExternalStarterShip starterShip)
@@ -365,61 +419,6 @@ namespace CobaltCoreModding.Components.Services
             {
                 manifest.LoadManifest(this);
             }
-        }
-
-
-        public static object? LookupStarterShip(string globalName)
-        {
-            object? result = null;
-            if (registeredStarterShips.TryGetValue(globalName, out var ship))
-            {
-                result = ship;
-            }
-            else if (registeredRawStarterShips.TryGetValue(globalName, out var rawShip))
-            {
-                result = rawShip;
-            }
-            else
-            {
-                logger?.LogWarning("Startership {0} has not been found", globalName);
-            }
-            return result;
-        }
-
-
-        object IStartershipLookup.LookupStarterShip(string globalName)
-        {
-            return LookupStarterShip(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        ExternalCard ICardLookup.LookupCard(string globalName)
-        {
-            return CardRegistry.LookupCard(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        ExternalArtifact IArtifactLookup.LookupArtifact(string globalName)
-        {
-            return ArtifactRegistry.LookupArtifact(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        ExternalDeck IDeckLookup.LookupDeck(string globalName)
-        {
-            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
-        {
-            return GlossaryRegistry.LookupGlossary(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        IManifest IManifestLookup.LookupManifest(string globalName)
-        {
-            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

@@ -13,7 +13,6 @@ namespace CobaltCoreModding.Components.Services
 {
     public class StatusRegistry : IStatusRegistry
     {
-        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private const int status_id_counter_start = 1000000;
         private static readonly Dictionary<int, object> icon_lookup = new Dictionary<int, object>();
         private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
@@ -27,6 +26,15 @@ namespace CobaltCoreModding.Components.Services
         {
             StatusRegistry.logger = logger;
             modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalStatus? LookupStatus(string globalName)
+        {
+            if (!total_lookup.TryGetValue(globalName, out var status))
+                logger?.LogWarning("ExternalStatus {0} not found", globalName);
+            return status;
         }
 
         public static void PatchStatusData()
@@ -91,6 +99,21 @@ namespace CobaltCoreModding.Components.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
              */
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalStatus IStatusLookup.LookupStatus(string globalName)
+        {
+            throw new NotImplementedException();
         }
 
         public bool RegisterStatus(ExternalStatus status)
@@ -200,28 +223,6 @@ namespace CobaltCoreModding.Components.Services
                 return;
 
             __result = new_result;
-        }
-
-        public static ExternalStatus? LookupStatus(string globalName)
-        {
-            if (!total_lookup.TryGetValue(globalName, out var status))
-                logger?.LogWarning("ExternalStatus {0} not found", globalName);
-            return status;
-        }
-
-        ExternalStatus IStatusLookup.LookupStatus(string globalName)
-        {
-            throw new NotImplementedException();
-        }
-
-        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        IManifest IManifestLookup.LookupManifest(string globalName)
-        {
-            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }
