@@ -22,6 +22,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<ICustomEventManifest> customEventManifests = new();
         private static List<IDeckManifest> deckManifests = new();
         private static List<IGlossaryManifest> glossaryManifests = new();
+        private static ILoggerFactory? loggerFactory;
         private static HashSet<Assembly> modAssemblies = new();
         private static List<IPrelaunchManifest> prelaunchManifests = new();
         private static List<IRawShipManifest> rawShipManifests = new();
@@ -34,9 +35,10 @@ namespace CobaltCoreModding.Components.Services
         private static List<IStatusManifest> statusManifests = new();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
 
-        public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
+        public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
         {
             this.logger = logger;
+            ModAssemblyHandler.loggerFactory = loggerFactory;
         }
 
         public static IEnumerable<IAddinManifest> AddinManifests => addinManifests.ToArray();
@@ -229,6 +231,8 @@ namespace CobaltCoreModding.Components.Services
                 //set working directoy
                 spawned_manifest.ModRootFolder = working_directory;
                 spawned_manifest.GameRootFolder = CobaltCoreHandler.CobaltCoreAppPath;
+                if (loggerFactory != null)
+                    spawned_manifest.Logger = loggerFactory.CreateLogger(spawned_manifest.GetType());
 
                 //sort manifest into the various manifest lists.
                 if (!registered_manifests.TryAdd(spawned_manifest.Name, spawned_manifest))
