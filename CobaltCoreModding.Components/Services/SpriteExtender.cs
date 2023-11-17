@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,11 +17,14 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class SpriteExtender : IArtRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private static ILogger<SpriteExtender>? logger;
 
         public SpriteExtender(ILogger<SpriteExtender> logger, CobaltCoreHandler cobaltCoreHandler, ModAssemblyHandler modAssemblyHandler)
         {
             SpriteExtender.logger = logger;
+            this.modAssemblyHandler = modAssemblyHandler;
         }
 
         private const int sprite_id_counter_start = 10000000;
@@ -51,7 +56,7 @@ namespace CobaltCoreModding.Components.Services
         private void RunArtManifest()
         {
             var sprite_manifests = ModAssemblyHandler.SpriteManifests;
-            foreach (var manifest in sprite_manifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(sprite_manifests, logger))
             {
                 manifest?.LoadManifest(this);
             }
@@ -265,8 +270,6 @@ namespace CobaltCoreModding.Components.Services
 
         private static IDictionary? CachedTextures;
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => throw new NotImplementedException();
-
 #pragma warning disable IDE0051 // Remove unused private members
 
         private static bool GetSprPrefix(object id, ref Texture2D? __result)
@@ -389,6 +392,19 @@ namespace CobaltCoreModding.Components.Services
                 sprite_data.Id = target_id;
             }
             return true;
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            var item = ModAssemblyHandler.LookupManifest(globalName);
+            if (item == null)
+                throw new KeyNotFoundException();
+            return item;
         }
     }
 }

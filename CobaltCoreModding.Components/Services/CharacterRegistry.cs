@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -11,17 +13,27 @@ namespace CobaltCoreModding.Components.Services
     public class CharacterRegistry : ICharacterRegistry
     {
         private static ILogger<ICharacterRegistry>? Logger;
-
         private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public CharacterRegistry(ILogger<ICharacterRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalCharacter? LookupCharacter(string globalName)
+        {
+            if (registered_characters.TryGetValue(globalName, out var character))
+                Logger?.LogWarning("ExternalCharacter {0} not found", globalName);
+            return character;
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.CharacterManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CharacterManifests, Logger))
             {
                 manifest.LoadManifest(this);
             }
@@ -29,6 +41,36 @@ namespace CobaltCoreModding.Components.Services
             HarmonyPatches();
             PatchNewRunOptions();
             PatchStarterSets();
+        }
+
+        public ExternalAnimation LookupAnimation(string globalName)
+        {
+            return AnimationRegistry.LookupAnimation(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalCard LookupCard(string globalName)
+        {
+            return CardRegistry.LookupCard(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalCharacter ICharacterLookup.LookupCharacter(string globalName)
+        {
+            return LookupCharacter(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalDeck LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         bool ICharacterRegistry.RegisterCharacter(ExternalCharacter character)

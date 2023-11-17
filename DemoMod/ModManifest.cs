@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Definitions;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
@@ -7,7 +8,7 @@ using DemoMod.Cards;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
     {
         public static ExternalStatus? demo_status;
         internal static ICustomEventHub? EventHub;
@@ -21,10 +22,12 @@ namespace DemoMod
         private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
-        public IEnumerable<string> Dependencies => new string[0];
+
         public DirectoryInfo? ModRootFolder { get; set; }
         public DirectoryInfo? GameRootFolder { get; set; }
-        public string Name => "EWanderer.DemoMod";
+        public string Name => "EWanderer.DemoMod.MainManifest";
+
+        public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
 
         public void BootMod(IModLoaderContact contact)
         {
@@ -69,10 +72,6 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(demo_status_sprite))
                     throw new Exception("Cannot register sprite.");
             }
-        }
-
-        public void LoadManifest(IDbRegistry dbRegistry)
-        {
         }
 
         public void LoadManifest(IAnimationRegistry registry)

@@ -13,7 +13,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
     /// </summary>
     public interface IModManifest : IManifest
     {
-        IEnumerable<string> Dependencies { get; }
 
         void BootMod(IModLoaderContact contact);
     }

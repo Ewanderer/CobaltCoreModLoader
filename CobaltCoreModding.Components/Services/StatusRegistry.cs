@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -18,10 +20,21 @@ namespace CobaltCoreModding.Components.Services
         private static ILogger<StatusRegistry>? logger;
         private static int status_id_counter = status_id_counter_start;
         private static FieldInfo? tt_glossary_key_field;
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
-        public StatusRegistry(ILogger<StatusRegistry>? logger)
+        public StatusRegistry(ILogger<StatusRegistry>? logger, ModAssemblyHandler mah)
         {
             StatusRegistry.logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalStatus? LookupStatus(string globalName)
+        {
+            if (!total_lookup.TryGetValue(globalName, out var status))
+                logger?.LogWarning("ExternalStatus {0} not found", globalName);
+            return status;
         }
 
         public static void PatchStatusData()
@@ -60,7 +73,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.StatusManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StatusManifests, logger))
             {
                 manifest.LoadManifest(this);
             }
@@ -86,6 +99,21 @@ namespace CobaltCoreModding.Components.Services
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
              */
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalStatus IStatusLookup.LookupStatus(string globalName)
+        {
+            throw new NotImplementedException();
         }
 
         public bool RegisterStatus(ExternalStatus status)

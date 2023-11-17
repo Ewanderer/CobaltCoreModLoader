@@ -1,7 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
-using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.OverwriteItems;
-using CobaltCoreModding.Components.Utils;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -11,7 +9,7 @@ namespace CobaltCoreModding.Components.Services
     /// <summary>
     /// This serice can be used to run patches
     /// </summary>
-    public class DBExtender : IDbRegistry
+    public class DBExtender
     {
         private static ILogger<DBExtender>? Logger;
 
@@ -24,14 +22,7 @@ namespace CobaltCoreModding.Components.Services
             PartialCardStatOverwrite.SprType = TypesAndEnums.SprType;
         }
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
-
         private Type card_type { get; init; }
-
-        ExternalSprite? IDbRegistry.GetModSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName);
-        }
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.
@@ -60,7 +51,6 @@ namespace CobaltCoreModding.Components.Services
             var load_strings_for_locale_postfix = typeof(DBExtender).GetMethod("LoadStringsForLocale_PostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
-
         }
 
         /// <summary>
@@ -194,8 +184,6 @@ namespace CobaltCoreModding.Components.Services
         private static void PatchStory()
         {
         }
-
-   
 
         /*
         private static void LoadAllSubclasses(Dictionary<string, Type>? target, Type? lookup_type)

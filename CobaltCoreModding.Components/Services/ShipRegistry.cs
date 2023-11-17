@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -22,19 +24,22 @@ namespace CobaltCoreModding.Components.Services
         private static MethodInfo CopyShip = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.ShipType }) ?? throw new Exception("Mutil.DeepCopy<Ship> couldn't be created!");
         private static ShipRegistry? instance;
         private static ILogger<ShipRegistry>? logger;
-
         private static FieldInfo part_skin_field = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found");
         private static FieldInfo parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Ship.parts field not found");
         private static FieldInfo ship_chassisOver_field = TypesAndEnums.ShipType.GetField("chassisOver") ?? throw new Exception("Ship.chassisOver field not found");
         private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
+        private readonly ModAssemblyHandler modAssemblyHandler;
         private readonly PartRegistry partRegistry;
 
-        public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry)
+        public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry, ModAssemblyHandler mah)
         {
             ShipRegistry.logger = logger;
             this.partRegistry = partRegistry;
             ShipRegistry.instance = this;
+            modAssemblyHandler = mah;
         }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
 
         /// <summary>
         /// Creates copy of a ship object registered under a global name.
@@ -65,6 +70,13 @@ namespace CobaltCoreModding.Components.Services
             {
                 manifest.LoadManifest(instance);
             }
+        }
+
+        public static object? LookupShip(string globalName)
+        {
+            if (!registeredShips.TryGetValue(globalName, out var ship))
+                logger?.LogWarning("ExternalShip {0} cannot be found", globalName);
+            return ship;
         }
 
         /// <summary>
@@ -106,10 +118,30 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ShipManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipManifests, logger))
             {
                 manifest.LoadManifest(this);
             }
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalPart IPartLookup.LookupPart(string globalName)
+        {
+            return PartRegistry.LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        object IShipLookup.LookupShip(string globalName)
+        {
+            return LookupShip(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterShip(ExternalShip ship)

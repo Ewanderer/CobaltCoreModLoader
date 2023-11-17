@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -10,27 +12,60 @@ namespace CobaltCoreModding.Components.Services
 {
     public class StarterShipRegistry : IStartershipRegistry, IRawStartershipRegistry
     {
-        private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
-        private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
         private static readonly Dictionary<string, Dictionary<string, (string, string)>> rawLocalizations = new Dictionary<string, Dictionary<string, (string, string)>>();
-                
+        private static readonly Dictionary<string, object> registeredRawStarterShips = new Dictionary<string, object>();
+        private static readonly Dictionary<string, ExternalStarterShip> registeredStarterShips = new Dictionary<string, ExternalStarterShip>();
         private static FieldInfo artifacts_field = TypesAndEnums.StarterShipType.GetField("artifacts") ?? throw new Exception("Cannot find StarterShip.artifacts fieldinfo");
         private static FieldInfo cards_field = TypesAndEnums.StarterShipType.GetField("cards") ?? throw new Exception("Cannot find StarterShip.cards fieldinfo");
         private static StarterShipRegistry? instance;
         private static ILogger<StarterShipRegistry>? logger;
-
         private static FieldInfo ship_field = TypesAndEnums.StarterShipType.GetField("ship") ?? throw new Exception("Cannot find Startership.ship fieldinfo");
         private static FieldInfo ship_is_player_field = TypesAndEnums.ShipType.GetField("isPlayerShip") ?? throw new Exception("Cannot find Ship.isPlayerShip fieldinfo");
         private static FieldInfo ship_key_field = TypesAndEnums.ShipType.GetField("key") ?? throw new Exception("Cannot find Ship.key fieldinfo");
         private readonly ArtifactRegistry artifactRegistry;
         private readonly CardRegistry cardRegistry;
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
-        public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger)
+        public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger, ModAssemblyHandler mah)
         {
             this.cardRegistry = cardRegistry;
             this.artifactRegistry = artifactRegistry;
             StarterShipRegistry.logger = logger;
             instance = this;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static void LoadRawManifests()
+        {
+            if (instance == null)
+            {
+                logger?.LogCritical("Instance is null. Cannot load raw starterships.");
+                return;
+            }
+            foreach (var manifest in ModAssemblyHandler.RawStartershipManifests)
+            {
+                manifest.LoadManifest(instance);
+            }
+        }
+
+        public static object? LookupStarterShip(string globalName)
+        {
+            object? result = null;
+            if (registeredStarterShips.TryGetValue(globalName, out var ship))
+            {
+                result = ship;
+            }
+            else if (registeredRawStarterShips.TryGetValue(globalName, out var rawShip))
+            {
+                result = rawShip;
+            }
+            else
+            {
+                logger?.LogWarning("Startership {0} has not been found", globalName);
+            }
+            return result;
         }
 
         public static void PatchStarterShips()
@@ -51,7 +86,7 @@ namespace CobaltCoreModding.Components.Services
                 var actual_starter = ActualizeStarterShip(starter.GlobalName);
                 lookup.Add(starter.GlobalName, actual_starter);
             }
-            
+
             foreach (var (globalName, starterShip) in registeredRawStarterShips)
             {
                 if (lookup.Contains(globalName))
@@ -74,6 +109,61 @@ namespace CobaltCoreModding.Components.Services
                 }
                 lookup.Add(globalName, starterShip);
             }
+        }
+
+        public void AddRawLocalization(string global_name, string name, string description, string locale = "en")
+        {
+            if (!registeredRawStarterShips.ContainsKey(global_name))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation because ship is not registered.", global_name);
+                return;
+            }
+
+            if (!rawLocalizations.TryGetValue(locale, out var localeDict))
+            {
+                localeDict = new Dictionary<string, (string, string)>();
+                rawLocalizations[locale] = localeDict;
+            }
+
+            if (!localeDict.TryAdd(global_name, (name, description)))
+            {
+                logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
+            }
+        }
+
+        ExternalArtifact IArtifactLookup.LookupArtifact(string globalName)
+        {
+            return ArtifactRegistry.LookupArtifact(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalCard ICardLookup.LookupCard(string globalName)
+        {
+            return CardRegistry.LookupCard(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
+        {
+            return GlossaryRegistry.LookupGlossary(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        object IStartershipLookup.LookupStarterShip(string globalName)
+        {
+            return LookupStarterShip(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterStartership(ExternalStarterShip starterShip)
@@ -142,21 +232,21 @@ namespace CobaltCoreModding.Components.Services
             {
                 return false;
             }
-            
+
             // validate startership object
             if (!starterShip.GetType().IsAssignableTo(TypesAndEnums.StarterShipType))
             {
                 logger?.LogCritical("Attempted to register a raw ship under global name {0} that isn't a CobaltCore.Ship object.", global_name);
                 return false;
             }
-            
+
             var artifacts = artifacts_field.GetValue(starterShip) as IEnumerable;
             if (artifacts == null)
             {
                 logger?.LogWarning("Raw startership {0} couldn't retrieve artifact list", global_name);
                 return false;
             }
-            
+
             var cards = cards_field.GetValue(starterShip) as IEnumerable;
             if (cards == null)
             {
@@ -172,7 +262,7 @@ namespace CobaltCoreModding.Components.Services
                     return false;
                 }
             }
-            
+
             foreach (var card in cards)
             {
                 if (!card.GetType().IsAssignableTo(TypesAndEnums.CardType))
@@ -181,36 +271,16 @@ namespace CobaltCoreModding.Components.Services
                     return false;
                 }
             }
-            
+
             if (!registeredRawStarterShips.TryAdd(global_name, starterShip))
             {
                 logger?.LogWarning("StarterShip with global name {0} already exist. skipping further entries", global_name);
                 return false;
             }
-            
+
             return true;
         }
 
-        public void AddRawLocalization(string global_name, string name, string description, string locale = "en")
-        {
-            if (!registeredRawStarterShips.ContainsKey(global_name))
-            {
-                logger?.LogWarning("Raw StarterShip {0} cannot add localisation because ship is not registered.", global_name);
-                return;
-            }
-
-            if (!rawLocalizations.TryGetValue(locale, out var localeDict))
-            {
-                localeDict = new Dictionary<string, (string, string)>();
-                rawLocalizations[locale] = localeDict;
-            }
-
-            if (!localeDict.TryAdd(global_name, (name, description)))
-            {
-                logger?.LogWarning("Raw StarterShip {0} cannot add localisation of name because key already taken.", global_name);
-            }
-        }
-        
         public void RunLogic()
         {
             LoadManifests();
@@ -345,22 +415,9 @@ namespace CobaltCoreModding.Components.Services
 
         private void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.StartershipManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StartershipManifests, logger))
             {
                 manifest.LoadManifest(this);
-            }
-        }
-        
-        public static void LoadRawManifests()
-        {
-            if (instance == null)
-            {
-                logger?.LogCritical("Instance is null. Cannot load raw starterships.");
-                return;
-            }
-            foreach (var manifest in ModAssemblyHandler.RawStartershipManifests)
-            {
-                manifest.LoadManifest(instance);
             }
         }
     }

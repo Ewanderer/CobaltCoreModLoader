@@ -1,8 +1,11 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Reflection;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -20,9 +23,53 @@ namespace CobaltCoreModding.Components.Services
         /// </summary>
         private static Dictionary<string, ExternalArtifact> registered_artifacts = new Dictionary<string, ExternalArtifact>();
 
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalArtifact? LookupArtifact(string globalName)
+        {
+            registered_artifacts.TryGetValue(globalName, out var artifact);
+            return artifact;
+        }
+
+        public void LoadManifests()
+        {
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ArtifactManifests, Logger))
+            {
+                manifest.LoadManifest(this);
+            }
+        }
+
+        ExternalArtifact IArtifactLookup.LookupArtifact(string globalName)
+        {
+            return LookupArtifact(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
+        {
+            return GlossaryRegistry.LookupGlossary(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
@@ -172,14 +219,6 @@ namespace CobaltCoreModding.Components.Services
                     loc_dictionary[name_key] = name;
                 if (loc_dictionary.TryAdd(desc_key, description))
                     loc_dictionary[desc_key] = description;
-            }
-        }
-
-        public void LoadManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
-            {
-                manifest.LoadManifest(this);
             }
         }
 

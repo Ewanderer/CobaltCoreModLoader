@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -16,13 +18,16 @@ namespace CobaltCoreModding.Components.Services
         private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
         private static ILogger<PartRegistry>? logger;
         private static Dictionary<string, Tuple<int, int?>> raw_parts = new Dictionary<string, Tuple<int, int?>>();
-
         private static FieldInfo SkinField = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found.");
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
-        public PartRegistry(ILogger<PartRegistry> logger)
+        public PartRegistry(ILogger<PartRegistry> logger, ModAssemblyHandler mah)
         {
             PartRegistry.logger = logger;
+            modAssemblyHandler = mah;
         }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
 
         /// <summary>
         /// Creates a copy of a part template in ExternalPart and fixes its skin value.
@@ -48,6 +53,13 @@ namespace CobaltCoreModding.Components.Services
         public static object ActualizePart(ExternalPart part)
         {
             return ActualizePart(part.GlobalName);
+        }
+
+        public static ExternalPart? LookupPart(string globalName)
+        {
+            if (!registeredParts.TryGetValue(globalName, out var part))
+                logger?.LogWarning("ExternalPart {0} not found", globalName);
+            return part;
         }
 
         public static void PatchPartSprites()
@@ -116,10 +128,25 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.ShipPartsManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipPartsManifests, logger))
             {
                 manifest.LoadManifest(this);
             }
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalPart IPartLookup.LookupPart(string globalName)
+        {
+            return LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterPart(ExternalPart externalPart)
