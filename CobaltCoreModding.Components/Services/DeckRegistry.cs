@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -9,6 +11,7 @@ namespace CobaltCoreModding.Components.Services
 {
     public class DeckRegistry : IDeckRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private const int deck_counter_start = 1000000;
         private static int deck_counter = deck_counter_start;
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
@@ -227,6 +230,28 @@ namespace CobaltCoreModding.Components.Services
                 if (!deck_str_dictionary.Contains(deck_val))
                     deck_str_dictionary.Add(deck_val, deck.Value.GlobalName);
             }
+        }
+
+        public static ExternalDeck? LookupDeck(string globalName)
+        {
+            if (!deck_lookup.TryGetValue(globalName, out var deck))
+                Logger?.LogWarning("ExternalDeck {0} not found", globalName);
+            return deck;
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

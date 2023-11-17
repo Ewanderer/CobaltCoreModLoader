@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -11,6 +13,7 @@ namespace CobaltCoreModding.Components.Services
 {
     public class StatusRegistry : IStatusRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private const int status_id_counter_start = 1000000;
         private static readonly Dictionary<int, object> icon_lookup = new Dictionary<int, object>();
         private static readonly Dictionary<string, ExternalStatus> total_lookup = new Dictionary<string, ExternalStatus>();
@@ -197,6 +200,28 @@ namespace CobaltCoreModding.Components.Services
                 return;
 
             __result = new_result;
+        }
+
+        public static ExternalStatus? LookupStatus(string globalName)
+        {
+            if (!total_lookup.TryGetValue(globalName, out var status))
+                logger?.LogWarning("ExternalStatus {0} not found", globalName);
+            return status;
+        }
+
+        ExternalStatus IStatusLookup.LookupStatus(string globalName)
+        {
+            throw new NotImplementedException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

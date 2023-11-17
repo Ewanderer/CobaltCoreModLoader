@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,6 +17,7 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class SpriteExtender : IArtRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private readonly ModAssemblyHandler modAssemblyHandler;
         private static ILogger<SpriteExtender>? logger;
 
@@ -267,7 +270,6 @@ namespace CobaltCoreModding.Components.Services
 
         private static IDictionary? CachedTextures;
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => throw new NotImplementedException();
 
 #pragma warning disable IDE0051 // Remove unused private members
 
@@ -391,6 +393,19 @@ namespace CobaltCoreModding.Components.Services
                 sprite_data.Id = target_id;
             }
             return true;
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            var item = ModAssemblyHandler.LookupManifest(globalName);
+            if ( item== null)
+                throw new KeyNotFoundException();
+            return item;
         }
     }
 }

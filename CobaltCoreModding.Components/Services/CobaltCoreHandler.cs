@@ -10,7 +10,7 @@ namespace CobaltCoreModding.Components.Services
     /// This class contains the logic to parse a CoboltCore executable and start it up on demand.
     /// After being loaded it will also provide the cobalt core game assembly for any shenanigans
     /// </summary>
-    public class CobaltCoreHandler : ICobaltCoreContact
+    public class CobaltCoreHandler
     {
         private IHostApplicationLifetime appLifetime;
         private List<Assembly> CobaltCoreExecutableAssemblies = new List<Assembly>();
@@ -24,7 +24,6 @@ namespace CobaltCoreModding.Components.Services
 
         public static DirectoryInfo? CobaltCoreAppPath { get; private set; }
         public static Assembly? CobaltCoreAssembly { get; private set; }
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreAssembly ?? throw new Exception("Cobalt Core Assembly not loaded!");
 
         public void LoadupCobaltCore(FileInfo cobaltCoreExecutable)
         {

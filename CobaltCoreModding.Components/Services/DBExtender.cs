@@ -1,5 +1,6 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using HarmonyLib;
@@ -11,7 +12,7 @@ namespace CobaltCoreModding.Components.Services
     /// <summary>
     /// This serice can be used to run patches
     /// </summary>
-    public class DBExtender : IDbRegistry
+    public class DBExtender
     {
         private static ILogger<DBExtender>? Logger;
 
@@ -24,14 +25,9 @@ namespace CobaltCoreModding.Components.Services
             PartialCardStatOverwrite.SprType = TypesAndEnums.SprType;
         }
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
-
         private Type card_type { get; init; }
 
-        ExternalSprite? IDbRegistry.GetModSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName);
-        }
+  
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.

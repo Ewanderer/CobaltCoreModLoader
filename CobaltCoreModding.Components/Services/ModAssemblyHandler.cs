@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Definitions.ItemLookups;
+using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -32,6 +33,12 @@ namespace CobaltCoreModding.Components.Services
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
+
+        public static IManifest? LookupManifest(string globalName)
+        {
+            registered_manifests.TryGetValue(globalName, out var manifest);
+            return manifest;
+        }
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler)
         {
@@ -76,11 +83,14 @@ namespace CobaltCoreModding.Components.Services
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
-        IEnumerable<Assembly> IModLoaderContact.LoadedModAssemblies => ModAssemblies;
+
 
         private ILogger<ModAssemblyHandler> logger { get; init; }
+
+        public Assembly CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
+
+        public IEnumerable<IManifest> LoadedManifests => registered_manifests.Values;
 
         public void FinalizeModLoading()
         {
@@ -89,12 +99,6 @@ namespace CobaltCoreModding.Components.Services
                 if (manifest == null) continue;
                 manifest.FinalizePreperations();
             }
-        }
-
-        IManifest? IModLoaderContact.GetManifest(string name)
-        {
-            registered_manifests.TryGetValue(name, out var manifest);
-            return manifest;
         }
 
         public void LoadModAssembly(FileInfo mod_file)
@@ -185,6 +189,11 @@ namespace CobaltCoreModding.Components.Services
             return true;
         }
 
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
         public void WarumMods(object? ui_object)
         {
             foreach (var manifest in LoadOrderly(ModAssemblyHandler.bootManifests, logger))
@@ -270,5 +279,7 @@ namespace CobaltCoreModding.Components.Services
                     addinManifests.Add(addinManifest);
             }
         }
+
+
     }
 }

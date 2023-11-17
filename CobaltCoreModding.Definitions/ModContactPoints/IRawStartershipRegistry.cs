@@ -1,9 +1,11 @@
-﻿namespace CobaltCoreModding.Definitions.ModContactPoints
+﻿using CobaltCoreModding.Definitions.ItemLookups;
+
+namespace CobaltCoreModding.Definitions.ModContactPoints
 {
     /// <summary>
     /// Allows for raw starter ships to be registered.
     /// </summary>
-    public interface IRawStartershipRegistry
+    public interface IRawStartershipRegistry : IStartershipLookup
     {
         /// <summary>
         /// Add localization to a raw ship

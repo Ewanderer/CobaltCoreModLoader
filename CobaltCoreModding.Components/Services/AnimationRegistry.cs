@@ -1,9 +1,12 @@
 ﻿using CobaltCoreModding.Components.Utils;
 
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Reflection;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -21,10 +24,38 @@ namespace CobaltCoreModding.Components.Services
             modAssemblyHandler = mah;
         }
 
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalAnimation? LookupAnimation(string globalName)
+        {
+            registered_animations.TryGetValue(globalName, out var animation);
+            return animation;
+        }
+
         public void LoadManifests()
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.AnimationManifests, Logger))
                 manifest.LoadManifest(this);
+        }
+
+        ExternalAnimation IAnimationLookup.LookupAnimation(string globalName)
+        {
+            return LookupAnimation(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         bool IAnimationRegistry.RegisterAnimation(ExternalAnimation animation)

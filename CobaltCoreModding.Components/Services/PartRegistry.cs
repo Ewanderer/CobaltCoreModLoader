@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -12,6 +14,7 @@ namespace CobaltCoreModding.Components.Services
     /// </summary>
     public class PartRegistry : IShipPartRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private static readonly Dictionary<string, ExternalPart> registeredParts = new();
         private static MethodInfo CopyPart = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.PartType }) ?? throw new Exception("Mutil.DeepCopy<Part> couldn't be created!");
         private static ILogger<PartRegistry>? logger;
@@ -190,6 +193,28 @@ namespace CobaltCoreModding.Components.Services
         internal bool ValidatePart(ExternalPart part)
         {
             return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
+        }
+
+        public static ExternalPart? LookupPart(string globalName)
+        {
+            if (!registeredParts.TryGetValue(globalName, out var part))
+                logger?.LogWarning("ExternalPart {0} not found", globalName);
+            return part;
+        }
+
+        ExternalPart IPartLookup.LookupPart(string globalName)
+        {
+            return LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

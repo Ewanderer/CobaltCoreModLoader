@@ -1,8 +1,9 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
 {
-    public interface IArtRegistry : ICobaltCoreContact
+    public interface IArtRegistry : ISpriteLookup
     {
         /// <summary>
         /// Pass any sprite here for registration. it will be assigned an id and return the id.

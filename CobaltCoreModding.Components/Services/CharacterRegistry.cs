@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
@@ -10,6 +12,7 @@ namespace CobaltCoreModding.Components.Services
 {
     public class CharacterRegistry : ICharacterRegistry
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private static ILogger<ICharacterRegistry>? Logger;
         private static Dictionary<string, ExternalCharacter> registered_characters = new Dictionary<string, ExternalCharacter>();
         private readonly ModAssemblyHandler modAssemblyHandler;
@@ -187,6 +190,43 @@ namespace CobaltCoreModding.Components.Services
                 artifacts_field.SetValue(new_starter_deck, artifact_list);
                 starter_sets_dictionary.Add(deck_val, new_starter_deck);
             }
+        }
+
+        public static ExternalCharacter? LookupCharacter(string globalName)
+        {
+            if (registered_characters.TryGetValue(globalName, out var character))
+                Logger?.LogWarning("ExternalCharacter {0} not found", globalName);
+            return character;
+        }
+
+        ExternalCharacter ICharacterLookup.LookupCharacter(string globalName)
+        {
+            return LookupCharacter(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalCard LookupCard(string globalName)
+        {
+            return CardRegistry.LookupCard(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalAnimation LookupAnimation(string globalName)
+        {
+            return AnimationRegistry.LookupAnimation(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalDeck LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

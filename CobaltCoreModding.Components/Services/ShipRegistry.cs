@@ -1,6 +1,8 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -18,6 +20,8 @@ namespace CobaltCoreModding.Components.Services
         /// This dictionary holds both external ships and raw ship object
         /// </summary>
         private static readonly Dictionary<string, object> registeredShips = new Dictionary<string, object>();
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
 
         private static MethodInfo CopyShip = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.ShipType }) ?? throw new Exception("Mutil.DeepCopy<Ship> couldn't be created!");
         private static ShipRegistry? instance;
@@ -252,6 +256,33 @@ namespace CobaltCoreModding.Components.Services
             }
             parts_field.SetValue(result, part_list);
             return result;
+        }
+
+        public static object? LookupShip(string globalName)
+        {
+            if (!registeredShips.TryGetValue(globalName, out var ship))
+                logger?.LogWarning("ExternalShip {0} cannot be found", globalName);
+            return ship;
+        }
+
+        object IShipLookup.LookupShip(string globalName)
+        {
+            return LookupShip(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalPart IPartLookup.LookupPart(string globalName)
+        {
+            return PartRegistry.LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

@@ -1,13 +1,17 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Reflection;
 
 namespace CobaltCoreModding.Components.Services
 {
     public class GlossaryRegistry : IGlossaryRegisty
     {
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
         private static readonly Dictionary<string, ExternalGlossary> registered_glossary = new Dictionary<string, ExternalGlossary>();
         private static ILogger<IGlossaryRegisty>? Logger;
         private readonly ModAssemblyHandler modAssemblyHandler;
@@ -102,6 +106,28 @@ namespace CobaltCoreModding.Components.Services
                     }
                 }
             }
+        }
+
+        public static ExternalGlossary? LookupGlossary(string globalName)
+        {
+            if (!registered_glossary.TryGetValue(globalName, out var glossary))
+                Logger?.LogWarning("ExternalGlossary {0} not found.", globalName);
+            return glossary;
+        }
+
+        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
+        {
+            return LookupGlossary(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }
