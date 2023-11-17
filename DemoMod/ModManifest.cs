@@ -74,10 +74,6 @@ namespace DemoMod
             }
         }
 
-        public void LoadManifest(IDbRegistry dbRegistry)
-        {
-        }
-
         public void LoadManifest(IAnimationRegistry registry)
         {
             default_animation = new ExternalAnimation("ewanderer.demomod.dracula.neutral", dracula_deck ?? throw new NullReferenceException(), "neutral", false, new ExternalSprite[] {
