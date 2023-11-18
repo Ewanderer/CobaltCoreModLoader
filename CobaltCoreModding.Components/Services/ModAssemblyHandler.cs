@@ -33,6 +33,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<IPartTypeManifest> partTypeManifests = new();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
@@ -78,6 +79,7 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+        public static IEnumerable<IPartTypeManifest> PartTypeManifests => partTypeManifests.ToArray();
 
         public Assembly CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
@@ -278,6 +280,8 @@ namespace CobaltCoreModding.Components.Services
                     prelaunchManifests.Add(prelaunchManifest);
                 if (spawned_manifest is IAddinManifest addinManifest)
                     addinManifests.Add(addinManifest);
+                if (spawned_manifest is IPartTypeManifest partTypeManifest)
+                    partTypeManifests.Add(partTypeManifest);
             }
         }
     }

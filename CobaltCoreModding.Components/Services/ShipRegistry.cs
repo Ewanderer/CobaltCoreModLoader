@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -261,6 +262,11 @@ namespace CobaltCoreModding.Components.Services
         internal static bool CheckShip(string global_name)
         {
             return registeredShips.ContainsKey(global_name);
+        }
+
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
 
         private static object ActualizeExternalShip(ExternalShip ship)

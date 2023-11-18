@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -216,6 +217,11 @@ namespace CobaltCoreModding.Components.Services
         internal bool ValidatePart(ExternalPart part)
         {
             return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
+        }
+
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }
