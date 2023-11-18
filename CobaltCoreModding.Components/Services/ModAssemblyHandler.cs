@@ -24,6 +24,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<IGlossaryManifest> glossaryManifests = new();
         private static ILoggerFactory? loggerFactory;
         private static HashSet<Assembly> modAssemblies = new();
+        private static List<IPartTypeManifest> partTypeManifests = new();
         private static List<IPrelaunchManifest> prelaunchManifests = new();
         private static List<IRawShipManifest> rawShipManifests = new();
         private static List<IRawStartershipManifest> rawStartershipManifests = new();
@@ -33,7 +34,6 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
-        private static List<IPartTypeManifest> partTypeManifests = new();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
@@ -64,6 +64,7 @@ namespace CobaltCoreModding.Components.Services
 
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
 
+        public static IEnumerable<IPartTypeManifest> PartTypeManifests => partTypeManifests.ToArray();
         public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
 
         public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
@@ -79,8 +80,6 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
-        public static IEnumerable<IPartTypeManifest> PartTypeManifests => partTypeManifests.ToArray();
-
         public Assembly CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public IEnumerable<IManifest> LoadedManifests => registered_manifests.Values;

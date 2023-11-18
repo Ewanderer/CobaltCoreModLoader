@@ -145,6 +145,11 @@ namespace CobaltCoreModding.Components.Services
             return LookupPart(globalName) ?? throw new KeyNotFoundException();
         }
 
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
+        }
+
         ExternalSprite ISpriteLookup.LookupSprite(string globalName)
         {
             return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
@@ -217,11 +222,6 @@ namespace CobaltCoreModding.Components.Services
         internal bool ValidatePart(ExternalPart part)
         {
             return registeredParts.TryGetValue(part.GlobalName, out var reg_part) && reg_part == part;
-        }
-
-        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
-        {
-            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
     }
 }

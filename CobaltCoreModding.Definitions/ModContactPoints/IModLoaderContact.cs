@@ -11,6 +11,10 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     /// </summary>
     public interface IModLoaderContact : IManifestLookup
     {
+        /// <summary>
+        /// A list of all manifest. use if you want to discover all mods for some reason
+        /// </summary>
+        public IEnumerable<IManifest> LoadedManifests { get; }
 
         /// <summary>
         /// Attempts to put a new assembly into the mod loader.
@@ -20,10 +24,5 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="working_directory">The directory which serves as the mod loader path. to ensure it can find physcial resources.</param>
         /// <returns></returns>
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory);
-
-        /// <summary>
-        /// A list of all manifest. use if you want to discover all mods for some reason
-        /// </summary>
-        public IEnumerable<IManifest> LoadedManifests { get; }
     }
 }

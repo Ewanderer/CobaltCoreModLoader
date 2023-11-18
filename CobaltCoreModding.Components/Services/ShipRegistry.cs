@@ -135,6 +135,11 @@ namespace CobaltCoreModding.Components.Services
             return PartRegistry.LookupPart(globalName) ?? throw new KeyNotFoundException();
         }
 
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
+        }
+
         object IShipLookup.LookupShip(string globalName)
         {
             return LookupShip(globalName) ?? throw new KeyNotFoundException();
@@ -262,11 +267,6 @@ namespace CobaltCoreModding.Components.Services
         internal static bool CheckShip(string global_name)
         {
             return registeredShips.ContainsKey(global_name);
-        }
-
-        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
-        {
-            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
 
         private static object ActualizeExternalShip(ExternalShip ship)

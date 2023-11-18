@@ -7,7 +7,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     /// they can even have external parts referenced, since these manifest are only loaded after all patching has been done during game startup.
     /// if you need custom chassis, well register chassis should be called first.
     /// </summary>
-    public interface IRawShipRegistry: IShipLookup
+    public interface IRawShipRegistry : IShipLookup
     {
         /// <summary>
         /// Register a raw ship.
