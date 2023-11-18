@@ -54,6 +54,38 @@ namespace CobaltCoreModdding.Components.Services
             return true;
         }
 
+        internal static void PatchLocalisations(string locale, ref Dictionary<string, string> result)
+        {
+            foreach (var type in registeredPartTypes.Values)
+            {
+                if (type.Id == null)
+                    continue;
+                type.GetLocalisation(locale, out var name, out var desc);
+
+                if (name != null)
+                {
+                    var key = $"part.{type.Id}.name";
+                    if (!result.TryAdd(key, name))
+                        logger?.LogWarning("Part {0} cannot register name because key {1} already added somehow", type.GlobalName, key);
+                }
+                else
+                {
+                    logger?.LogError("Part {0} has no name found in {1} and english", type.GlobalName, locale);
+                }
+
+                if (desc != null)
+                {
+                    var key = $"part.{type.Id}.desc";
+                    if (!result.TryAdd(key, desc))
+                        logger?.LogWarning("Part {0} cannot register desc because key {1} already added somehow", type.GlobalName, key);
+                }
+                else
+                {
+                    logger?.LogError("Part {0} has no description found in {1} and english", type.GlobalName, locale);
+                }
+            }
+        }
+
         internal void LoadManifests()
         {
             foreach (var manifest in ModAssemblyHandler.PartTypeManifests)

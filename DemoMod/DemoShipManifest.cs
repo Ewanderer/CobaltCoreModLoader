@@ -3,25 +3,30 @@ using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DemoMod
 {
     public class DemoShipManifest : IShipPartManifest, IShipManifest, IStartershipManifest, IPartTypeManifest
     {
+        private ExternalPart Cannon = new ExternalPart(
+         "EWanderer.Demomod.DemoShip.Cannon",
+         new Part()
+         {
+             active = true,
+             damageModifier = PDamMod.weak,
+             type = PType.cannon,
+         },
+         ExternalSprite.GetRaw((int)Spr.parts_cannon_freezeB));
 
-        public DirectoryInfo? ModRootFolder { get; set; }
-        public DirectoryInfo? GameRootFolder { get; set; }
-
-        public string Name => "EWanderer.Demomod.DemoShipManifest";
-
-        public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
-
-        public ILogger? Logger { get; set; }
+        private ExternalPart Cockpit = new ExternalPart(
+            "EWanderer.Demomod.DemoShip.Cockpit",
+            new Part()
+            {
+                active = true,
+                damageModifier = PDamMod.none,
+                type = PType.cockpit,
+            },
+            ExternalSprite.GetRaw((int)Spr.parts_cockpit_bubble));
 
         private ExternalPart CrystalStructure = new ExternalPart(
             "EWanderer.Demomod.DemoShip.CrystalStructure",
@@ -34,25 +39,7 @@ namespace DemoMod
             },
             ExternalSprite.GetRaw((int)Spr.parts_crystal_1));
 
-        private ExternalPart Cockpit = new ExternalPart(
-            "EWanderer.Demomod.DemoShip.Cockpit",
-            new Part()
-            {
-                active = true,
-                damageModifier = PDamMod.none,
-                type = PType.cockpit,
-            },
-            ExternalSprite.GetRaw((int)Spr.parts_cockpit_bubble));
-
-        private ExternalPart Cannon = new ExternalPart(
-         "EWanderer.Demomod.DemoShip.Cannon",
-         new Part()
-         {
-             active = true,
-             damageModifier = PDamMod.weak,
-             type = PType.cannon,
-         },
-         ExternalSprite.GetRaw((int)Spr.parts_cannon_freezeB));
+        private ExternalShip? demoship;
 
         private ExternalPart Launcher = new ExternalPart(
          "EWanderer.Demomod.DemoShip.Launcher",
@@ -64,6 +51,17 @@ namespace DemoMod
          },
          ExternalSprite.GetRaw((int)Spr.parts_missiles_conveyor));
 
+        public DemoShipManifest()
+        {
+        }
+
+        public static ExternalPartType? DemoPartType { get; private set; }
+        public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
+        public DirectoryInfo? GameRootFolder { get; set; }
+        public ILogger? Logger { get; set; }
+        public DirectoryInfo? ModRootFolder { get; set; }
+        public string Name => "EWanderer.Demomod.DemoShipManifest";
+
         public void LoadManifest(IShipPartRegistry registry)
         {
             if (CrystalStructure.GetPartObject() is Part p)
@@ -72,13 +70,6 @@ namespace DemoMod
             registry.RegisterPart(Cockpit);
             registry.RegisterPart(Cannon);
             registry.RegisterPart(Launcher);
-        }
-
-        ExternalShip? demoship;
-
-        public DemoShipManifest()
-        {
-
         }
 
         public void LoadManifest(IShipRegistry shipRegistry)
@@ -113,12 +104,11 @@ namespace DemoMod
             registry.RegisterStartership(starter);
         }
 
-        public static ExternalPartType? DemoPartType { get; private set; }
-
         public void LoadManifest(IPartTypeRegistry partTypeRegistry)
         {
             DemoPartType = new ExternalPartType("EWanderer.Demomod.PartTypes.DemoType");
             partTypeRegistry.RegisterPartType(DemoPartType);
+            DemoPartType.AddLocalisation("Chicken coop", "BAWK!");
         }
     }
 }
