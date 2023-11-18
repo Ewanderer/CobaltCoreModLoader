@@ -2,6 +2,7 @@
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,17 @@ using System.Threading.Tasks;
 
 namespace DemoMod
 {
-    public class DemoShipManifest : IShipPartManifest, IShipManifest, IStartershipManifest
+    public class DemoShipManifest : IShipPartManifest, IShipManifest, IStartershipManifest, IPartTypeManifest
     {
+
         public DirectoryInfo? ModRootFolder { get; set; }
         public DirectoryInfo? GameRootFolder { get; set; }
 
         public string Name => "EWanderer.Demomod.DemoShipManifest";
 
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
+
+        public ILogger? Logger { get; set; }
 
         private ExternalPart CrystalStructure = new ExternalPart(
             "EWanderer.Demomod.DemoShip.CrystalStructure",
@@ -62,6 +66,8 @@ namespace DemoMod
 
         public void LoadManifest(IShipPartRegistry registry)
         {
+            if (CrystalStructure.GetPartObject() is Part p)
+                p.type = (PType)(DemoPartType?.Id ?? throw new Exception());
             registry.RegisterPart(CrystalStructure);
             registry.RegisterPart(Cockpit);
             registry.RegisterPart(Cannon);
@@ -69,6 +75,11 @@ namespace DemoMod
         }
 
         ExternalShip? demoship;
+
+        public DemoShipManifest()
+        {
+
+        }
 
         public void LoadManifest(IShipRegistry shipRegistry)
         {
@@ -95,11 +106,19 @@ namespace DemoMod
             if (demoship == null)
                 return;
             var starter = new ExternalStarterShip("EWanderer.Demomod.DemoShip.StarterShip",
-                demoship.GlobalName, new ExternalCard[0],new ExternalArtifact[0], new Type[0], new Type[0]);
+                demoship.GlobalName, new ExternalCard[0], new ExternalArtifact[0], new Type[0], new Type[0]);
 
             starter.AddLocalisation("Hyrbid", "A crystal-tech hybrid ship. Demoship using existing assets by EWanderer");
 
             registry.RegisterStartership(starter);
+        }
+
+        public static ExternalPartType? DemoPartType { get; private set; }
+
+        public void LoadManifest(IPartTypeRegistry partTypeRegistry)
+        {
+            DemoPartType = new ExternalPartType("EWanderer.Demomod.PartTypes.DemoType");
+            partTypeRegistry.RegisterPartType(DemoPartType);
         }
     }
 }

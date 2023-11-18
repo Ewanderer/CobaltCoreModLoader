@@ -221,9 +221,9 @@ namespace CobaltCoreModding.Components.Services
                 {
                     spawned_manifest = Activator.CreateInstance(type) as IManifest;
                 }
-                catch
+                catch(Exception err)
                 {
-                    logger.LogError("mod manifest type {0} has no empty constructor", type.Name);
+                    logger.LogError(err,"mod manifest type {0} not loaded with the following error.", type.Name);
                     continue;
                 }
                 //should not happen so we don't bother with logging

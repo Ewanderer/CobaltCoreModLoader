@@ -5,6 +5,7 @@ using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Actions;
 using DemoMod.Cards;
+using Microsoft.Extensions.Logging;
 
 namespace DemoMod
 {
@@ -28,6 +29,8 @@ namespace DemoMod
         public string Name => "EWanderer.DemoMod.MainManifest";
 
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
+
+        public ILogger? Logger { get ; set; }
 
         public void BootMod(IModLoaderContact contact)
         {
