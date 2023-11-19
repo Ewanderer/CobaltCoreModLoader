@@ -15,9 +15,12 @@ namespace CobaltCoreModding.Components.Services
     /// Sprites are handled for the most part by a SpriteMapper and Sprite loader and a Sprite Enum.
     /// This services hooks into their guts and offers help function to mods making the whole loading process much smoother.
     /// </summary>
-    public class SpriteExtender : IArtRegistry
+    public class SpriteExtender : ISpriteRegistry
     {
         Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        Func<object> ISpriteRegistry.GetCobaltCoreGraphicsDeviceFunc => () => { return SpriteExtender.GetGraphicsDevice(); };
+
         private readonly ModAssemblyHandler modAssemblyHandler;
         private static ILogger<SpriteExtender>? logger;
 
@@ -165,7 +168,7 @@ namespace CobaltCoreModding.Components.Services
                 return;
             }
 
-            foreach (var overwrite_sprite in sprite_registry.Values.Where(e => e.Id != null && 0 <= e.Id && e.Id < sprite_id_counter_start))
+            foreach (var overwrite_sprite in sprite_registry.Values.Where(e => e.Id != null && 0 <= e.Id && e.Id < sprite_id_counter_start && e.IsCaching))
             {
                 if (overwrite_sprite == null || overwrite_sprite.Id == null)
                     continue;
@@ -217,7 +220,7 @@ namespace CobaltCoreModding.Components.Services
                 {
                     texture = sprite.GetTexture() as Texture2D;
                     if (texture == null)
-                        throw new NotImplementedException($"ExternalSprite with Id {sprite.Id?.ToString() ?? "null"} cannot be resolved!");
+                        throw new NotImplementedException($"ExternalSprite with Id {sprite.Id?.ToString() ?? "null"} didn't return a texture!");
                 }
                 return texture;
             }
@@ -252,7 +255,7 @@ namespace CobaltCoreModding.Components.Services
             return false;
         }
 
-        private static GraphicsDevice GetGraphicsDevice()
+        public static GraphicsDevice GetGraphicsDevice()
         {
             if (graphics_device != null)
                 return graphics_device;
@@ -276,19 +279,23 @@ namespace CobaltCoreModding.Components.Services
 
         private static IDictionary? CachedTextures;
 
-#pragma warning disable IDE0051 // Remove unused private members
 
         private static bool GetSprPrefix(object id, ref Texture2D? __result)
-#pragma warning restore IDE0051 // Remove unused private members
         {
             //if this cast breaks, we deserve a crash.
             int id_val = (int)id;
             //check if value is from base game.
+            if (sprite_registry.TryGetValue(id_val, out var sprite) && !sprite.IsCaching)
+            {
+                __result = LoadTexture(sprite);
+                return false;
+            }
+
             if (0 <= id_val && id_val < sprite_id_counter_start)
                 return true;
 
             //check if known
-            if (!sprite_registry.ContainsKey(id_val))
+            if (sprite == null)
             {
                 __result = null;
                 logger?.LogCritical($"Unregistered mod sprite with id '{id_val}' requested!");
@@ -302,7 +309,7 @@ namespace CobaltCoreModding.Components.Services
                 CachedTextures = CobaltCoreHandler.CobaltCoreAssembly?.GetType("SpriteLoader")?.GetField("textures")?.GetValue(null) as IDictionary;
             }
 
-            if (CachedTextures?.Contains(id) ?? false)
+            if (sprite.IsCaching && (CachedTextures?.Contains(id) ?? false))
             {
                 // chaced textures will contain a texture2d
                 __result = CachedTextures[id] as Texture2D;
@@ -310,11 +317,11 @@ namespace CobaltCoreModding.Components.Services
             }
 
             //try load from dictionary
-            var sprite = sprite_registry[id_val];
+
 
             __result = LoadTexture(sprite);
             //cache for future attempts.
-            if (__result != null && !(CachedTextures?.Contains(id) ?? true))
+            if (__result != null && !(CachedTextures?.Contains(id) ?? true) && sprite.IsCaching)
             {
                 CachedTextures.Add(id, __result);
             }
@@ -334,7 +341,7 @@ namespace CobaltCoreModding.Components.Services
                     if (overwrite_sprite == null || overwrite_sprite.Id == null)
                         continue;
                     var texture = LoadTexture(overwrite_sprite);
-                    if (texture == null)
+                    if (texture == null && overwrite_sprite.IsCaching)
                     {
                         logger?.LogWarning("Failed to load overwrite texture");
                         continue;
@@ -357,7 +364,7 @@ namespace CobaltCoreModding.Components.Services
             }
         }
 
-        bool IArtRegistry.RegisterArt(ExternalSprite sprite_data, int? overwrite_value)
+        bool ISpriteRegistry.RegisterArt(ExternalSprite sprite_data, int? overwrite_value)
         {
             if (sprite_data.Id != null)
             {

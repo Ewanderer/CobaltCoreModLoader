@@ -8,6 +8,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
         /// Called by art registry when it times for add extra sprites into the system.
         /// </summary>
         /// <param name="artRegistry"></param>
-        public void LoadManifest(IArtRegistry artRegistry);
+        public void LoadManifest(ISpriteRegistry artRegistry);
     }
 }

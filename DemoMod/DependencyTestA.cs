@@ -24,7 +24,7 @@ namespace DemoMod
 
         public ILogger? Logger { get; set ; }
 
-        public void LoadManifest(IArtRegistry artRegistry)
+        public void LoadManifest(ISpriteRegistry artRegistry)
         {
 
         }

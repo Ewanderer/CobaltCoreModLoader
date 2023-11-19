@@ -32,6 +32,11 @@
             this.GlobalName = global_name;
         }
 
+        protected ExternalSprite(string globalName)
+        {
+            GlobalName = globalName;
+        }
+
         private ExternalSprite(int id)
         {
             this.id = id;
@@ -55,6 +60,12 @@
                 id = value;
             }
         }
+
+        /// <summary>
+        /// When overriden an external sprite, this flag can be used to indicate that a GetTexture()
+        /// function intends to change its output and thus need to be called everytime.
+        /// </summary>
+        public virtual bool IsCaching => true;
 
         /// <summary>
         /// This function is used by mod loader to create an art asset with an id of an cobalt core spr value.
