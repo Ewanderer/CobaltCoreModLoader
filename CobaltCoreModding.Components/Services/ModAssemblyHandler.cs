@@ -24,6 +24,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<IGlossaryManifest> glossaryManifests = new();
         private static ILoggerFactory? loggerFactory;
         private static HashSet<Assembly> modAssemblies = new();
+        private static List<IPartTypeManifest> partTypeManifests = new();
         private static List<IPrelaunchManifest> prelaunchManifests = new();
         private static List<IRawShipManifest> rawShipManifests = new();
         private static List<IRawStartershipManifest> rawStartershipManifests = new();
@@ -63,6 +64,7 @@ namespace CobaltCoreModding.Components.Services
 
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
 
+        public static IEnumerable<IPartTypeManifest> PartTypeManifests => partTypeManifests.ToArray();
         public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
 
         public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
@@ -78,7 +80,6 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
-
         public Assembly CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public IEnumerable<IManifest> LoadedManifests => registered_manifests.Values;
@@ -220,9 +221,9 @@ namespace CobaltCoreModding.Components.Services
                 {
                     spawned_manifest = Activator.CreateInstance(type) as IManifest;
                 }
-                catch
+                catch(Exception err)
                 {
-                    logger.LogError("mod manifest type {0} has no empty constructor", type.Name);
+                    logger.LogError(err,"mod manifest type {0} not loaded with the following error.", type.Name);
                     continue;
                 }
                 //should not happen so we don't bother with logging
@@ -278,6 +279,8 @@ namespace CobaltCoreModding.Components.Services
                     prelaunchManifests.Add(prelaunchManifest);
                 if (spawned_manifest is IAddinManifest addinManifest)
                     addinManifests.Add(addinManifest);
+                if (spawned_manifest is IPartTypeManifest partTypeManifest)
+                    partTypeManifests.Add(partTypeManifest);
             }
         }
     }

@@ -4,6 +4,7 @@ using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
+using SingleFileExtractor.Core.Legacy;
 using System.Collections;
 using System.Reflection;
 
@@ -33,9 +34,16 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var card in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardManifests, Logger))
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardManifests, Logger))
             {
-                card.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by CardRegistry");
+                }
             }
         }
 

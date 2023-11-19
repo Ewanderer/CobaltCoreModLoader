@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace DemoMod
 {
@@ -19,6 +20,8 @@ namespace DemoMod
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[] {
             new DependencyEntry<IArtifactManifest>("EWanderer.DemoMod.DependecyTestA")
         };
+
+        public ILogger? Logger { get; set; }
 
         public void FinalizePreperations()
         {

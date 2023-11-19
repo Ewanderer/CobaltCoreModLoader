@@ -2,6 +2,7 @@
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,8 @@ namespace DemoMod
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[] {
             new DependencyEntry<ISpriteManifest>("EWanderer.DemoMod.DependecyTestB")
         };
+
+        public ILogger? Logger { get; set ; }
 
         public void LoadManifest(IArtRegistry artRegistry)
         {

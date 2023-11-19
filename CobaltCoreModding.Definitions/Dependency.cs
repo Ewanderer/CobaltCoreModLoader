@@ -25,7 +25,7 @@ namespace CobaltCoreModding.Definitions
         public string DependencyName { get; init; }
 
         /// <summary>
-        /// What part of a manifest need to be loaded first. 
+        /// What part of a manifest need to be loaded first.
         /// In case a manifest for example implements Sprites, Artifacts, Events, etc, but our dependeny is only on an artifact.
         /// </summary>
         public Type DependencyType { get; init; }

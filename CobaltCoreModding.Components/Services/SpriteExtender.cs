@@ -46,7 +46,6 @@ namespace CobaltCoreModding.Components.Services
         {
             //load manifest
             RunArtManifest();
-
             //"patch" mapping
             PatchMapping();
             //patch sprite loader
@@ -58,7 +57,14 @@ namespace CobaltCoreModding.Components.Services
             var sprite_manifests = ModAssemblyHandler.SpriteManifests;
             foreach (var manifest in modAssemblyHandler.LoadOrderly(sprite_manifests, logger))
             {
-                manifest?.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by SpriteExtender");
+                }
             }
         }
 

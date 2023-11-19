@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
@@ -87,6 +88,7 @@ namespace CobaltCoreModding.Components.Services
             ArtifactRegistry.PatchLocalisations(locale, ref __result);
             StatusRegistry.PatchLocalisations(locale, ref __result);
             StarterShipRegistry.PatchLocalisations(locale, ref __result);
+            PartTypeRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<ValueTuple<string, Action>> MakeInitQueue_Postfix(Queue<ValueTuple<string, Action>> __result)

@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -28,7 +29,7 @@ namespace CobaltCoreModding.Components.Services
         private static FieldInfo parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Ship.parts field not found");
         private static FieldInfo ship_chassisOver_field = TypesAndEnums.ShipType.GetField("chassisOver") ?? throw new Exception("Ship.chassisOver field not found");
         private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
-        private readonly ModAssemblyHandler modAssemblyHandler;
+        private static ModAssemblyHandler? modAssemblyHandler;
         private readonly PartRegistry partRegistry;
 
         public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry, ModAssemblyHandler mah)
@@ -66,9 +67,16 @@ namespace CobaltCoreModding.Components.Services
                 logger?.LogCritical("Instance is null. Cannot load raw ships.");
                 return;
             }
-            foreach (var manifest in ModAssemblyHandler.RawShipManifests)
+            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.RawShipManifests, logger) ?? ModAssemblyHandler.RawShipManifests)
             {
-                manifest.LoadManifest(instance);
+                try
+                {
+                    manifest.LoadManifest(instance);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by RawShipRegistry");
+                }
             }
         }
 
@@ -118,9 +126,16 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipManifests, logger))
+            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.ShipManifests, logger)?? ModAssemblyHandler.ShipManifests)
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by ShipRegistry");
+                }
             }
         }
 
@@ -132,6 +147,11 @@ namespace CobaltCoreModding.Components.Services
         ExternalPart IPartLookup.LookupPart(string globalName)
         {
             return PartRegistry.LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
 
         object IShipLookup.LookupShip(string globalName)

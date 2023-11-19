@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -130,7 +131,14 @@ namespace CobaltCoreModding.Components.Services
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ShipPartsManifests, logger))
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by PartRegistry");
+                }
             }
         }
 
@@ -142,6 +150,11 @@ namespace CobaltCoreModding.Components.Services
         ExternalPart IPartLookup.LookupPart(string globalName)
         {
             return LookupPart(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalPartType IPartTypeLookup.LookupPartType(string globalName)
+        {
+            return PartTypeRegistry.LookupPartType(globalName) ?? throw new KeyNotFoundException();
         }
 
         ExternalSprite ISpriteLookup.LookupSprite(string globalName)

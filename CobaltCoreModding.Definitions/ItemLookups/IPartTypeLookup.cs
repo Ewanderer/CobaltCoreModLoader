@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace CobaltCoreModding.Definitions.ItemLookups
 {
-    public interface IArtifactLookup : IManifestLookup, ICobaltCoreLookup, ISpriteLookup, IDeckLookup, IGlossaryLookup
+    public interface IPartTypeLookup : IManifestLookup, ICobaltCoreLookup
     {
-        ExternalArtifact LookupArtifact(string globalName);
+        ExternalPartType LookupPartType(string globalName);
     }
 }

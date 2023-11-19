@@ -34,7 +34,16 @@ namespace CobaltCoreModding.Components.Services
         public void LoadManifests()
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CardOverwriteManifests, Logger))
-                manifest.LoadManifest(this);
+            {
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by CardOverwriteRegistry");
+                }
+            }
         }
 
         bool ICardOverwriteRegistry.RegisterCardMetaOverwrite(CardMetaOverwrite cardMeta, string card_key)
