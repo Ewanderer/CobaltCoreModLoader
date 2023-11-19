@@ -104,12 +104,6 @@ namespace CobaltCoreModding.Components.Services
             patched_result.Enqueue(__result.Dequeue());
             //we patch out own items into db.
             patched_result.Enqueue(new("loading modded decks and statuses", () => { InsertNewDeckAndStatus(); }));
-            //cobalt core loads localisations.
-            patched_result.Enqueue(__result.Dequeue());
-            // We inject ourselves into the loader directly, so no extra here.
-            // Cobalt Core loads platforms.
-            patched_result.Enqueue(__result.Dequeue());
-            // nothing to do for us here...
             // Cobalt Core loads story.
             patched_result.Enqueue(__result.Dequeue());
             // we apply any patches to story item.
@@ -128,6 +122,14 @@ namespace CobaltCoreModding.Components.Services
             patched_result.Enqueue(__result.Dequeue());
             //we do our patches on that.
             patched_result.Enqueue(new("patch card and artifact metadata, event choice functions, story commands", () => { PatchMetasAndStoryFunctions(); }));
+            /*
+            //cobalt core loads localisations.
+            patched_result.Enqueue(__result.Dequeue());
+            // We inject ourselves into the loader directly, so no extra here.
+            // Cobalt Core loads platforms.
+            patched_result.Enqueue(__result.Dequeue());
+            // nothing to do for us here...    
+            */         
             //at this point all things needed for raw ships is avaialbe and we load their manifests.
             patched_result.Enqueue(new("load raw ship manifests", () => { ShipRegistry.LoadRawManifests(); }));
             //cobalt core does stuff not concering us.
