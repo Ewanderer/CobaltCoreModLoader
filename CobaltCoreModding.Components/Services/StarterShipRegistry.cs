@@ -24,7 +24,7 @@ namespace CobaltCoreModding.Components.Services
         private static FieldInfo ship_key_field = TypesAndEnums.ShipType.GetField("key") ?? throw new Exception("Cannot find Ship.key fieldinfo");
         private readonly ArtifactRegistry artifactRegistry;
         private readonly CardRegistry cardRegistry;
-        private readonly ModAssemblyHandler modAssemblyHandler;
+        private static ModAssemblyHandler? modAssemblyHandler;
 
         public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger, ModAssemblyHandler mah)
         {
@@ -44,9 +44,16 @@ namespace CobaltCoreModding.Components.Services
                 logger?.LogCritical("Instance is null. Cannot load raw starterships.");
                 return;
             }
-            foreach (var manifest in ModAssemblyHandler.RawStartershipManifests)
+            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.RawStartershipManifests, logger) ?? ModAssemblyHandler.RawStartershipManifests)
             {
-                manifest.LoadManifest(instance);
+                try
+                {
+                    manifest.LoadManifest(instance);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by StarterShipRegistry");
+                }
             }
         }
 
@@ -415,9 +422,16 @@ namespace CobaltCoreModding.Components.Services
 
         private void LoadManifests()
         {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StartershipManifests, logger))
+            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.StartershipManifests, logger) ?? ModAssemblyHandler.StartershipManifests)
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by StarterShipRegistry");
+                }
             }
         }
     }

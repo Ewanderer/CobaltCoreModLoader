@@ -35,7 +35,16 @@ namespace CobaltCoreModding.Components.Services
         public void LoadManifests()
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.AnimationManifests, Logger))
-                manifest.LoadManifest(this);
+            {
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by AnimationRegistry");
+                }
+            }
         }
 
         ExternalAnimation IAnimationLookup.LookupAnimation(string globalName)

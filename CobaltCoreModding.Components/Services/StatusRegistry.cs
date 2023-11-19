@@ -75,7 +75,14 @@ namespace CobaltCoreModding.Components.Services
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StatusManifests, logger))
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by StatusRegistry");
+                }
             }
 
             //harmony patching TT glossary to replace status lookup.

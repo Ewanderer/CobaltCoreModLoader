@@ -93,7 +93,14 @@ namespace CobaltCoreModding.Components.Services
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CustomEventManifests, logger))
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by CustomEventHub registry");
+                }
             }
         }
 

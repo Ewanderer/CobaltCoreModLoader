@@ -16,9 +16,12 @@ namespace CobaltCoreModdding.Components.Services
         private static int id_counter = id_counter_start;
         Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception();
 
-        public PartTypeRegistry(ILogger<PartTypeRegistry> logger)
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
+        public PartTypeRegistry(ILogger<PartTypeRegistry> logger, ModAssemblyHandler modAssemblyHandler)
         {
             PartTypeRegistry.logger = logger;
+            this.modAssemblyHandler = modAssemblyHandler;
         }
 
         public static ExternalPartType? LookupPartType(string globalName)
@@ -96,9 +99,16 @@ namespace CobaltCoreModdding.Components.Services
 
         internal void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.PartTypeManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.PartTypeManifests,logger))
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by PartTypeRegistry");
+                }
             }
         }
     }
