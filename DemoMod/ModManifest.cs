@@ -30,14 +30,15 @@ namespace DemoMod
 
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
 
-        public ILogger? Logger { get ; set; }
+        public ILogger? Logger { get; set; }
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
 
-        public void LoadManifest(IArtRegistry artRegistry)
+        private ExternalSprite? DemoAttackSprite;
+        public void LoadManifest(ISpriteRegistry artRegistry)
         {
             if (ModRootFolder == null)
                 throw new Exception("No root folder set!");
@@ -75,6 +76,13 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(demo_status_sprite))
                     throw new Exception("Cannot register sprite.");
             }
+
+            {
+                DemoAttackSprite = new Sprites.DemoDynamicSprite("EwAnderer.demomod.sprites.attack_overrwide", artRegistry.GetCobaltCoreGraphicsDeviceFunc);
+                if (!artRegistry.RegisterArt(DemoAttackSprite, (int)Spr.icons_attack))
+                    throw new Exception("Cannot register sprite.");
+            }
+
         }
 
         public void LoadManifest(IAnimationRegistry registry)

@@ -28,7 +28,7 @@ namespace DemoMod
 
         }
 
-        public void LoadManifest(IArtRegistry artRegistry)
+        public void LoadManifest(ISpriteRegistry artRegistry)
         {
 
         }
