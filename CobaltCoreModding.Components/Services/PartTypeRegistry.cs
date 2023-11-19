@@ -13,8 +13,13 @@ namespace CobaltCoreModdding.Components.Services
         private const int id_counter_start = 1000000;
         private static readonly Dictionary<string, ExternalPartType> registeredPartTypes = new Dictionary<string, ExternalPartType>();
         private static ILogger? logger;
-        private int id_counter = id_counter_start;
+        private static int id_counter = id_counter_start;
         Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception();
+
+        public PartTypeRegistry(ILogger<PartTypeRegistry> logger)
+        {
+            PartTypeRegistry.logger = logger;
+        }
 
         public static ExternalPartType? LookupPartType(string globalName)
         {
@@ -37,16 +42,19 @@ namespace CobaltCoreModdding.Components.Services
         {
             if (string.IsNullOrWhiteSpace(externalPartType.GlobalName))
             {
+                logger?.LogWarning("Attempted to register external part type without a globalName! Skipping");
                 return false;
             }
 
             if (externalPartType.Id != null)
             {
+                logger?.LogWarning("ExternalPartType {0} already has an id", externalPartType.GlobalName);
                 return false;
             }
 
             if (!registeredPartTypes.TryAdd(externalPartType.GlobalName, externalPartType))
             {
+                logger?.LogWarning("ExternalPartType with Global Name {0} already registed, skipping...", externalPartType.GlobalName);
                 return false;
             }
 
