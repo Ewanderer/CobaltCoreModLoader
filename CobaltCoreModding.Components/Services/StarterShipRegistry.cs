@@ -437,17 +437,15 @@ namespace CobaltCoreModding.Components.Services
             //check which ship we have.
             var ship = state_ship_field.GetValue(s) ?? throw new Exception("Unable to extract ship from state");
             var key = (ship_key_field.GetValue(ship) as string) ?? throw new Exception("Unable to extract key from ship");
-            registeredRawStarterShips.TryGetValue(key, out var starter_ship_obj);
-
             var permitted_types = new List<Type>();
             var forbidden_types = new List<Type>();
 
-            if (starter_ship_obj is ExternalStarterShip externalStarterShip)
+            if (registeredStarterShips.TryGetValue(key, out var externalStarterShip))
             {
                 permitted_types.AddRange(externalStarterShip.ExclusiveNativeArtifacts);
                 permitted_types.AddRange(externalStarterShip.ExclusiveArtifacts.Select(e => e.ArtifactType));
             }
-            else
+            else if (registeredRawStarterShips.ContainsKey(key))
             {
                 //we have a raw starter ship object
                 if (rawStarterExclusiveArtifacts.TryGetValue(key, out var types))
@@ -457,8 +455,8 @@ namespace CobaltCoreModding.Components.Services
             //go through all ships and put them on forbidden types
             foreach (var starter in registeredStarterShips.Values)
             {
-                permitted_types.AddRange(starter.ExclusiveNativeArtifacts);
-                permitted_types.AddRange(starter.ExclusiveArtifacts.Select(e => e.ArtifactType));
+                forbidden_types.AddRange(starter.ExclusiveNativeArtifacts);
+                forbidden_types.AddRange(starter.ExclusiveArtifacts.Select(e => e.ArtifactType));
             }
 
             foreach (var list in rawStarterExclusiveArtifacts.Values)

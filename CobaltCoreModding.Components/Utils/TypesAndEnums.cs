@@ -43,6 +43,18 @@ namespace CobaltCoreModding.Components.Utils
 
         private static Type? __ttglossary_type = null;
         private static Type? __upgrade_type = null;
+        private static Type? __ptype_type = null;
+
+        public static Type PTypeType
+        {
+            get
+            {
+                if (__ptype_type != null)
+                    return __ptype_type;
+                return __ptype_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("PType") ?? throw new Exception("PType type not found");
+            }
+        }
+
 
         public static Type ArtifactMetaType
         {
@@ -310,6 +322,13 @@ namespace CobaltCoreModding.Components.Utils
             if (status_id == null)
                 return null;
             return Convert.ChangeType(Enum.ToObject(StatusType, status_id), StatusType);
+        }
+
+        public static object? IntToPType(int? ptype_id)
+        {
+            if (ptype_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(PTypeType, ptype_id), PTypeType);
         }
 
         public static object? IntToUpgrade(int? upgrade_id)

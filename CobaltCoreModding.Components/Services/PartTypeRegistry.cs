@@ -135,10 +135,10 @@ namespace CobaltCoreModdding.Components.Services
             var permitted = new List<Type>();
             foreach (var part in parts)
             {
-                var p_type = (int?)part_ptype_field.GetValue(part);
-                if (p_type == null)
+                var obj = part_ptype_field.GetValue(part);
+                if (obj == null)
                     continue;
-                var match = registeredPartTypes.Values.FirstOrDefault(e => e.Id == p_type);
+                var match = registeredPartTypes.Values.FirstOrDefault(e => TypesAndEnums.IntToPType(e.Id)?.Equals(obj) ?? false);
                 if (match != null)
                 {
                     permitted.AddRange(match.ExclusiveNativeArtifacts);
