@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Components.Services;
+﻿using CobaltCoreModdding.Components.Services;
+using CobaltCoreModding.Components.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,6 +30,7 @@ namespace CobaltCoreModdding.Components.Utils
             builder.Services.AddSingleton<PartRegistry>();
             builder.Services.AddSingleton<ShipRegistry>();
             builder.Services.AddSingleton<StarterShipRegistry>();
+            builder.Services.AddSingleton<PartTypeRegistry>();
             return builder;
         }
 
@@ -54,6 +56,8 @@ namespace CobaltCoreModdding.Components.Utils
             host.Services.GetRequiredService<AnimationRegistry>().LoadManifests();
             //patch characters
             host.Services.GetRequiredService<CharacterRegistry>().LoadManifests();
+            //patch parts.
+            host.Services.GetRequiredService<PartTypeRegistry>().LoadManifests();
             //patch ship parts
             host.Services.GetRequiredService<PartRegistry>().LoadManifests();
             //load ship manifests.
@@ -66,10 +70,6 @@ namespace CobaltCoreModdding.Components.Utils
             host.Services.GetRequiredService<CustomEventHub>().LoadManifest();
             //run remaining mod logic
             host.Services.GetRequiredService<ModAssemblyHandler>().FinalizeModLoading();
-
-           
         }
-
-       
     }
 }

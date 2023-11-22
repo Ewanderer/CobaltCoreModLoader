@@ -1,13 +1,15 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Definitions;
+using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using DemoMod.Actions;
 using DemoMod.Cards;
+using Microsoft.Extensions.Logging;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IDBManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
     {
         public static ExternalStatus? demo_status;
         internal static ICustomEventHub? EventHub;
@@ -15,23 +17,26 @@ namespace DemoMod
         private ExternalSprite? card_art_sprite;
         private ExternalAnimation? default_animation;
         private ExternalSprite? demo_status_sprite;
+        private ExternalSprite? DemoAttackSprite;
         private ExternalDeck? dracula_deck;
         private ExternalSprite? dracular_art;
         private ExternalSprite? dracular_border;
         private ExternalAnimation? mini_animation;
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
-        public IEnumerable<string> Dependencies => new string[0];
-        public DirectoryInfo? ModRootFolder { get; set; }
+
+        public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
         public DirectoryInfo? GameRootFolder { get; set; }
-        public string Name => "EWanderer.DemoMod";
+        public ILogger? Logger { get; set; }
+        public DirectoryInfo? ModRootFolder { get; set; }
+        public string Name => "EWanderer.DemoMod.MainManifest";
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
 
-        public void LoadManifest(IArtRegistry artRegistry)
+        public void LoadManifest(ISpriteRegistry artRegistry)
         {
             if (ModRootFolder == null)
                 throw new Exception("No root folder set!");
@@ -69,10 +74,12 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(demo_status_sprite))
                     throw new Exception("Cannot register sprite.");
             }
-        }
 
-        public void LoadManifest(IDbRegistry dbRegistry)
-        {
+            {
+                DemoAttackSprite = new Sprites.DemoDynamicSprite("EwAnderer.demomod.sprites.attack_overrwide", artRegistry.GetCobaltCoreGraphicsDeviceFunc);
+                if (!artRegistry.RegisterArt(DemoAttackSprite, (int)Spr.icons_attack))
+                    throw new Exception("Cannot register sprite.");
+            }
         }
 
         public void LoadManifest(IAnimationRegistry registry)
@@ -181,10 +188,18 @@ namespace DemoMod
 
         public void LoadManifest(IArtifactRegistry registry)
         {
-            var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
-            var artifact = new ExternalArtifact(typeof(Artifacts.PortableBlackHole), "EWanderer.DemoMod.PortableBlackHoleArtifact", spr, null, new ExternalGlossary[0]);
-            artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
-            registry.RegisterArtifact(artifact);
+            {
+                var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
+                var artifact = new ExternalArtifact("EWanderer.DemoMod.PortableBlackHoleArtifact", typeof(Artifacts.PortableBlackHole), spr, new ExternalGlossary[0], null, null);
+                artifact.AddLocalisation("Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
+                registry.RegisterArtifact(artifact);
+            }
+            {
+                var spr = ExternalSprite.GetRaw((int)Spr.artifacts_HealBooster);
+                var artifact = new ExternalArtifact("EWanderer.DemoMod.DemoWingArtifactAA", typeof(Artifacts.DemoWingArtifact), spr, new ExternalGlossary[0], null, new int[] { (int)PType.wing });
+                artifact.AddLocalisation("Solar Wings", "Stylish wings for a stylish commander");
+                registry.RegisterArtifact(artifact);
+            }
         }
 
         public void LoadManifest(IStatusRegistry statusRegistry)

@@ -1,8 +1,12 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Reflection;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -12,15 +16,55 @@ namespace CobaltCoreModding.Components.Services
 
         private static Dictionary<string, ExternalAnimation> registered_animations = new Dictionary<string, ExternalAnimation>();
 
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public AnimationRegistry(ILogger<IAnimationRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalAnimation? LookupAnimation(string globalName)
+        {
+            registered_animations.TryGetValue(globalName, out var animation);
+            return animation;
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.AnimationManifests)
-                manifest.LoadManifest(this);
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.AnimationManifests, Logger))
+            {
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by AnimationRegistry");
+                }
+            }
+        }
+
+        ExternalAnimation IAnimationLookup.LookupAnimation(string globalName)
+        {
+            return LookupAnimation(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         bool IAnimationRegistry.RegisterAnimation(ExternalAnimation animation)

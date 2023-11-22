@@ -1,4 +1,5 @@
-﻿using CobaltCoreModding.Definitions.ModManifests;
+﻿using CobaltCoreModding.Definitions.ItemLookups;
+using CobaltCoreModding.Definitions.ModManifests;
 using System.Reflection;
 
 namespace CobaltCoreModding.Definitions.ModContactPoints
@@ -8,11 +9,12 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
     /// mod loader and a mod and will be passed during its bootup.
     /// Examples are: Adding additional localisations, graphics and other ressources not covered by the mod loader magic (such as loading cards which is done straight from assembly)
     /// </summary>
-    public interface IModLoaderContact : ICobaltCoreContact
+    public interface IModLoaderContact : IManifestLookup
     {
-        public IEnumerable<Assembly> LoadedModAssemblies { get; }
-
-        public IManifest? GetManifest(string name);
+        /// <summary>
+        /// A list of all manifest. use if you want to discover all mods for some reason
+        /// </summary>
+        public IEnumerable<IManifest> LoadedManifests { get; }
 
         /// <summary>
         /// Attempts to put a new assembly into the mod loader.

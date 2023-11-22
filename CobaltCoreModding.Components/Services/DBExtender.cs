@@ -1,7 +1,6 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
-using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Definitions.OverwriteItems;
+﻿using CobaltCoreModdding.Components.Services;
 using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.OverwriteItems;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -11,7 +10,7 @@ namespace CobaltCoreModding.Components.Services
     /// <summary>
     /// This serice can be used to run patches
     /// </summary>
-    public class DBExtender : IDbRegistry
+    public class DBExtender
     {
         private static ILogger<DBExtender>? Logger;
 
@@ -24,14 +23,7 @@ namespace CobaltCoreModding.Components.Services
             PartialCardStatOverwrite.SprType = TypesAndEnums.SprType;
         }
 
-        Assembly ICobaltCoreContact.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new NullReferenceException();
-
         private Type card_type { get; init; }
-
-        ExternalSprite? IDbRegistry.GetModSprite(string globalName)
-        {
-            return SpriteExtender.LookupSprite(globalName);
-        }
 
         /// <summary>
         /// This functions hooks the extra data storage from DBExtender into the loading function of Cobalt Core DB.
@@ -60,7 +52,6 @@ namespace CobaltCoreModding.Components.Services
             var load_strings_for_locale_postfix = typeof(DBExtender).GetMethod("LoadStringsForLocale_PostFix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("make init queue postfix not found");
 
             harmony.Patch(load_strings_for_locale_method, postfix: new HarmonyMethod(load_strings_for_locale_postfix));
-
         }
 
         /// <summary>
@@ -97,6 +88,7 @@ namespace CobaltCoreModding.Components.Services
             ArtifactRegistry.PatchLocalisations(locale, ref __result);
             StatusRegistry.PatchLocalisations(locale, ref __result);
             StarterShipRegistry.PatchLocalisations(locale, ref __result);
+            PartTypeRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<ValueTuple<string, Action>> MakeInitQueue_Postfix(Queue<ValueTuple<string, Action>> __result)
@@ -112,12 +104,6 @@ namespace CobaltCoreModding.Components.Services
             patched_result.Enqueue(__result.Dequeue());
             //we patch out own items into db.
             patched_result.Enqueue(new("loading modded decks and statuses", () => { InsertNewDeckAndStatus(); }));
-            //cobalt core loads localisations.
-            patched_result.Enqueue(__result.Dequeue());
-            // We inject ourselves into the loader directly, so no extra here.
-            // Cobalt Core loads platforms.
-            patched_result.Enqueue(__result.Dequeue());
-            // nothing to do for us here...
             // Cobalt Core loads story.
             patched_result.Enqueue(__result.Dequeue());
             // we apply any patches to story item.
@@ -136,6 +122,14 @@ namespace CobaltCoreModding.Components.Services
             patched_result.Enqueue(__result.Dequeue());
             //we do our patches on that.
             patched_result.Enqueue(new("patch card and artifact metadata, event choice functions, story commands", () => { PatchMetasAndStoryFunctions(); }));
+            /*
+            //cobalt core loads localisations.
+            patched_result.Enqueue(__result.Dequeue());
+            // We inject ourselves into the loader directly, so no extra here.
+            // Cobalt Core loads platforms.
+            patched_result.Enqueue(__result.Dequeue());
+            // nothing to do for us here...
+            */
             //at this point all things needed for raw ships is avaialbe and we load their manifests.
             patched_result.Enqueue(new("load raw ship manifests", () => { ShipRegistry.LoadRawManifests(); }));
             //cobalt core does stuff not concering us.
@@ -194,8 +188,6 @@ namespace CobaltCoreModding.Components.Services
         private static void PatchStory()
         {
         }
-
-   
 
         /*
         private static void LoadAllSubclasses(Dictionary<string, Type>? target, Type? lookup_type)

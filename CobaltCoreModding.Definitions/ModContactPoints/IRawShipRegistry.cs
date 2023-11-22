@@ -1,11 +1,13 @@
-﻿namespace CobaltCoreModding.Definitions.ModContactPoints
+﻿using CobaltCoreModding.Definitions.ItemLookups;
+
+namespace CobaltCoreModding.Definitions.ModContactPoints
 {
     /// <summary>
     /// Allows for raw ships to be registered.
     /// they can even have external parts referenced, since these manifest are only loaded after all patching has been done during game startup.
     /// if you need custom chassis, well register chassis should be called first.
     /// </summary>
-    public interface IRawShipRegistry
+    public interface IRawShipRegistry : IShipLookup
     {
         /// <summary>
         /// Register a raw ship.

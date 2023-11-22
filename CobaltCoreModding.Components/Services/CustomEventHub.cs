@@ -17,10 +17,12 @@ namespace CobaltCoreModding.Components.Services
         private static readonly Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>> volatileCustomEventLookup = new Dictionary<string, Tuple<Type, ConditionalWeakTable<object, object>>>();
 
         private static ILogger<CustomEventHub>? logger;
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
-        public CustomEventHub(ILogger<CustomEventHub> logger)
+        public CustomEventHub(ILogger<CustomEventHub> logger, ModAssemblyHandler mah)
         {
             CustomEventHub.logger = logger;
+            modAssemblyHandler = mah;
         }
 
         public bool ConnectToEvent<T>(string eventName, Action<T> handler)
@@ -89,9 +91,16 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifest()
         {
-            foreach (var manifest in ModAssemblyHandler.CustomEventManifests)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.CustomEventManifests, logger))
             {
-                manifest.LoadManifest(this);
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by CustomEventHub registry");
+                }
             }
         }
 

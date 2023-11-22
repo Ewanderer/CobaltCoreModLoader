@@ -1,6 +1,8 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
+﻿using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
@@ -14,17 +16,52 @@ namespace CobaltCoreModding.Components.Services
         private static Dictionary<string, ExternalDeck> deck_lookup = new Dictionary<string, ExternalDeck>();
         private static ILogger<IDeckRegistry>? Logger;
         private static Dictionary<int, ExternalDeck> registered_decks = new Dictionary<int, ExternalDeck>();
+        private readonly ModAssemblyHandler modAssemblyHandler;
 
         public DeckRegistry(ILogger<IDeckRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalDeck? LookupDeck(string globalName)
+        {
+            if (!deck_lookup.TryGetValue(globalName, out var deck))
+                Logger?.LogWarning("ExternalDeck {0} not found", globalName);
+            return deck;
         }
 
         public void LoadManifests()
         {
-            foreach (var manifest in ModAssemblyHandler.DeckManifests)
-                manifest.LoadManifest(this);
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.DeckManifests, Logger))
+            {
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by DeckRegistry");
+                }
+            }
             PatchEnumExtension();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public IManifest LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        public ExternalSprite LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         bool IDeckRegistry.RegisterDeck(ExternalDeck deck, int? overwrite)

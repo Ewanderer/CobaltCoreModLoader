@@ -1,8 +1,13 @@
-﻿using CobaltCoreModding.Definitions.ExternalItems;
-using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModdding.Components.Services;
 using CobaltCoreModding.Components.Utils;
+using CobaltCoreModding.Definitions.ExternalItems;
+using CobaltCoreModding.Definitions.ItemLookups;
+using CobaltCoreModding.Definitions.ModContactPoints;
+using CobaltCoreModding.Definitions.ModManifests;
+using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using System.Reflection;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -15,14 +20,79 @@ namespace CobaltCoreModding.Components.Services
 
         private static ILogger<IArtifactRegistry>? Logger;
 
+        private static FieldInfo part_ptype_field = TypesAndEnums.PartType.GetField("type") ?? throw new Exception("Cannot find part.type field.");
+
         /// <summary>
         /// global name artifact lookup.
         /// </summary>
         private static Dictionary<string, ExternalArtifact> registered_artifacts = new Dictionary<string, ExternalArtifact>();
 
+        private static FieldInfo ship_key_field = TypesAndEnums.ShipType.GetField("key") ?? throw new Exception("Cannot find Ship.key fieldinfo");
+        private static FieldInfo ship_parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Cannot find ship.parts field.");
+        private static FieldInfo state_ship_field = TypesAndEnums.StateType.GetField("ship") ?? throw new Exception("Cannot find state.ship field.");
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public ArtifactRegistry(ILogger<IArtifactRegistry> logger, ModAssemblyHandler mah, CobaltCoreHandler cch)
         {
             Logger = logger;
+            modAssemblyHandler = mah;
+        }
+
+        Assembly ICobaltCoreLookup.CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("CobaltCoreAssemblyMissing");
+
+        public static ExternalArtifact? LookupArtifact(string globalName)
+        {
+            registered_artifacts.TryGetValue(globalName, out var artifact);
+            return artifact;
+        }
+
+        public void LoadManifests()
+        {
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.ArtifactManifests, Logger))
+            {
+                try
+                {
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by ArtifactRegistry");
+                }
+            }
+
+            //Patch blocked artifacts
+            var harmony = new Harmony("modloader.artifactregistry.general");
+
+            var artifact_reward_get_blocked_artifacts_method = CobaltCoreHandler.CobaltCoreAssembly?.GetType("ArtifactReward")?.GetMethod("GetBlockedArtifacts", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("ArtifactReward.GetBlockedArtifacts method not found");
+
+            var artifact_reward_get_blocked_artifacts_postfix = typeof(PartTypeRegistry).GetMethod("GetBlockedArtifacts_Postfix", BindingFlags.Static | BindingFlags.NonPublic) ?? throw new Exception("PartTypeRegistry.GetBlockedArtifacts_Postfix method not found");
+
+            harmony.Patch(artifact_reward_get_blocked_artifacts_method, postfix: new HarmonyMethod(artifact_reward_get_blocked_artifacts_postfix));
+        }
+
+        ExternalArtifact IArtifactLookup.LookupArtifact(string globalName)
+        {
+            return LookupArtifact(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalDeck IDeckLookup.LookupDeck(string globalName)
+        {
+            return DeckRegistry.LookupDeck(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalGlossary IGlossaryLookup.LookupGlossary(string globalName)
+        {
+            return GlossaryRegistry.LookupGlossary(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        IManifest IManifestLookup.LookupManifest(string globalName)
+        {
+            return ModAssemblyHandler.LookupManifest(globalName) ?? throw new KeyNotFoundException();
+        }
+
+        ExternalSprite ISpriteLookup.LookupSprite(string globalName)
+        {
+            return SpriteExtender.LookupSprite(globalName) ?? throw new KeyNotFoundException();
         }
 
         public bool RegisterArtifact(ExternalArtifact artifact, string? overwrite = null)
@@ -175,17 +245,42 @@ namespace CobaltCoreModding.Components.Services
             }
         }
 
-        public void LoadManifests()
-        {
-            foreach (var manifest in ModAssemblyHandler.ArtifactManifests)
-            {
-                manifest.LoadManifest(this);
-            }
-        }
-
         internal bool ValidateArtifact(ExternalArtifact artifact)
         {
             return registered_artifacts.TryGetValue(artifact.GlobalName, out var reg_artifact) && reg_artifact == artifact;
+        }
+
+        private static void GetBlockedArtifacts_Postfix(ref HashSet<Type> __result, object s)
+        {
+            var ship = state_ship_field.GetValue(s) ?? throw new Exception("Unable to extract ship from state");
+            var parts = ship_parts_field.GetValue(ship) as IEnumerable ?? throw new Exception("Unable to extract parts from ship");
+            var key = ship_key_field.GetValue(ship) as string ?? throw new Exception("Unable to extract key from ship");
+
+            var forbidden = new List<Type>();
+            var permitted = new List<Type>();
+            foreach (var part in parts)
+            {
+                var p_type = (int?)part_ptype_field.GetValue(part);
+                if (p_type == null)
+                    continue;
+                permitted.AddRange(registered_artifacts.Values.Where(e => e.ExclusiveToNativeParts.Any(f => f == p_type)).Select(e => e.ArtifactType));
+            }
+
+            permitted.AddRange(registered_artifacts.Values.Where(e => e.ExclusiveToShips.Any(f => string.Compare(f, key, true) == 0)).Select(e => e.ArtifactType));
+
+            permitted.AddRange(registered_artifacts.Values.Where(e => e.ExclusiveToShips.Any()).Select(e => e.ArtifactType));
+
+            //Lock out any artifacts with this property.
+            forbidden.AddRange(registered_artifacts.Values.Where(e => e.ExclusiveToNativeParts.Any()).Select(e => e.ArtifactType));
+
+            foreach (var a_type in permitted)
+            {
+                __result.Remove(a_type);
+            }
+            foreach (var a_type in forbidden.Except(permitted))
+            {
+                __result.Add(a_type);
+            }
         }
     }
 }
