@@ -28,6 +28,7 @@ namespace CobaltCoreModding.Components.Services
         private static FieldInfo state_ship_field = TypesAndEnums.StateType.GetField("ship") ?? throw new Exception("Cannot find state.ship field.");
         private readonly ArtifactRegistry artifactRegistry;
         private readonly CardRegistry cardRegistry;
+        private static readonly Dictionary<string, List<Type>> rawStarterExclusiveCards = new();
 
         public StarterShipRegistry(CardRegistry cardRegistry, ArtifactRegistry artifactRegistry, ILogger<StarterShipRegistry> logger, ModAssemblyHandler mah)
         {
@@ -493,6 +494,17 @@ namespace CobaltCoreModding.Components.Services
                     manifest.Logger?.LogError(err, "Exception caught by StarterShipRegistry");
                 }
             }
+        }
+
+        public bool MakeCardExclusive(string shipName, Type cardType)
+        {
+            if (!cardType.IsAssignableTo(TypesAndEnums.CardType))
+                return false;
+            if (rawStarterExclusiveCards.TryGetValue(shipName, out var list))
+                list.Add(cardType);
+            else
+                rawStarterExclusiveCards.Add(shipName, new List<Type> { cardType });
+            return true;
         }
     }
 }
