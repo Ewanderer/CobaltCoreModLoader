@@ -120,21 +120,21 @@ namespace DemoMod
             {
                 var spr = ExternalSprite.GetRaw((int)Spr.artifacts_ShardEnchanter);
                 demo_ship_artifact = new ExternalArtifact("EWanderer.Demomod.Demoship.DemoShipArtifact", typeof(Artifacts.DemoShipArtifact), spr, new ExternalGlossary[0], null);
-                demo_ship_artifact.AddLocalisation("en", "Cup Holder", "Extra cup holders. Remove Chicken Coops somehow.");
+                demo_ship_artifact.AddLocalisation("Cup Holder", "Extra cup holders. Remove Chicken Coops somehow.");
                 registry.RegisterArtifact(demo_ship_artifact);
             }
 
             {
                 var spr = ExternalSprite.GetRaw((int)Spr.artifacts_ShardEnchanter);
                 demo_part_artifact = new ExternalArtifact("EWanderer.Demomod.Demoship.DemoPartArtifact", typeof(Artifacts.DemoPartArtifact), spr, new ExternalGlossary[0], null);
-                demo_part_artifact.AddLocalisation("en", "Crystal Lining", "Shiny.");
+                demo_part_artifact.AddLocalisation("Crystal Lining", "Shiny.");
                 registry.RegisterArtifact(demo_part_artifact);
             }
 
             {
                 var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannonV2);
                 jupiter_demo_artifact = new ExternalArtifact("EWanderer.Demomod.Demoship.SomethingWeird", typeof(Artifacts.DemoJupiterArtifact), spr, new ExternalGlossary[0], null);
-                jupiter_demo_artifact.AddLocalisation("en", "BÄM", "BÄM.");
+                jupiter_demo_artifact.AddLocalisation("BÄM", "BÄM.");
                 registry.RegisterArtifact(jupiter_demo_artifact);
             }
         }

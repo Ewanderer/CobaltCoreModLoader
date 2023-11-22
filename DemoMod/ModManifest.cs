@@ -191,13 +191,13 @@ namespace DemoMod
             {
                 var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
                 var artifact = new ExternalArtifact("EWanderer.DemoMod.PortableBlackHoleArtifact", typeof(Artifacts.PortableBlackHole), spr, new ExternalGlossary[0], null, null);
-                artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
+                artifact.AddLocalisation("Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
                 registry.RegisterArtifact(artifact);
             }
             {
                 var spr = ExternalSprite.GetRaw((int)Spr.artifacts_HealBooster);
-                var artifact = new ExternalArtifact("EWanderer.DemoMod.DemoWingArtifact", typeof(Artifacts.DemoShipArtifact), spr, new ExternalGlossary[0], null, new int[] { (int)PType.wing });
-                artifact.AddLocalisation("en", "Solar Wings", "Stylish wings for a stylish commander");
+                var artifact = new ExternalArtifact("EWanderer.DemoMod.DemoWingArtifactAA", typeof(Artifacts.DemoWingArtifact), spr, new ExternalGlossary[0], null, new int[] { (int)PType.wing });
+                artifact.AddLocalisation("Solar Wings", "Stylish wings for a stylish commander");
                 registry.RegisterArtifact(artifact);
             }
         }

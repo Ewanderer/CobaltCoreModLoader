@@ -48,7 +48,7 @@
         public ExternalSprite Sprite { get; init; }
         private Dictionary<string, Tuple<string, string>> Localisations { get; init; } = new();
 
-        public void AddLocalisation(string locale, string name, string description)
+        public void AddLocalisation(string name, string description, string locale="en")
         {
             Tuple<string, string> tuple = new(name, description);
             if (!Localisations.TryAdd(locale, tuple))
