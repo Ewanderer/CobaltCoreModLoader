@@ -24,5 +24,7 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="starterShip">A cobaltcore.startership object</param>
         /// <param name="global_name">global name. must be unique among all raw and external starterships.</param>
         bool RegisterStartership(object starterShip, string global_name);
+
+        bool MakeCardExclusive(string shipName, Type cardType);
     }
 }

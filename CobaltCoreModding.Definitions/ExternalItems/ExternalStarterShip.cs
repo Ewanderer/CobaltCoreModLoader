@@ -16,6 +16,7 @@
         /// <param name="nativeStartingArtifacts"></param>
         /// <param name="exclusiveArtifacts"></param>
         /// <param name="exclusiveNativeArtifacts"></param>
+        /// <param name="exclusiveCards">Doesn't do anything but is planned to make a card exclusive.</param>
         public ExternalStarterShip(string globalName,
             string shipGlobalName,
             IEnumerable<ExternalCard>? startingCards = null,
@@ -23,16 +24,18 @@
             IEnumerable<Type>? nativeStartingCards = null,
             IEnumerable<Type>? nativeStartingArtifacts = null,
             IEnumerable<ExternalArtifact>? exclusiveArtifacts = null,
-            IEnumerable<Type>? exclusiveNativeArtifacts = null)
+            IEnumerable<Type>? exclusiveNativeArtifacts = null,
+            IEnumerable<ExternalCard>? exclusiveCards=null)
         {
             GlobalName = globalName;
             ShipGlobalName = shipGlobalName;
-            StartingCards = startingCards?.ToArray() ?? new ExternalCard[0];
-            StartingArtifacts = startingArtifacts?.ToArray() ?? new ExternalArtifact[0];
-            NativeStartingCards = nativeStartingCards?.ToArray() ?? new Type[0];
-            NativeStartingArtifact = nativeStartingArtifacts?.ToArray() ?? new Type[0];
-            ExclusiveArtifacts = exclusiveArtifacts?.ToArray() ?? new ExternalArtifact[0];
-            ExclusiveNativeArtifacts = exclusiveNativeArtifacts?.ToArray() ?? new Type[0];
+            StartingCards = startingCards?.ToArray() ?? Array.Empty<ExternalCard>();
+            StartingArtifacts = startingArtifacts?.ToArray() ?? Array.Empty<ExternalArtifact>();
+            NativeStartingCards = nativeStartingCards?.ToArray() ?? Array.Empty<Type>();
+            NativeStartingArtifact = nativeStartingArtifacts?.ToArray() ?? Array.Empty<Type>();
+            ExclusiveArtifacts = exclusiveArtifacts?.ToArray() ?? Array.Empty<ExternalArtifact>();
+            ExclusiveNativeArtifacts = exclusiveNativeArtifacts?.ToArray() ?? Array.Empty<Type>();
+            ExclusiveCards=exclusiveCards?.ToArray()??Array.Empty<ExternalCard>();
         }
 
         public ExternalStarterShip(string globalName,
@@ -46,6 +49,8 @@
             this(globalName, ship_template.GlobalName, startingCards, startingArtifacts, nativeStartingCards, nativeStartingArtifacts, exclusiveArtifacts, exclusiveNativeArtifacts)
         {
         }
+
+        public IEnumerable<ExternalCard> ExclusiveCards { get; init; }
 
         /// <summary>
         /// All artifacts added here will only show if this ship has been selected.
