@@ -17,6 +17,7 @@ namespace DemoMod
         private ExternalSprite? card_art_sprite;
         private ExternalAnimation? default_animation;
         private ExternalSprite? demo_status_sprite;
+        private ExternalSprite? DemoAttackSprite;
         private ExternalDeck? dracula_deck;
         private ExternalSprite? dracular_art;
         private ExternalSprite? dracular_border;
@@ -24,20 +25,17 @@ namespace DemoMod
         private ExternalSprite? mini_dracula_sprite;
         private ExternalSprite? pinker_per_border_over_sprite;
 
-        public DirectoryInfo? ModRootFolder { get; set; }
-        public DirectoryInfo? GameRootFolder { get; set; }
-        public string Name => "EWanderer.DemoMod.MainManifest";
-
         public IEnumerable<DependencyEntry> Dependencies => new DependencyEntry[0];
-
+        public DirectoryInfo? GameRootFolder { get; set; }
         public ILogger? Logger { get; set; }
+        public DirectoryInfo? ModRootFolder { get; set; }
+        public string Name => "EWanderer.DemoMod.MainManifest";
 
         public void BootMod(IModLoaderContact contact)
         {
             //Nothing to do here lol.
         }
 
-        private ExternalSprite? DemoAttackSprite;
         public void LoadManifest(ISpriteRegistry artRegistry)
         {
             if (ModRootFolder == null)
@@ -82,7 +80,6 @@ namespace DemoMod
                 if (!artRegistry.RegisterArt(DemoAttackSprite, (int)Spr.icons_attack))
                     throw new Exception("Cannot register sprite.");
             }
-
         }
 
         public void LoadManifest(IAnimationRegistry registry)
@@ -191,10 +188,18 @@ namespace DemoMod
 
         public void LoadManifest(IArtifactRegistry registry)
         {
-            var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
-            var artifact = new ExternalArtifact(typeof(Artifacts.PortableBlackHole), "EWanderer.DemoMod.PortableBlackHoleArtifact", spr, null, new ExternalGlossary[0]);
-            artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
-            registry.RegisterArtifact(artifact);
+            {
+                var spr = ExternalSprite.GetRaw((int)Spr.artifacts_AresCannon);
+                var artifact = new ExternalArtifact("EWanderer.DemoMod.PortableBlackHoleArtifact", typeof(Artifacts.PortableBlackHole), spr, new ExternalGlossary[0], null, null);
+                artifact.AddLocalisation("en", "Black Hole Generator 3000", "Bring your own black hole to a fight. Why would you bring it along? It will consume us all!");
+                registry.RegisterArtifact(artifact);
+            }
+            {
+                var spr = ExternalSprite.GetRaw((int)Spr.artifacts_HealBooster);
+                var artifact = new ExternalArtifact("EWanderer.DemoMod.DemoWingArtifact", typeof(Artifacts.DemoShipArtifact), spr, new ExternalGlossary[0], null, new int[] { (int)PType.wing });
+                artifact.AddLocalisation("en", "Solar Wings", "Stylish wings for a stylish commander");
+                registry.RegisterArtifact(artifact);
+            }
         }
 
         public void LoadManifest(IStatusRegistry statusRegistry)

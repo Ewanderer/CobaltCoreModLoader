@@ -1,5 +1,4 @@
-﻿using CobaltCoreModding.Definitions.ModContactPoints;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SingleFileExtractor.Core;
 using System.Reflection;

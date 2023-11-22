@@ -1,23 +1,22 @@
 ﻿using CobaltCoreModding.Definitions.ExternalItems;
 using Microsoft.Xna.Framework.Graphics;
 
-
 namespace DemoMod.Sprites
 {
     public class DemoDynamicSprite : ExternalSprite
     {
+        private readonly Func<object> getGraphicsDeviceFunc;
+
+        private readonly Random random = new Random();
+
+        private Texture2D? current_texture = null;
+
         public DemoDynamicSprite(string globalName, Func<object> getGraphicsDeviceFunc) : base(globalName)
         {
             this.getGraphicsDeviceFunc = getGraphicsDeviceFunc;
         }
 
-        readonly Random random = new Random();
-
-        readonly Func<object> getGraphicsDeviceFunc;
-
         public override bool IsCaching => false;
-
-        private Texture2D? current_texture = null;
 
         public override object? GetTexture()
         {
@@ -48,6 +47,5 @@ namespace DemoMod.Sprites
             current_texture.SetData(new_colors);
             return current_texture;
         }
-
     }
 }
