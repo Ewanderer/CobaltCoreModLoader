@@ -16,6 +16,8 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="locale">Language to add localization for</param>
         void AddRawLocalization(string global_name, string name, string description, string locale = "en");
 
+        bool MakeArtifactExclusive(string shipName, Type artifactType);
+
         /// <summary>
         /// Register a raw ship.
         /// </summary>

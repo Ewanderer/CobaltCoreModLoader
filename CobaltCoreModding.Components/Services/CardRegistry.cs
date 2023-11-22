@@ -4,7 +4,6 @@ using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
-using SingleFileExtractor.Core.Legacy;
 using System.Collections;
 using System.Reflection;
 

@@ -221,9 +221,9 @@ namespace CobaltCoreModding.Components.Services
                 {
                     spawned_manifest = Activator.CreateInstance(type) as IManifest;
                 }
-                catch(Exception err)
+                catch (Exception err)
                 {
-                    logger.LogError(err,"mod manifest type {0} not loaded with the following error.", type.Name);
+                    logger.LogError(err, "mod manifest type {0} not loaded with the following error.", type.Name);
                     continue;
                 }
                 //should not happen so we don't bother with logging

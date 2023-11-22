@@ -128,8 +128,8 @@ namespace CobaltCoreModding.Components.Services
             // We inject ourselves into the loader directly, so no extra here.
             // Cobalt Core loads platforms.
             patched_result.Enqueue(__result.Dequeue());
-            // nothing to do for us here...    
-            */         
+            // nothing to do for us here...
+            */
             //at this point all things needed for raw ships is avaialbe and we load their manifests.
             patched_result.Enqueue(new("load raw ship manifests", () => { ShipRegistry.LoadRawManifests(); }));
             //cobalt core does stuff not concering us.

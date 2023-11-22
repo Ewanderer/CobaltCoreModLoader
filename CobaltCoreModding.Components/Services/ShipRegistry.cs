@@ -25,11 +25,11 @@ namespace CobaltCoreModding.Components.Services
         private static MethodInfo CopyShip = TypesAndEnums.MutilType.GetMethod("DeepCopy", BindingFlags.Static | BindingFlags.Public)?.MakeGenericMethod(new Type[] { TypesAndEnums.ShipType }) ?? throw new Exception("Mutil.DeepCopy<Ship> couldn't be created!");
         private static ShipRegistry? instance;
         private static ILogger<ShipRegistry>? logger;
+        private static ModAssemblyHandler? modAssemblyHandler;
         private static FieldInfo part_skin_field = TypesAndEnums.PartType.GetField("skin") ?? throw new Exception("Part.skin field not found");
         private static FieldInfo parts_field = TypesAndEnums.ShipType.GetField("parts") ?? throw new Exception("Ship.parts field not found");
         private static FieldInfo ship_chassisOver_field = TypesAndEnums.ShipType.GetField("chassisOver") ?? throw new Exception("Ship.chassisOver field not found");
         private static FieldInfo ship_chassisUnder_field = TypesAndEnums.ShipType.GetField("chassisUnder") ?? throw new Exception("Ship.chassisUnder field not found");
-        private static ModAssemblyHandler? modAssemblyHandler;
         private readonly PartRegistry partRegistry;
 
         public ShipRegistry(ILogger<ShipRegistry> logger, PartRegistry partRegistry, ModAssemblyHandler mah)
@@ -126,7 +126,7 @@ namespace CobaltCoreModding.Components.Services
 
         public void LoadManifests()
         {
-            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.ShipManifests, logger)?? ModAssemblyHandler.ShipManifests)
+            foreach (var manifest in modAssemblyHandler?.LoadOrderly(ModAssemblyHandler.ShipManifests, logger) ?? ModAssemblyHandler.ShipManifests)
             {
                 try
                 {

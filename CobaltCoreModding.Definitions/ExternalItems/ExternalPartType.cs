@@ -6,11 +6,16 @@
         private readonly Dictionary<string, string> name_localisations = new Dictionary<string, string>();
         private int? id;
 
-        public ExternalPartType(string globalName)
+        public ExternalPartType(string globalName, IEnumerable<ExternalArtifact>? exclusiveArtifacts = null, IEnumerable<Type>? exclusiveNativeArtifacts = null)
         {
             GlobalName = globalName;
+            ExclusiveArtifacts = exclusiveArtifacts?.ToArray() ?? Array.Empty<ExternalArtifact>();
+            ExclusiveNativeArtifacts = exclusiveNativeArtifacts?.ToArray() ?? Array.Empty<Type>();
         }
 
+        public IEnumerable<ExternalArtifact> ExclusiveArtifacts { get; init; }
+
+        public IEnumerable<Type> ExclusiveNativeArtifacts { get; init; }
         public string GlobalName { get; init; }
 
         public int? Id

@@ -36,6 +36,7 @@ namespace CobaltCoreModding.Components.Utils
         private static Type? __starter_Deck_type = null;
 
         private static Type? __startership_type = null;
+        private static Type? __state_type = null;
         private static Type? __status_def_type = null;
         private static Type? __status_type = null;
         private static Type? __story_vars_type = null;
@@ -220,6 +221,16 @@ namespace CobaltCoreModding.Components.Utils
                 if (__startership_type != null)
                     return __startership_type;
                 return __startership_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StarterShip") ?? throw new Exception("StarterShip type not found");
+            }
+        }
+
+        public static Type StateType
+        {
+            get
+            {
+                if (__state_type != null)
+                    return __state_type;
+                return __state_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("State") ?? throw new Exception("State type not found");
             }
         }
 
