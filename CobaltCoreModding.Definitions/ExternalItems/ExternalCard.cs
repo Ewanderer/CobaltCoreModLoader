@@ -70,7 +70,7 @@
 
         public void GenerateCardNamesFromResourceFile()
         {
-#warning todo
+
         }
 
         public void GetLocalisation(string locale, out string? name, out string? description, out string? descriptionA, out string? descriptionB)
