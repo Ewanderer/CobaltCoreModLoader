@@ -3,6 +3,7 @@ using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -34,6 +35,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private readonly List<AssemblyLoadContext> contexts = new List<AssemblyLoadContext>();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
@@ -106,7 +108,11 @@ namespace CobaltCoreModding.Components.Services
             try
             {
                 logger.LogInformation($"Loading mod from {mod_file.FullName}...");
-                var assembly = Assembly.LoadFile(mod_file.FullName);
+                var context = new AssemblyLoadContext(mod_file.DirectoryName ?? throw new Exception("Mod doesn't have folder???"));
+                var assembly = context.LoadFromAssemblyPath(mod_file.FullName);
+                context.Resolving += ModContext_Resolving;
+                contexts.Add(context);
+                //var assembly = Assembly.LoadFrom(mod_file.FullName);
                 if (modAssemblies.Add(assembly))
                     ExtractManifestFromAssembly(
                         assembly,
@@ -282,6 +288,24 @@ namespace CobaltCoreModding.Components.Services
                 if (spawned_manifest is IPartTypeManifest partTypeManifest)
                     partTypeManifests.Add(partTypeManifest);
             }
+        }
+
+        private Assembly? ModContext_Resolving(AssemblyLoadContext context, AssemblyName assemblyName)
+        {
+            //Mods should either cross reference another mod.
+            Assembly? result = modAssemblies.Concat(new Assembly[] { CobaltCoreAssembly }).FirstOrDefault(e => e.GetName().Equals(assemblyName));
+            //or an internal dependency, which we will load here to its context to avoid collision between mods.
+            if (result == null)
+            {
+                try
+                {
+                    result = context.LoadFromAssemblyPath(Path.Combine(context.Name ?? throw new Exception(), (assemblyName.Name ?? throw new Exception()) + ".dll"));
+                }
+                catch
+                {
+                }
+            }
+            return result;
         }
     }
 }
