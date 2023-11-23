@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            tabControl1 = new System.Windows.Forms.TabControl();
+            MainTabControl = new System.Windows.Forms.TabControl();
             tpMain = new System.Windows.Forms.TabPage();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             clbModLibrary = new System.Windows.Forms.CheckedListBox();
@@ -43,21 +43,21 @@
             cbCloseOnLaunch = new System.Windows.Forms.CheckBox();
             cbStartDevMode = new System.Windows.Forms.CheckBox();
             btnLaunchCobaltCore = new System.Windows.Forms.Button();
-            tabControl1.SuspendLayout();
+            MainTabControl.SuspendLayout();
             tpMain.SuspendLayout();
             tableLayoutPanel1.SuspendLayout();
             SuspendLayout();
             // 
-            // tabControl1
+            // MainTabControl
             // 
-            tabControl1.Controls.Add(tpMain);
-            tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            tabControl1.Location = new System.Drawing.Point(0, 0);
-            tabControl1.Margin = new System.Windows.Forms.Padding(5);
-            tabControl1.Name = "tabControl1";
-            tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(684, 461);
-            tabControl1.TabIndex = 0;
+            MainTabControl.Controls.Add(tpMain);
+            MainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            MainTabControl.Location = new System.Drawing.Point(0, 0);
+            MainTabControl.Margin = new System.Windows.Forms.Padding(5);
+            MainTabControl.Name = "MainTabControl";
+            MainTabControl.SelectedIndex = 0;
+            MainTabControl.Size = new System.Drawing.Size(684, 461);
+            MainTabControl.TabIndex = 0;
             // 
             // tpMain
             // 
@@ -256,13 +256,13 @@
             AutoScaleDimensions = new System.Drawing.SizeF(11F, 25F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(684, 461);
-            Controls.Add(tabControl1);
+            Controls.Add(MainTabControl);
             Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             Margin = new System.Windows.Forms.Padding(5);
             MinimumSize = new System.Drawing.Size(700, 500);
             Name = "MainForm";
             Text = "Cobalt Core Mod Loader";
-            tabControl1.ResumeLayout(false);
+            MainTabControl.ResumeLayout(false);
             tpMain.ResumeLayout(false);
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
@@ -271,7 +271,7 @@
 
         #endregion
 
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tpMain;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
@@ -286,5 +286,6 @@
         private System.Windows.Forms.CheckBox cbCloseOnLaunch;
         private System.Windows.Forms.CheckBox cbStartDevMode;
         private System.Windows.Forms.Button btnLaunchCobaltCore;
+        public System.Windows.Forms.TabControl MainTabControl;
     }
 }
