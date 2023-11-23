@@ -1,5 +1,4 @@
-﻿using CobaltCoreModdding.Components.Services;
-using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;

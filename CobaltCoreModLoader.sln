@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModLoaderApp", "C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModLoaderClassic", "CobaltCoreModLoaderClassic\CobaltCoreModLoaderClassic.csproj", "{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModdding.Components", "CobaltCoreModding.Components\CobaltCoreModdding.Components.csproj", "{47C50A41-83F0-43DB-9607-B317686081BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CobaltCoreModding.Components", "CobaltCoreModding.Components\CobaltCoreModding.Components.csproj", "{015AAF65-C28C-4114-BC74-81C7ABD3338F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,14 +53,14 @@ Global
 		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|Any CPU.Build.0 = Release|Any CPU
 		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|x64.ActiveCfg = Release|Any CPU
 		{98C1AE94-F8FE-4D15-B91A-A93D7AE6C755}.Release|x64.Build.0 = Release|Any CPU
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Debug|x64.ActiveCfg = Debug|x64
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Debug|x64.Build.0 = Debug|x64
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Release|x64.ActiveCfg = Release|x64
-		{47C50A41-83F0-43DB-9607-B317686081BB}.Release|x64.Build.0 = Release|x64
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Debug|x64.ActiveCfg = Debug|x64
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Debug|x64.Build.0 = Debug|x64
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Release|x64.ActiveCfg = Release|x64
+		{015AAF65-C28C-4114-BC74-81C7ABD3338F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

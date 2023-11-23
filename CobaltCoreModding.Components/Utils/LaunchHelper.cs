@@ -1,10 +1,9 @@
-﻿using CobaltCoreModdding.Components.Services;
-using CobaltCoreModding.Components.Services;
+﻿using CobaltCoreModding.Components.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace CobaltCoreModdding.Components.Utils
+namespace CobaltCoreModding.Components.Utils
 {
     public static class LaunchHelper
     {

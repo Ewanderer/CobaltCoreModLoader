@@ -5,7 +5,7 @@ using System;
 using Serilog;
 using System.IO;
 using System.Windows.Forms;
-using CobaltCoreModdding.Components.Utils;
+using CobaltCoreModding.Components.Utils;
 
 namespace CobaltCoreModLoaderApp
 {
