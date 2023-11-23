@@ -1,5 +1,4 @@
-﻿using CobaltCoreModdding.Components.Services;
-using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.OverwriteItems;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;

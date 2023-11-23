@@ -1,5 +1,4 @@
-﻿using CobaltCoreModding.Components.Services;
-using CobaltCoreModding.Components.Utils;
+﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ItemLookups;
 using CobaltCoreModding.Definitions.ModContactPoints;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Reflection;
 
-namespace CobaltCoreModdding.Components.Services
+namespace CobaltCoreModding.Components.Services
 {
     public class PartTypeRegistry : IPartTypeRegistry
     {
