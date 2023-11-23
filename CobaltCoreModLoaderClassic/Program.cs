@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using CobaltCoreModding.Components.Utils;
-using CobaltCoreModdding.Components.Utils;
 
 public static class Program
 {

@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CobaltCoreModding.Components\CobaltCoreModdding.Components.csproj" />
+      <ProjectReference Include="..\CobaltCoreModding.Components\CobaltCoreModding.Components.csproj" />
     </ItemGroup>
 
 </Project>

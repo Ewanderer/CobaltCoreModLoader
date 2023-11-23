@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CobaltCoreModding.Components\CobaltCoreModdding.Components.csproj" />
+    <ProjectReference Include="..\CobaltCoreModding.Components\CobaltCoreModding.Components.csproj" />
     <ProjectReference Include="..\CobaltCoreModding.Definitions\CobaltCoreModding.Definitions.csproj" />
     <ProjectReference Include="..\SingleFileExtractor\src\SingleFileExtractor.Core\SingleFileExtractor.Core.csproj" />
   </ItemGroup>
