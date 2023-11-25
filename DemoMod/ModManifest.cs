@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DemoMod
 {
-    public class ModManifest : IModManifest, ISpriteManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest
+    public class ModManifest : IModManifest, ISpriteManifest, IAnimationManifest, IDeckManifest, ICardManifest, ICardOverwriteManifest, ICharacterManifest, IGlossaryManifest, IArtifactManifest, IStatusManifest, ICustomEventManifest, IAddinManifest
     {
         public static ExternalStatus? demo_status;
         internal static ICustomEventHub? EventHub;
@@ -126,7 +126,7 @@ namespace DemoMod
             //make card meta data
             var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null);
             //add card name in english
-            card.AddLocalisation("Schwarzmagier");
+            card.AddLocalisation(addin?.tbValue.Text ?? "Schwarzmagier");
             //register card in the db extender.
             registry.RegisterCard(card);
         }
@@ -215,6 +215,23 @@ namespace DemoMod
             eventHub.MakeEvent<Combat>("EWanderer.DemoMod.TestEvent");
             eventHub.ConnectToEvent<Combat>("EWanderer.DemoMod.TestEvent", (c) => { c.QueueImmediate(new ACardOffering() { amount = 10, battleType = BattleType.Elite, inCombat = true }); });
             ModManifest.EventHub = eventHub;
+        }
+
+        private DemoAddinPanel? addin;
+
+        public void ModifyLauncher(object? launcherUI)
+        {
+            if (launcherUI is Form)
+            {
+                var parent = launcherUI.GetType().GetField("MainTabControl")?.GetValue(launcherUI) as TabControl;
+                if (parent == null)
+                    return;
+                var page = new TabPage("DemoMod");
+                addin = new DemoAddinPanel();
+                page.Controls.Add(addin);
+                addin.Dock = DockStyle.Fill;
+                parent.TabPages.Add(page);
+            }
         }
     }
 }
