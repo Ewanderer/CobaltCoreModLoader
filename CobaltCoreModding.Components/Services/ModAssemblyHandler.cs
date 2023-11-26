@@ -145,7 +145,7 @@ namespace CobaltCoreModding.Components.Services
                             continue;
                         var loaded_list = loadedManifests.First(e => dependency.DependencyType.IsAssignableTo(e.Key)).Value;
                         //check if dependeny has been loaded.
-                        if (!loaded_list.Any(m => string.Compare(m.Name, dependency.DependencyName) == 0))
+                        if (!dependency.IgnoreIfMissing && !loaded_list.Any(m => m.Name == dependency.DependencyName))
                         {
                             failed = true;
                             break;
@@ -175,11 +175,13 @@ namespace CobaltCoreModding.Components.Services
                     //Determine missing dependency names
                     var missing_dependency_names = leftover.Dependencies.Where(d =>
                     {
+                        if(d.IgnoreIfMissing)
+                            return false;
                         if (!loadedManifests.Any(e => d.DependencyType.IsAssignableTo(e.Key)))
                             return false;
                         var loaded_list = loadedManifests.First(e => d.DependencyType.IsAssignableTo(e.Key)).Value;
                         //check if dependeny has been loaded.
-                        return !loaded_list.Any(m => string.Compare(m.Name, d.DependencyName) == 0);
+                        return !loaded_list.Any(m => m.Name == d.DependencyName);
                     }).Select(e => e.DependencyName);
                     var mdn_list = string.Join("\n", missing_dependency_names);
                     missing_logger.LogCritical("The Manifest '{0}' is missing the following dependencies and thus cannot be loaded:\n {1}", leftover.Name, mdn_list);
