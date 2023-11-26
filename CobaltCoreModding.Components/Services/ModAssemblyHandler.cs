@@ -50,7 +50,7 @@ namespace CobaltCoreModding.Components.Services
 
         public static IEnumerable<IArtifactManifest> ArtifactManifests => artifactManifests.ToArray();
 
-        public static IEnumerable<IModManifest> BootManifests => BootManifests.ToArray();
+        public static IEnumerable<IModManifest> BootManifests => bootManifests.ToArray();
 
         public static IEnumerable<ICardManifest> CardManifests => cardManifests.ToArray();
 
