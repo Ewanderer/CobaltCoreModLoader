@@ -13,10 +13,23 @@ namespace CobaltCoreModding.Definitions
         /// <param name="dependencyName"></param>
         /// <param name="dependencyType"></param>
         /// <see cref="DependencyEntry{T}"/>
-        protected DependencyEntry(string dependencyName, Type dependencyType)
+        [Obsolete("Use the 3-arg overload instead.")]
+        protected DependencyEntry(string dependencyName, Type dependencyType) : this(dependencyName, dependencyType, false)
+        {
+        }
+
+        /// <summary>
+        /// Closed constructor to prevent missconstruction, use DependencyEntry{T} for construction.
+        /// </summary>
+        /// <param name="dependencyName"></param>
+        /// <param name="dependencyType"></param>
+        /// <param name="ignoreIfMissing"></param>
+        /// <see cref="DependencyEntry{T}"/>
+        protected DependencyEntry(string dependencyName, Type dependencyType, bool ignoreIfMissing = false)
         {
             DependencyName = dependencyName;
             DependencyType = dependencyType;
+            IgnoreIfMissing = ignoreIfMissing;
         }
 
         /// <summary>
@@ -29,6 +42,8 @@ namespace CobaltCoreModding.Definitions
         /// In case a manifest for example implements Sprites, Artifacts, Events, etc, but our dependeny is only on an artifact.
         /// </summary>
         public Type DependencyType { get; init; }
+
+        public bool IgnoreIfMissing { get; init; }
     }
 
     /// <summary>
@@ -41,7 +56,17 @@ namespace CobaltCoreModding.Definitions
         /// A raw constructor
         /// </summary>
         /// <param name="dependencyName">the name of the dependency manifest.</param>
-        public DependencyEntry(string dependencyName) : base(dependencyName, typeof(T))
+        [Obsolete("Use the 2-arg overload instead.")]
+        public DependencyEntry(string dependencyName) : this(dependencyName, false)
+        {
+        }
+
+        /// <summary>
+        /// A raw constructor
+        /// </summary>
+        /// <param name="dependencyName">the name of the dependency manifest.</param>
+        /// <param name="ignoreIfMissing">If <c>true</c>, the mod will continue to load if the dependency is missing</param>
+        public DependencyEntry(string dependencyName, bool ignoreIfMissing = false) : base(dependencyName, typeof(T), ignoreIfMissing)
         {
         }
 
@@ -49,7 +74,18 @@ namespace CobaltCoreModding.Definitions
         /// For even more stricter control use this
         /// </summary>
         /// <param name="manifest">the manifest to which we are dependent.</param>
-        public DependencyEntry(T manifest) : base(manifest.Name, typeof(T))
+        [Obsolete("Use the 2-arg overload instead.")]
+        public DependencyEntry(T manifest) : this(manifest, false)
+        {
+        }
+
+
+        /// <summary>
+        /// For even more stricter control use this
+        /// </summary>
+        /// <param name="manifest">the manifest to which we are dependent.</param>
+        /// <param name="ignoreIfMissing">If <c>true</c>, the mod will continue to load if the dependency is missing</param>
+        public DependencyEntry(T manifest, bool ignoreIfMissing = false) : base(manifest.Name, typeof(T), ignoreIfMissing)
         {
         }
     }

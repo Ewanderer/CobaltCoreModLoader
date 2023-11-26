@@ -145,7 +145,7 @@ namespace CobaltCoreModding.Components.Services
                             continue;
                         var loaded_list = loadedManifests.First(e => dependency.DependencyType.IsAssignableTo(e.Key)).Value;
                         //check if dependeny has been loaded.
-                        if (!loaded_list.Any(m => m.Name == dependency.DependencyName))
+                        if (!dependency.IgnoreIfMissing && !loaded_list.Any(m => m.Name == dependency.DependencyName))
                         {
                             failed = true;
                             break;
@@ -175,6 +175,8 @@ namespace CobaltCoreModding.Components.Services
                     //Determine missing dependency names
                     var missing_dependency_names = leftover.Dependencies.Where(d =>
                     {
+                        if(d.IgnoreIfMissing)
+                            return false;
                         if (!loadedManifests.Any(e => d.DependencyType.IsAssignableTo(e.Key)))
                             return false;
                         var loaded_list = loadedManifests.First(e => d.DependencyType.IsAssignableTo(e.Key)).Value;
