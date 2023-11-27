@@ -23,6 +23,7 @@
     <PackageReference Include="System.Reflection.MetadataLoadContext" Version="8.0.0" />
     <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0" />
     <PackageReference Include="VdfConverter" Version="1.0.3" />
+	<PackageReference Include="Pintail" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>

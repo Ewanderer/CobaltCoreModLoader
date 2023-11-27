@@ -24,5 +24,13 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         /// <param name="working_directory">The directory which serves as the mod loader path. to ensure it can find physcial resources.</param>
         /// <returns></returns>
         public bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory);
+
+        /// <summary>
+        /// Request an API provided by another mod via the <see cref="IApiProviderManifest.GetApi(IManifest)"/> method.
+        /// </summary>
+        /// <typeparam name="TApi">An interface type matching the public members of the API provided by the other mod.</typeparam>
+        /// <param name="modName">The unique mod name of the mod that provides the API.</param>
+        /// <returns>A proxy for the API provided by the other mod, or `null` if the mod is not loaded or the interface does not match the API's public members.</returns>
+        public TApi? GetApi<TApi>(string modName) where TApi : class;
     }
 }
