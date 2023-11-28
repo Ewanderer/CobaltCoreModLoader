@@ -7,7 +7,7 @@ using System.Reflection.Emit;
 
 namespace CobaltCoreModding.Components.Services
 {
-    internal class PerModModLoaderContact : IModLoaderContact
+    internal class PerModModLoaderContact : IModLoaderContact, IPrelaunchContactPoint
     {
         private record struct ModApiKey(
             string ModName,
@@ -16,12 +16,12 @@ namespace CobaltCoreModding.Components.Services
 
         private readonly ModAssemblyHandler modAssemblyHandler;
         private readonly ILogger<ModAssemblyHandler> logger;
-        private readonly IModManifest modManifest;
+        private readonly IManifest modManifest;
 
         private readonly Dictionary<ModApiKey, object?> modApis = new();
         private readonly IProxyManager<string> proxyManager;
 
-        internal PerModModLoaderContact(ModAssemblyHandler modAssemblyHandler, ILogger<ModAssemblyHandler> logger, IModManifest modManifest)
+        internal PerModModLoaderContact(ModAssemblyHandler modAssemblyHandler, ILogger<ModAssemblyHandler> logger, IManifest modManifest)
         {
             this.modAssemblyHandler = modAssemblyHandler;
             this.logger = logger;

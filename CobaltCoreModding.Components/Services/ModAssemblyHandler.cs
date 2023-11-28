@@ -38,7 +38,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<IApiProviderManifest> apiProviderManifests = new();
         private readonly List<AssemblyLoadContext> contexts = new List<AssemblyLoadContext>();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
-        private readonly Dictionary<IModManifest, IModLoaderContact> modLoaderContacts = new();
+        private readonly Dictionary<IManifest, PerModModLoaderContact> modLoaderContacts = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
         {
@@ -105,7 +105,13 @@ namespace CobaltCoreModding.Components.Services
             foreach (var manifest in LoadOrderly(ModAssemblyHandler.prelaunchManifests, logger))
             {
                 if (manifest == null) continue;
-                manifest.FinalizePreperations();
+
+                if (!modLoaderContacts.TryGetValue(manifest, out var contact))
+                {
+                    contact = new PerModModLoaderContact(this, logger, manifest);
+                    modLoaderContacts[manifest] = contact;
+                }
+                manifest.FinalizePreperations(contact);
             }
         }
 
