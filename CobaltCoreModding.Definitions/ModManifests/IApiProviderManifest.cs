@@ -7,6 +7,6 @@
         /// </summary>
         /// <param name="requestingMod">The mod that requested the API.</param>
         /// <returns>The object whose public methods will be exposed to other mods.</returns>
-        object? GetApi(IModManifest requestingMod) => this;
+        object? GetApi(IManifest requestingMod) => this;
     }
 }

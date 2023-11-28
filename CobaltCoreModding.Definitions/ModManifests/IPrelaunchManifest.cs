@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,6 @@ namespace CobaltCoreModding.Definitions.ModManifests
     /// </summary>
     public interface IPrelaunchManifest : IManifest
     {
-        public void FinalizePreperations();
+        public void FinalizePreperations(IPrelaunchContactPoint prelaunchManifest);
     }
 }
