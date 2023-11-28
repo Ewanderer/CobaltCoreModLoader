@@ -326,7 +326,7 @@ namespace CobaltCoreModding.Components.Services
         private Assembly? ModContext_Resolving(AssemblyLoadContext context, AssemblyName assemblyName)
         {
             //Mods should either cross reference another mod.
-            Assembly? result = modAssemblies.Concat(new Assembly[] { CobaltCoreAssembly }).FirstOrDefault(e => e.GetName().Equals(assemblyName));
+            Assembly? result = modAssemblies.Concat(new Assembly[] { CobaltCoreAssembly }).FirstOrDefault(e => e.GetName().FullName == assemblyName.FullName);
             //or an internal dependency, which we will load here to its context to avoid collision between mods.
             if (result == null)
             {
