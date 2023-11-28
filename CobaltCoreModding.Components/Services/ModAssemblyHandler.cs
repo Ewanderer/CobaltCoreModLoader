@@ -11,7 +11,7 @@ namespace CobaltCoreModding.Components.Services
     /// A singleton to help store any assembly and its manifest.
     /// Can also run their bootup according to dependency.
     /// </summary>
-    public class ModAssemblyHandler : IModLoaderContact
+    public class ModAssemblyHandler
     {
         private static List<IAddinManifest> addinManifests = new();
         private static List<IAnimationManifest> animationManifests = new();
@@ -35,8 +35,10 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<IApiProviderManifest> apiProviderManifests = new();
         private readonly List<AssemblyLoadContext> contexts = new List<AssemblyLoadContext>();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
+        private readonly Dictionary<IModManifest, IModLoaderContact> modLoaderContacts = new();
 
         public ModAssemblyHandler(ILogger<ModAssemblyHandler> logger, CobaltCoreHandler cobalt_core_handler, ILoggerFactory loggerFactory)
         {
@@ -67,6 +69,7 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<Assembly> ModAssemblies => modAssemblies.ToArray();
 
         public static IEnumerable<IPartTypeManifest> PartTypeManifests => partTypeManifests.ToArray();
+
         public static IEnumerable<IPrelaunchManifest> PrelaunchManifests => prelaunchManifests.ToArray();
 
         public static IEnumerable<IRawShipManifest> RawShipManifests => rawShipManifests.ToArray();
@@ -82,6 +85,9 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+
+        public static IEnumerable<IApiProviderManifest> ApiProviderManifests => apiProviderManifests.ToArray();
+
         public Assembly CobaltCoreAssembly => CobaltCoreHandler.CobaltCoreAssembly ?? throw new Exception("No Cobalt Core found.");
 
         public IEnumerable<IManifest> LoadedManifests => registered_manifests.Values;
@@ -184,17 +190,22 @@ namespace CobaltCoreModding.Components.Services
             }
         }
 
-        IManifest IManifestLookup.LookupManifest(string globalName)
-        {
-            return LookupManifest(globalName) ?? throw new KeyNotFoundException();
-        }
-
-        bool IModLoaderContact.RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
+        internal bool RegisterNewAssembly(Assembly assembly, DirectoryInfo working_directory)
         {
             if (modAssemblies.Add(assembly))
                 ExtractManifestFromAssembly(assembly, working_directory);
 
             return true;
+        }
+
+        private IModLoaderContact ObtainModLoaderContact(IModManifest modManifest)
+        {
+            if (!modLoaderContacts.TryGetValue(modManifest, out var contact))
+            {
+                contact = new PerModModLoaderContact(this, logger, modManifest);
+                modLoaderContacts[modManifest] = contact;
+            }
+            return contact;
         }
 
         public void WarumMods(object? ui_object)
@@ -217,8 +228,9 @@ namespace CobaltCoreModding.Components.Services
 
             foreach (var manifest in LoadOrderly(ModAssemblyHandler.bootManifests, logger))
             {
-                if (manifest == null) continue;
-                manifest.BootMod(this);
+                if (manifest == null)
+                    continue;
+                manifest.BootMod(ObtainModLoaderContact(manifest));
             }
 
             foreach (var manifest in LoadOrderly(ModAssemblyHandler.addinManifests, logger))
@@ -300,6 +312,8 @@ namespace CobaltCoreModding.Components.Services
                     addinManifests.Add(addinManifest);
                 if (spawned_manifest is IPartTypeManifest partTypeManifest)
                     partTypeManifests.Add(partTypeManifest);
+                if (spawned_manifest is IApiProviderManifest apiProviderManifest)
+                    apiProviderManifests.Add(apiProviderManifest);
             }
         }
 
