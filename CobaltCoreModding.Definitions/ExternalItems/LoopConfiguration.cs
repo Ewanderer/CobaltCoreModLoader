@@ -15,7 +15,9 @@ namespace CobaltCoreModding.Definitions.ExternalItems
     /// </summary>
     public class LoopConfiguration
     {
-
+        /// <summary>
+        /// THe name of htis configuration for referencing.
+        /// </summary>
         public string GlobalName { get; init; }
 
         /// <summary>
@@ -28,6 +30,26 @@ namespace CobaltCoreModding.Definitions.ExternalItems
         /// When searching for content, the global name of this config and any named here will be looked up in entries.
         /// </summary>
         public IEnumerable<string> IncludeContentFrom { get; init; }
+
+        /// <summary>
+        /// set this if the configuration is intended for a certain cast.
+        /// </summary>
+        public IEnumerable<int> RequiredCastDeckIds { get; init; } = Array.Empty<int>();
+        
+        /// <summary>
+        /// If RequiredCastDeckIds is used, this is the minimum number of matches required.
+        /// </summary>
+        public int MinimumRequiredCastCount = 0;
+        
+        /// <summary>
+        /// If RequiredCastDeckIds is used, this is the maximum number of matches permitted.
+        /// </summary>
+        public int MaximumRequiredCastCount = 0;
+
+        /// <summary>
+        /// Limit which ships can be used for this config, by their name.
+        /// </summary>
+        public IEnumerable<string> PermittedShipNames { get; init; } = Array.Empty<string>();
 
         public LoopConfiguration(string globalName, IEnumerable<string> includeContentFrom)
         {
