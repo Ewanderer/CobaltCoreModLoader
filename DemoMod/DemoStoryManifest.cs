@@ -46,10 +46,10 @@ namespace DemoMod
                 {
                     new ExternalStory.ExternalSay()
                     {
-                        who = "riggs", /* the character that talks. For modded characters, use CharacterDeck.GlobalName
+                        Who = "riggs", /* the character that talks. For modded characters, use CharacterDeck.GlobalName
                                         * attempting to make an absent character speak in combat will interrupt the shout !*/
-                        what = "Example shout !",
-                        loopTag = "squint" // the specific animation that should play during the shout. "neutral" is default
+                        What = "Example shout !",
+                        LoopTag = "squint" // the specific animation that should play during the shout. "neutral" is default
                     },
                     new Say() // same as above, but native
                     {
@@ -112,22 +112,22 @@ namespace DemoMod
                     {
                         new ExternalStory.ExternalSay()
                         {
-                            who = "walrus", // characters in event dialogues don't need to be actually present !
-                            what = "Example event start !",
-                            flipped = true, // if true, the character is on the right side of the dialogue while talking
+                            Who = "walrus", // characters in event dialogues don't need to be actually present !
+                            What = "Example event start !",
+                            Flipped = true, // if true, the character is on the right side of the dialogue while talking
                         },
                         new Command(){name = "demoDoStuffCommand"}, /* execute a registered method, only works during dialogues.
                                                                      * You can see vanilla examples in the class StoryCommands*/
                         new ExternalStory.ExternalSay()
                         {
-                            who = "comp",
-                            what = "Ouch !",
+                            Who = "comp",
+                            What = "Ouch !",
                         },
                     }
                 );
 
-            storyRegistry.RegisterChoice("demoChoiceFunc", typeof(DemoStoryChoices).GetMethod(nameof(DemoStoryChoices.DemoStoryChoice)));
-            storyRegistry.RegisterCommand("demoDoStuffCommand", typeof(DemoStoryCommands).GetMethod(nameof(DemoStoryCommands.DemoStoryCommand)));
+            storyRegistry.RegisterChoice("demoChoiceFunc", typeof(DemoStoryChoices).GetMethod(nameof(DemoStoryChoices.DemoStoryChoice))!);
+            storyRegistry.RegisterCommand("demoDoStuffCommand", typeof(DemoStoryCommands).GetMethod(nameof(DemoStoryCommands.DemoStoryCommand))!);
             storyRegistry.RegisterStory(exampleEvent);
 
             var exampleEventOutcome_0 = new ExternalStory("EWanderer.Demomod.DemoStory.ChoiceEvent_Outcome_0",
@@ -139,8 +139,8 @@ namespace DemoMod
                     {
                         new ExternalStory.ExternalSay()
                         {
-                            who = "comp",
-                            what = "Yay !",
+                            Who = "comp",
+                            What = "Yay !",
                         },
                     }
                 );
@@ -155,8 +155,8 @@ namespace DemoMod
                     {
                         new ExternalStory.ExternalSay()
                         {
-                            who = "comp",
-                            what = "That hurts !",
+                            Who = "comp",
+                            What = "That hurts !",
                         },
                     }
                 );
@@ -171,8 +171,8 @@ namespace DemoMod
                     {
                         new ExternalStory.ExternalSay()
                         {
-                            who = "comp",
-                            what = "Let's scoot !",
+                            Who = "comp",
+                            What = "Let's scoot !",
                         },
                     }
                 );

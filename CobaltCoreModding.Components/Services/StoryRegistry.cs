@@ -28,7 +28,7 @@ namespace CobaltCoreModding.Components.Services
             StoryRegistry.logger = logger;
             modAssemblyHandler = mah;
         }
-        
+
         public void LoadManifests()
         {
             foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StoryManifests, logger))
@@ -57,7 +57,7 @@ namespace CobaltCoreModding.Components.Services
 
             foreach (KeyValuePair<string, Tuple<MethodInfo, bool>> choice in registeredChoices)
             {
-                if(!choices_dict.TryAdd(choice.Key, choice.Value.Item1))
+                if (!choices_dict.TryAdd(choice.Key, choice.Value.Item1))
                 {
                     if (!choice.Value.Item2)
                     {
@@ -85,55 +85,44 @@ namespace CobaltCoreModding.Components.Services
         public static void PatchStories()
         {
             var story = TypesAndEnums.DbType.GetField("story")?.GetValue(null) ?? throw new Exception("Cannot find DB.story");
-            var stories_dict = TypesAndEnums.StoryType.GetField("all").GetValue(story) as IDictionary ?? throw new Exception("Cannot find Story.all");
+            var stories_dict = TypesAndEnums.StoryType.GetField("all")?.GetValue(story) as IDictionary ?? throw new Exception("Cannot find Story.all");
             var node_lines_field_info = TypesAndEnums.StoryNodeType.GetField("lines") ?? throw new Exception("Cannot find StoryNode.lines");
-            var node_type_field_info = TypesAndEnums.StoryNodeType.GetField("type") ?? throw new Exception("Cannot find StoryNode.type");
 
             foreach (ExternalStory s in registeredStories.Values)
             {
-                if (s.storyNode == null)
+                //overwrite instructions.
+                if (s.Instructions != null)
                 {
-                    s.storyNode = Activator.CreateInstance(TypesAndEnums.StoryNodeType) ?? throw new Exception("Cannot create instance of class StoryNode");
-                    node_type_field_info.SetValue(s.storyNode, TypesAndEnums.IntToNodeType(1));
-                }
+                    var node_lines_field = node_lines_field_info.GetValue(s.StoryNode) as IList ?? throw new Exception("Cannot find value of StoryNode.lines");
+                    node_lines_field.Clear();
 
-                if (s.storyNode.GetType() != TypesAndEnums.StoryNodeType)
-                {
-                    throw new Exception(String.Format("Cannot patch ExternalStory {0}, as ExternalStory.storyNode should be of class StoryNode", s.GlobalName));
-                }
-
-                var node_lines_field = node_lines_field_info.GetValue(s.storyNode) as IList ?? throw new Exception("Cannot find value of StoryNode.lines");
-
-                object instruction;
-                for (int i = 0; i < s.instructions.Count; i++)
-                {
-                    instruction = s.instructions[i];
-
-                    if (instruction is ExternalStory.ExternalSay extSay)
+                    foreach (var instruction in s.Instructions)
                     {
-                        dynamic nativeSay = Activator.CreateInstance(TypesAndEnums.SayType) ?? throw new Exception("Cannot create instance of class Say");
-                        nativeSay.hash = extSay.hash;
-                        nativeSay.who = extSay.who;
-                        nativeSay.loopTag = extSay.loopTag;
-                        nativeSay.ifCrew = extSay.ifCrew;
-                        nativeSay.delay = extSay.delay;
-                        nativeSay.choiceFunc = extSay.choiceFunc;
-                        nativeSay.flipped = extSay.flipped;
-
-                        instruction = nativeSay;
-                    }
-                    else
-                    {
-                        if (!instruction.GetType().IsSubclassOf(TypesAndEnums.InstructionType))
+                        //convert external says to native say.
+                        if (instruction is ExternalStory.ExternalSay extSay)
                         {
-                            throw new Exception(String.Format("Cannot add instance of class {0} to Story Node {1} as it does not inherit from class Instruction", instruction.GetType().Name, s.GlobalName));
+                            dynamic nativeSay = Activator.CreateInstance(TypesAndEnums.SayType) ?? throw new Exception("Cannot create instance of class Say");
+                            nativeSay.hash = extSay.Hash;
+                            nativeSay.who = extSay.Who;
+                            nativeSay.loopTag = extSay.LoopTag;
+                            nativeSay.ifCrew = extSay.IfCrew;
+                            nativeSay.delay = extSay.Delay;
+                            nativeSay.choiceFunc = extSay.ChoiceFunc;
+                            nativeSay.flipped = extSay.Flipped;
+                            node_lines_field.Add(nativeSay);
+                        }
+                        else
+                        {
+                            if (!instruction.GetType().IsSubclassOf(TypesAndEnums.InstructionType))
+                            {
+                                throw new Exception(String.Format("Cannot add instance of class {0} to Story Node {1} as it does not inherit from class Instruction", instruction.GetType().Name, s.GlobalName));
+                            }
+                            node_lines_field.Add(instruction);
                         }
                     }
-
-                    node_lines_field.Add(instruction);
                 }
-                
-                stories_dict.Add(s.GlobalName, s.storyNode);
+
+                stories_dict.Add(s.GlobalName, s.StoryNode);
             }
         }
 
@@ -154,12 +143,40 @@ namespace CobaltCoreModding.Components.Services
         public bool RegisterStory(ExternalStory story)
         {
 
+            if (string.IsNullOrWhiteSpace(story.GlobalName))
+            {
+                logger?.LogCritical("Attempted to register story with no global namme!");
+                return false;
+            }
+
             if (registeredStories.ContainsKey(story.GlobalName))
             {
                 logger?.LogCritical("Story with global name {0} already registered!", story.GlobalName);
                 return false;
             }
 
+            if (story.StoryNode.GetType() != TypesAndEnums.StoryNodeType)
+            {
+                logger?.LogCritical("Cannot patch ExternalStory {0}, as ExternalStory.storyNode should be of class StoryNode", story.GlobalName);
+                return false;
+            }
+
+            //validate lines
+            if (story.Instructions != null)
+            {
+                foreach (var instruction in story.Instructions)
+                {
+                    if (instruction is ExternalStory.ExternalSay)
+                    {
+                        continue;
+                    }
+                    if (!instruction.GetType().IsSubclassOf(TypesAndEnums.InstructionType))
+                    {
+                        logger?.LogWarning("Cannot add instance of class {0} to Story Node {1} as it does not inherit from class Instruction. It is also not an external.story instruction type", instruction.GetType().Name, story.GlobalName);
+                        return false;
+                    }
+                }
+            }
             registeredStories.Add(story.GlobalName, story);
 
             return true;
