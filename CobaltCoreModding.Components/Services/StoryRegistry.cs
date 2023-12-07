@@ -1,53 +1,24 @@
 ﻿using CobaltCoreModding.Components.Utils;
 using CobaltCoreModding.Definitions.ExternalItems;
 using CobaltCoreModding.Definitions.ModContactPoints;
-using HarmonyLib;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework.Input;
-using MonoMod.Utils;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CobaltCoreModding.Components.Services
 {
     public class StoryRegistry : IStoryRegistry
     {
-        private readonly ModAssemblyHandler modAssemblyHandler;
-        private static ILogger<StoryRegistry>? logger;
-        private static readonly Dictionary<string, ExternalStory> registeredStories = new Dictionary<string, ExternalStory>();
-        private static readonly Dictionary<string, Tuple<MethodInfo, bool>> registeredCommands = new Dictionary<string, Tuple<MethodInfo, bool>>();
         private static readonly Dictionary<string, Tuple<MethodInfo, bool>> registeredChoices = new Dictionary<string, Tuple<MethodInfo, bool>>();
+        private static readonly Dictionary<string, Tuple<MethodInfo, bool>> registeredCommands = new Dictionary<string, Tuple<MethodInfo, bool>>();
+        private static readonly Dictionary<string, ExternalStory> registeredStories = new Dictionary<string, ExternalStory>();
+        private static ILogger<StoryRegistry>? logger;
+        private readonly ModAssemblyHandler modAssemblyHandler;
+
         public StoryRegistry(ILogger<StoryRegistry>? logger, ModAssemblyHandler mah)
         {
             StoryRegistry.logger = logger;
             modAssemblyHandler = mah;
-        }
-
-        public void LoadManifests()
-        {
-            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StoryManifests, logger))
-            {
-                try
-                {
-                    manifest.LoadManifest(this);
-                }
-                catch (Exception err)
-                {
-                    manifest.Logger?.LogError(err, "Exception caught by StoryRegistry");
-                }
-            }
-
-            //patching
-        }
-        public void RunLogic()
-        {
-            LoadManifests();
         }
 
         public static void PatchChoicesAndCommands()
@@ -126,23 +97,59 @@ namespace CobaltCoreModding.Components.Services
             }
         }
 
-        internal static void PatchLocalisations(string locale, ref Dictionary<string, string> result)
+        public void LoadManifests()
         {
-            foreach (var s in registeredStories.Values)
+            foreach (var manifest in modAssemblyHandler.LoadOrderly(ModAssemblyHandler.StoryManifests, logger))
             {
-                s.GetLocalisation(locale, out Dictionary<string, string> lines);
-
-                foreach (KeyValuePair<string, string> line in lines)
+                try
                 {
-                    if (!result.TryAdd(line.Key, line.Value))
-                        logger?.LogWarning("Story {0} cannot register line because key {1} already added somehow", s.GlobalName, line.Key);
+                    manifest.LoadManifest(this);
+                }
+                catch (Exception err)
+                {
+                    manifest.Logger?.LogError(err, "Exception caught by StoryRegistry");
                 }
             }
+
+            //patching
+        }
+
+        public bool RegisterChoice(string key, MethodInfo choice, bool intendedOverride = false)
+        {
+            var value = new Tuple<MethodInfo, bool>(choice, intendedOverride);
+            if (!registeredChoices.TryAdd(key, value))
+            {
+                if (!intendedOverride)
+                {
+                    logger?.LogCritical("Story Choice with key {0} already registered!", key);
+                    return false;
+                }
+
+                registeredChoices[key] = value;
+            }
+
+            return true;
+        }
+
+        public bool RegisterCommand(string key, MethodInfo command, bool intendedOverride = false)
+        {
+            var value = new Tuple<MethodInfo, bool>(command, intendedOverride);
+            if (!registeredCommands.TryAdd(key, value))
+            {
+                if (!intendedOverride)
+                {
+                    logger?.LogCritical("Story Command with key {0} already registered!", key);
+                    return false;
+                }
+
+                registeredChoices[key] = value;
+            }
+
+            return true;
         }
 
         public bool RegisterStory(ExternalStory story)
         {
-
             if (string.IsNullOrWhiteSpace(story.GlobalName))
             {
                 logger?.LogCritical("Attempted to register story with no global namme!");
@@ -182,38 +189,23 @@ namespace CobaltCoreModding.Components.Services
             return true;
         }
 
-        public bool RegisterChoice(string key, MethodInfo choice, bool intendedOverride = false)
+        public void RunLogic()
         {
-            var value = new Tuple<MethodInfo, bool>(choice, intendedOverride);
-            if (!registeredChoices.TryAdd(key, value))
-            {
-                if (!intendedOverride)
-                {
-                    logger?.LogCritical("Story Choice with key {0} already registered!", key);
-                    return false;
-                }
-
-                registeredChoices[key] = value;
-            }
-
-            return true;
+            LoadManifests();
         }
 
-        public bool RegisterCommand(string key, MethodInfo command, bool intendedOverride = false)
+        internal static void PatchLocalisations(string locale, ref Dictionary<string, string> result)
         {
-            var value = new Tuple<MethodInfo, bool>(command, intendedOverride);
-            if (!registeredCommands.TryAdd(key, value))
+            foreach (var s in registeredStories.Values)
             {
-                if (!intendedOverride)
+                s.GetLocalisation(locale, out Dictionary<string, string> lines);
+
+                foreach (KeyValuePair<string, string> line in lines)
                 {
-                    logger?.LogCritical("Story Command with key {0} already registered!", key);
-                    return false;
+                    if (!result.TryAdd(line.Key, line.Value))
+                        logger?.LogWarning("Story {0} cannot register line because key {1} already added somehow", s.GlobalName, line.Key);
                 }
-
-                registeredChoices[key] = value;
             }
-
-            return true;
         }
     }
 }
