@@ -24,7 +24,8 @@ namespace DemoMod.Cards
                     break;
 
                 case Upgrade.B:
-                    list.Add(new ACorrodeDamage() { });
+                    list.Add(new ACorrodeDamage() { dialogueSelector = ".demoCardShout"}); /* notice the "." It is placed before a lookup tag to notify the game that it is one.
+                                                                                            * Without it, the story queries would try to match the string to an exact global name */
                     break;
 
                 case (Upgrade)3:

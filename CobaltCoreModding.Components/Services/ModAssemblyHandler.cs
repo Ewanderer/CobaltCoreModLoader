@@ -35,6 +35,7 @@ namespace CobaltCoreModding.Components.Services
         private static List<ISpriteManifest> spriteManifests = new();
         private static List<IStartershipManifest> startershipManifests = new();
         private static List<IStatusManifest> statusManifests = new();
+        private static List<IStoryManifest> storyManifests = new();
         private static List<IApiProviderManifest> apiProviderManifests = new();
         private readonly List<AssemblyLoadContext> contexts = new List<AssemblyLoadContext>();
         private readonly Dictionary<Type, List<IManifest>> loadedManifests = new Dictionary<Type, List<IManifest>>();
@@ -85,6 +86,7 @@ namespace CobaltCoreModding.Components.Services
         public static IEnumerable<IStartershipManifest> StartershipManifests => startershipManifests.ToArray();
 
         public static IEnumerable<IStatusManifest> StatusManifests => statusManifests.ToArray();
+        public static IEnumerable<IStoryManifest> StoryManifests => storyManifests.ToArray();
 
         public static IEnumerable<IApiProviderManifest> ApiProviderManifests => apiProviderManifests.ToArray();
 
@@ -310,6 +312,8 @@ namespace CobaltCoreModding.Components.Services
                     startershipManifests.Add(startership_manifest);
                 if (spawned_manifest is IRawStartershipManifest rawStartership_manifest)
                     rawStartershipManifests.Add(rawStartership_manifest);
+                if (spawned_manifest is IStoryManifest story_manifest)
+                    storyManifests.Add(story_manifest);
                 if (spawned_manifest is IModManifest boot_manifest)
                     bootManifests.Add(boot_manifest);
                 if (spawned_manifest is IPrelaunchManifest prelaunchManifest)
