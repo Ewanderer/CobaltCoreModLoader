@@ -16,7 +16,7 @@ namespace DemoMod
         public DirectoryInfo? ModRootFolder { get; set; }
         public string Name => "EWanderer.DemoMod.DependecyTestB";
 
-        public void FinalizePreperations()
+        public void FinalizePreperations(IPrelaunchContactPoint prelaunchManifest)
         {
         }
 

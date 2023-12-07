@@ -94,7 +94,7 @@ namespace CobaltCoreModding.Components.Services
                 if (s.storyNode == null)
                 {
                     s.storyNode = Activator.CreateInstance(TypesAndEnums.StoryNodeType) ?? throw new Exception("Cannot create instance of class StoryNode");
-                    node_lines_field_info.SetValue(s.storyNode, TypesAndEnums.IntToNodeType(0));
+                    node_type_field_info.SetValue(s.storyNode, TypesAndEnums.IntToNodeType(1));
                 }
 
                 if (s.storyNode.GetType() != TypesAndEnums.StoryNodeType)
