@@ -45,6 +45,12 @@ namespace CobaltCoreModding.Components.Utils
         private static Type? __upgrade_type = null;
         private static Type? __ptype_type = null;
 
+        private static Type? __node_type_type = null;
+        private static Type? __story_node_type = null;
+        private static Type? __story_type = null;
+        private static Type? __say_type = null;
+        private static Type? __instruction_type = null;
+
         public static Type PTypeType
         {
             get
@@ -296,6 +302,56 @@ namespace CobaltCoreModding.Components.Utils
             }
         }
 
+        public static Type NodeTypeType
+        {
+            get
+            {
+                if (__node_type_type != null)
+                    return __node_type_type;
+                return __node_type_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("NodeType") ?? throw new Exception("NodeType type not found");
+            }
+        }
+
+        public static Type StoryNodeType
+        {
+            get 
+            {
+                if (__story_node_type != null)
+                    return __story_node_type;
+                return __story_node_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("StoryNode") ?? throw new Exception("StoryNode type not found");
+            }
+        }
+
+        public static Type StoryType
+        {
+            get
+            {
+                if (__story_type != null)
+                    return __story_type;
+                return __story_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Story") ?? throw new Exception("Story type not found");
+            }
+        }
+
+        public static Type SayType
+        {
+            get
+            {
+                if (__say_type != null)
+                    return __say_type;
+                return __say_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Say") ?? throw new Exception("Say type not found");
+            }
+        }
+
+        public static Type InstructionType
+        {
+            get
+            {
+                if (__instruction_type != null)
+                    return __instruction_type;
+                return __instruction_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Instruction") ?? throw new Exception("Instruction type not found");
+            }
+        }
+
         public static object? IntToDeck(int? deck_id)
         {
             if (deck_id == null)
@@ -336,6 +392,13 @@ namespace CobaltCoreModding.Components.Utils
             if (upgrade_id == null)
                 return null;
             return Convert.ChangeType(Enum.ToObject(UpgradeType, upgrade_id), UpgradeType);
+        }
+
+        public static object? IntToNodeType(int? nodetype_id)
+        {
+            if(nodetype_id == null)
+                return null;
+            return Convert.ChangeType(Enum.ToObject(NodeTypeType, nodetype_id), NodeTypeType);
         }
     }
 }
