@@ -13,11 +13,6 @@
         /// </summary>
         private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
 
-        /// <summary>
-        /// Glossary entries that will be added! to card meta.
-        /// </summary>
-        public IEnumerable<string> ExtraGlossary { get; init; }
-
         public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
             if (string.IsNullOrWhiteSpace(globalName)) throw new ArgumentException("External card without global name");
@@ -31,7 +26,7 @@
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="globalName"></param>
         /// <param name="cardType"></param>
@@ -51,7 +46,6 @@
             ExtraGlossary = extraGlossary?.ToArray() ?? Array.Empty<string>();
         }
 
-
         /// <summary>
         /// Since you cannot put custom decks into deck meta attribute,
         /// so if need be they can be fed here and the DB Extender will overwrite the CardMeta Entry in the DB.
@@ -59,10 +53,20 @@
         public ExternalDeck? ActualDeck { get; init; }
 
         public ExternalSprite CardArt { get; init; }
+
         public Type CardType { get; init; }
+
         public string DescALocKey => "card." + CardType.Name + ".descA";
+
         public string DescBLocKey => "card." + CardType.Name + ".descB";
+
         public string DescLocKey => "card." + CardType.Name + ".desc";
+
+        /// <summary>
+        /// Glossary entries that will be added! to card meta.
+        /// </summary>
+        public IEnumerable<string> ExtraGlossary { get; init; }
+
         public string GlobalName { get; init; }
 
         public string NameLocKey => "card." + CardType.Name + ".name";
@@ -98,7 +102,6 @@
 
         public void GenerateCardNamesFromResourceFile()
         {
-
         }
 
         public void GetLocalisation(string locale, out string? name, out string? description, out string? descriptionA, out string? descriptionB)
