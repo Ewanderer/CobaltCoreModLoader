@@ -22,6 +22,28 @@
             CardType = cardType;
             CardArt = cardArt;
             ActualDeck = actualDeck;
+            ExtraGlossary = Array.Empty<string>();
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="globalName"></param>
+        /// <param name="cardType"></param>
+        /// <param name="cardArt"></param>
+        /// <param name="actualDeck"></param>
+        /// <param name="extraGlossary"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null, IEnumerable<string>? extraGlossary = null)
+        {
+            if (string.IsNullOrWhiteSpace(globalName)) throw new ArgumentException("External card without global name");
+            if (cardArt.Id == null) throw new ArgumentException($"Card Art not registered in External Card {globalName}");
+            if (actualDeck != null && actualDeck.Id == null) throw new ArgumentException($"Unregistered External Deck in Card {globalName}");
+            GlobalName = globalName;
+            CardType = cardType;
+            CardArt = cardArt;
+            ActualDeck = actualDeck;
+            ExtraGlossary = extraGlossary?.ToArray() ?? Array.Empty<string>();
         }
 
         /// <summary>
@@ -31,10 +53,20 @@
         public ExternalDeck? ActualDeck { get; init; }
 
         public ExternalSprite CardArt { get; init; }
+
         public Type CardType { get; init; }
+
         public string DescALocKey => "card." + CardType.Name + ".descA";
+
         public string DescBLocKey => "card." + CardType.Name + ".descB";
+
         public string DescLocKey => "card." + CardType.Name + ".desc";
+
+        /// <summary>
+        /// Glossary entries that will be added! to card meta.
+        /// </summary>
+        public IEnumerable<string> ExtraGlossary { get; init; }
+
         public string GlobalName { get; init; }
 
         public string NameLocKey => "card." + CardType.Name + ".name";
@@ -70,7 +102,6 @@
 
         public void GenerateCardNamesFromResourceFile()
         {
-
         }
 
         public void GetLocalisation(string locale, out string? name, out string? description, out string? descriptionA, out string? descriptionB)
