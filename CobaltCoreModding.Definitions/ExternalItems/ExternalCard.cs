@@ -13,6 +13,11 @@
         /// </summary>
         private Dictionary<string, string> localized_card_names = new Dictionary<string, string>();
 
+        /// <summary>
+        /// Glossary entries that will be added! to card meta.
+        /// </summary>
+        public IEnumerable<string> ExtraGlossary { get; init; }
+
         public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null)
         {
             if (string.IsNullOrWhiteSpace(globalName)) throw new ArgumentException("External card without global name");
@@ -22,7 +27,30 @@
             CardType = cardType;
             CardArt = cardArt;
             ActualDeck = actualDeck;
+            ExtraGlossary = Array.Empty<string>();
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="globalName"></param>
+        /// <param name="cardType"></param>
+        /// <param name="cardArt"></param>
+        /// <param name="actualDeck"></param>
+        /// <param name="extraGlossary"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public ExternalCard(string globalName, Type cardType, ExternalSprite cardArt, ExternalDeck? actualDeck = null, IEnumerable<string>? extraGlossary = null)
+        {
+            if (string.IsNullOrWhiteSpace(globalName)) throw new ArgumentException("External card without global name");
+            if (cardArt.Id == null) throw new ArgumentException($"Card Art not registered in External Card {globalName}");
+            if (actualDeck != null && actualDeck.Id == null) throw new ArgumentException($"Unregistered External Deck in Card {globalName}");
+            GlobalName = globalName;
+            CardType = cardType;
+            CardArt = cardArt;
+            ActualDeck = actualDeck;
+            ExtraGlossary = extraGlossary?.ToArray() ?? Array.Empty<string>();
+        }
+
 
         /// <summary>
         /// Since you cannot put custom decks into deck meta attribute,

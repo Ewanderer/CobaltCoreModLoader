@@ -190,13 +190,16 @@ namespace CobaltCoreModding.Components.Services
         {
             IDictionary card_meta_dictionary = TypesAndEnums.DbType.GetField("cardMetas")?.GetValue(null) as IDictionary ?? throw new Exception("card meta dictionary not found");
             var deck_field = TypesAndEnums.CardMetaType.GetField("deck") ?? throw new Exception();
+            var extra_glossary_field = TypesAndEnums.CardMetaType.GetField("extraGlossary") ?? throw new Exception();
 
             foreach (var card in registered_cards.Values.Where(e => e != null && e.ActualDeck != null))
             {
-                if (card == null) continue;
-
                 if (!card_meta_dictionary.Contains(card.CardType.Name))
-                    continue;
+                {
+                    //make new meta
+                    var new_meta = Activator.CreateInstance(TypesAndEnums.CardMetaType);
+                    card_meta_dictionary.Add(card.CardType.Name, new_meta);
+                }
                 var meta = card_meta_dictionary[card.CardType.Name];
                 var deck_val = TypesAndEnums.IntToDeck(card.ActualDeck?.Id);
                 if (deck_val == null)
@@ -205,6 +208,25 @@ namespace CobaltCoreModding.Components.Services
                     continue;
                 }
                 deck_field.SetValue(meta, deck_val);
+            }
+
+            foreach (var card in registered_cards.Values.Where(e => e.ExtraGlossary.Any()))
+            {
+                if (!card_meta_dictionary.Contains(card.CardType.Name))
+                {
+                    //make new meta
+                    var new_meta = Activator.CreateInstance(TypesAndEnums.CardMetaType);
+                    card_meta_dictionary.Add(card.CardType.Name, new_meta);
+                }
+                var meta = card_meta_dictionary[card.CardType.Name];
+                var old_val = extra_glossary_field.GetValue(meta) as IEnumerable<string>;
+                if (old_val == null)
+                {
+                    Logger?.LogError("Cannot extract extra glossary from card meta for {0}", card.GlobalName);
+                    continue;
+                }
+                var new_val = old_val.Concat(card.ExtraGlossary).ToArray();
+                extra_glossary_field.SetValue(meta, new_val);
             }
 
             foreach (var overwrite in card_overwrites.Where(e => e.Value != null && e.Value.ActualDeck != null))
