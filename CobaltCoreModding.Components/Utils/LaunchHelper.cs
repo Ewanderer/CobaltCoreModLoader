@@ -30,6 +30,7 @@ namespace CobaltCoreModding.Components.Utils
             builder.Services.AddSingleton<ShipRegistry>();
             builder.Services.AddSingleton<StarterShipRegistry>();
             builder.Services.AddSingleton<PartTypeRegistry>();
+            builder.Services.AddSingleton<StoryRegistry>();
             return builder;
         }
 
@@ -63,6 +64,8 @@ namespace CobaltCoreModding.Components.Utils
             host.Services.GetRequiredService<ShipRegistry>().LoadManifests();
             //load starter ship manifests
             host.Services.GetRequiredService<StarterShipRegistry>().RunLogic();
+            //load story manifests
+            host.Services.GetRequiredService<StoryRegistry>().RunLogic();
             //patch db
             host.Services.GetRequiredService<DBExtender>().PatchDB();
             //load events

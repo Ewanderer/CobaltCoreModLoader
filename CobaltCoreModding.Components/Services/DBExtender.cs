@@ -88,6 +88,7 @@ namespace CobaltCoreModding.Components.Services
             StatusRegistry.PatchLocalisations(locale, ref __result);
             StarterShipRegistry.PatchLocalisations(locale, ref __result);
             PartTypeRegistry.PatchLocalisations(locale, ref __result);
+            StoryRegistry.PatchLocalisations(locale, ref __result);
         }
 
         private static Queue<ValueTuple<string, Action>> MakeInitQueue_Postfix(Queue<ValueTuple<string, Action>> __result)
@@ -179,6 +180,7 @@ namespace CobaltCoreModding.Components.Services
             CardRegistry.PatchCardMetas();
             ArtifactRegistry.PatchArtifactMetas();
             CardOverwriteRegistry.PatchMeta();
+            StoryRegistry.PatchChoicesAndCommands();
         }
 
         /// <summary>
@@ -186,6 +188,7 @@ namespace CobaltCoreModding.Components.Services
         /// </summary>
         private static void PatchStory()
         {
+            StoryRegistry.PatchStories();
         }
 
         /*

@@ -124,7 +124,7 @@ namespace DemoMod
             if (card_art_sprite == null)
                 return;
             //make card meta data
-            var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null);
+            var card = new ExternalCard("Ewanderer.DemoMod.DemoCard", typeof(EWandererDemoCard), card_art_sprite, null, new string[] { "status.stun" });
             //add card name in english
             card.AddLocalisation(addin?.tbValue.Text ?? "Schwarzmagier");
             //register card in the db extender.
