@@ -146,7 +146,7 @@ namespace CobaltCoreModding.Components.Services
                     bool failed = false;
 
                     //check each dependency
-                    foreach (var dependency in candidate.Dependencies ?? ArraySegment<DependencyEntry>.Empty)
+                    foreach (var dependency in candidate.Dependencies ?? Array.Empty<DependencyEntry>())
                     {
                         //Skip dependecies not yet relevant.
                         if (!loadedManifests.Any(e => dependency.DependencyType.IsAssignableTo(e.Key)))
