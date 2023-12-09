@@ -106,8 +106,6 @@ namespace CobaltCoreModding.Components.Services
         {
             foreach (var manifest in LoadOrderly(ModAssemblyHandler.prelaunchManifests, logger))
             {
-                if (manifest == null) continue;
-
                 if (!modLoaderContacts.TryGetValue(manifest, out var contact))
                 {
                     contact = new PerModModLoaderContact(this, logger, manifest);
