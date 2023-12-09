@@ -1,9 +1,9 @@
-﻿using CobaltCoreModding.Definitions.ItemLookups;
-using CobaltCoreModding.Definitions.ModContactPoints;
+﻿using CobaltCoreModding.Definitions.ModContactPoints;
 using CobaltCoreModding.Definitions.ModManifests;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.Loader;
+using CobaltCoreModding.Definitions;
 
 namespace CobaltCoreModding.Components.Services
 {
@@ -144,8 +144,9 @@ namespace CobaltCoreModding.Components.Services
                 {
                     var candidate = remaining_manifests[i];
                     bool failed = false;
+
                     //check each dependency
-                    foreach (var dependency in candidate.Dependencies)
+                    foreach (var dependency in candidate.Dependencies ?? ArraySegment<DependencyEntry>.Empty)
                     {
                         //Skip dependecies not yet relevant.
                         if (!loadedManifests.Any(e => dependency.DependencyType.IsAssignableTo(e.Key)))
