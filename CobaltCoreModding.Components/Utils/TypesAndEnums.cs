@@ -49,6 +49,7 @@ namespace CobaltCoreModding.Components.Utils
         private static Type? __story_node_type = null;
         private static Type? __story_type = null;
         private static Type? __say_type = null;
+        private static Type? __say_switch_type = null;
         private static Type? __instruction_type = null;
 
         public static Type PTypeType
@@ -339,6 +340,16 @@ namespace CobaltCoreModding.Components.Utils
                 if (__say_type != null)
                     return __say_type;
                 return __say_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("Say") ?? throw new Exception("Say type not found");
+            }
+        }
+
+        public static Type SaySwitchType
+        {
+            get
+            {
+                if (__say_switch_type != null)
+                    return __say_switch_type;
+                return __say_switch_type = CobaltCoreHandler.CobaltCoreAssembly?.GetType("SaySwitch") ?? throw new Exception("SaySwitch type not found");
             }
         }
 

@@ -48,7 +48,24 @@ namespace CobaltCoreModding.Definitions.ExternalItems
                     {
                         AddLocalisation(say.Hash, say.What);
                     }
+                    if (instruction is ExternalSaySwitch sswitch)
+                    {
+                        foreach (ExternalSay extSay in sswitch.lines)
+                        {
+                            AddLocalisation(extSay.Hash, extSay.What);
+                        }
+                    }
                 }
+            }
+        }
+
+        public class ExternalSaySwitch
+        {
+            public List<ExternalSay> lines;
+
+            public ExternalSaySwitch(List<ExternalSay> lines)
+            {
+                this.lines = lines;
             }
         }
 

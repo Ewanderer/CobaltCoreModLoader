@@ -13,5 +13,6 @@ namespace CobaltCoreModding.Definitions.ModContactPoints
         public bool RegisterStory(ExternalStory story);
         public bool RegisterChoice(string key, MethodInfo choice, bool intendedOverride = false);
         public bool RegisterCommand(string key, MethodInfo command, bool intendedOverride = false);
+        public bool RegisterInjector(ExternalStoryInjector injector);
     }
 }
