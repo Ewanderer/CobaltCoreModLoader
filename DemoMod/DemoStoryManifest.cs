@@ -56,30 +56,31 @@ namespace DemoMod
                         who = "peri",
                         hash = "0" // a string that must be unique to your story, used to fetch localisation 
                     },
-                    new SaySwitch() /* this is used to randomly pick a valid options among the listed Says.
-                                     * Currently doesn't support ExternalStory.ExternalSay, so you'll have to input localisation and hashing by hand.*/
+                    new ExternalStory.ExternalSaySwitch( new List<ExternalStory.ExternalSay>() // this is used to randomly pick a valid options among the listed Says.
                     {
-                        lines = new List<Say> { 
-                            new Say() { 
-                                who = "max",
-                                hash = "maxSwitch"
-                            },
-                            new Say() {
-                                who = "eunice",
-                                hash = "drakeSwitch"
-                            },
-                            new Say() {
-                                who = "books",
-                                hash = "booksSwitch"
-                            },
-                        }
-                    }
+                        new ExternalStory.ExternalSay()
+                        {
+                            Who = "dizzy",
+                            What = "A !",
+                            LoopTag = "squint" 
+                        },
+                        new ExternalStory.ExternalSay()
+                        {
+                            Who = "eunice",
+                            What = "B !",
+                            LoopTag = "squint"
+                        },
+                        new ExternalStory.ExternalSay()
+                        {
+                            Who = "goat",
+                            What = "C !",
+                            LoopTag = "squint"
+                        },
+                    }) 
+                                     
                 }
             );
             exampleShout.AddLocalisation("0", "Example native shout !"); // setting the localisation for peri's shout using the native way
-            exampleShout.AddLocalisation("maxSwitch", "Rad");
-            exampleShout.AddLocalisation("drakeSwitch", "Im super mean btw");
-            exampleShout.AddLocalisation("booksSwitch", "*eats crystal shard*");
 
             storyRegistry.RegisterStory(exampleShout);
 
@@ -177,6 +178,33 @@ namespace DemoMod
                     }
                 );
             storyRegistry.RegisterStory(exampleEventOutcome_2);
+
+            // Story injectors below, allows you to actively edit/insert stuff from existing story in a non destructive way !
+
+            var injector = new ExternalStoryInjector("AbandonedShipyard", // the story in which to insert stuff
+                                                    ExternalStoryInjector.QuickInjection.Beginning, // from where to insert stuff. SaySwitch will insert your stuff in the nth SaySwitch, where n is targetIndex 
+                                                    1, // an index that offset the quick injection location. in this case, we're inserting 1 away from the beginning.
+                                                    new List<object>() // the stuff you want to insert
+            {
+                new ExternalStory.ExternalSay()
+                {
+                    Who = "comp",
+                    What = "Hey, i'm not supposed to say that !"
+                }
+            });
+
+            storyRegistry.RegisterInjector(injector);
+
+
+            // Advanced injectors let you hook a method that will receive the StoryNode during DB injection time, allowing you to modify it however you wish !
+
+            var advancedInjector = new ExternalStoryInjector("AbandonedShipyard", (node) =>
+            {
+                StoryNode s = node as StoryNode;
+
+
+            });
+            storyRegistry.RegisterInjector(advancedInjector);
         }
     }
 }
