@@ -259,9 +259,7 @@ namespace CobaltCoreModding.Components.Services
             var permitted = new List<Type>();
             foreach (var part in parts)
             {
-                var p_type = (int?)part_ptype_field.GetValue(part);
-                if (p_type == null)
-                    continue;
+                var p_type = (int) part_ptype_field.GetValue(part)!;
                 permitted.AddRange(registered_artifacts.Values.Where(e => e.ExclusiveToNativeParts.Any(f => f == p_type)).Select(e => e.ArtifactType));
             }
 
